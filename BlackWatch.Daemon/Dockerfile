@@ -8,13 +8,14 @@ USER appuser
 
 FROM mcr.microsoft.com/dotnet/sdk:5.0-alpine AS build
 WORKDIR /src
-COPY ["../*", "."]
+COPY ["BlackWatch.Daemon.csproj", "./BlackWatch.Daemon/"]
 RUN dotnet restore "BlackWatch.Daemon/BlackWatch.Daemon.csproj"
+WORKDIR /src/BlackWatch.Daemon
 COPY . .
-RUN dotnet build "BlackWatch.Daemon/BlackWatch.Daemon.csproj" -c Release -o /app/build
+RUN dotnet build "BlackWatch.Daemon.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "BlackWatch.Daemon/BlackWatch.Daemon.csproj" -c Release -o /app/publish
+RUN dotnet publish "BlackWatch.Daemon.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app

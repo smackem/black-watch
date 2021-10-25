@@ -1,0 +1,16 @@
+# Please refer https://aka.ms/HTTPSinContainer on how to setup an https developer certificate for your ASP .NET Core service.
+
+version: '3.4'
+
+services:
+  blackwatchapi:
+    image: blackwatchapi
+    build:
+      context: .
+      dockerfile: BlackWatch.Api/Dockerfile
+    ports:
+      - 6000:6000
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ~/.vsdbg:/remote_debugger:rw

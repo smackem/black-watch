@@ -11,14 +11,16 @@ USER appuser
 
 FROM mcr.microsoft.com/dotnet/sdk:5.0-alpine AS build
 WORKDIR /src
-COPY ["BlackWatch.Api.csproj", "./BlackWatch.Api/"]
-RUN dotnet restore "BlackWatch.Api/BlackWatch.Api.csproj"
+COPY ./*.sln ./
+COPY */*.csproj ./
+RUN for file in $(ls *.csproj); do mkdir -p ${file%.*} && mv $file ${file%.*}; done
+RUN dotnet restore
 WORKDIR "/src/BlackWatch.Api"
 COPY . .
-RUN dotnet build "BlackWatch.Api.csproj" -c Release -o /app/build
+RUN dotnet build "BlackWatch.Api/BlackWatch.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "BlackWatch.Api.csproj" -c Release -o /app/publish
+RUN dotnet publish "BlackWatch.Api/BlackWatch.Api.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app

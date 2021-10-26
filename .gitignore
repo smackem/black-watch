@@ -352,4 +352,11 @@ MigrationBackup/
 # docker-compose secrets file
 .env
 
+# VS support files
 .vscode
+
+# data files
+redis-data
+
+# rider support files
+.idea

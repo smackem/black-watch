@@ -5,20 +5,22 @@ services:
         image: blackwatch-api
         restart: always
         build:
-            context: ./BlackWatch.Api
-            dockerfile: ./Dockerfile
+            context: .
+            dockerfile: ./BlackWatch.Api.Dockerfile
         ports:
-            - 6000:6000
+            - "6000:5000"
         depends_on:
             - cache
     daemon:
         image: blackwatch-daemon
         restart: always
         build:
-            context: ./BlackWatch.Daemon
-            dockerfile: ./Dockerfile
+            context: .
+            dockerfile: ./BlackWatch.Daemon.Dockerfile
         depends_on:
             - cache
+        environment:
+            - Redis__ConnectionString=cache:6379
     cache:
         image: redis:6.2.6-alpine
         restart: always

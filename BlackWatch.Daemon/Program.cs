@@ -2,10 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.StackExchangeRedis;
+using BlackWatch.Core;
+using BlackWatch.Core.Contracts;
+using BlackWatch.Core.Services;
+using BlackWatch.Daemon.Features.Polygon;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace BlackWatch.Daemon
 {
@@ -16,16 +19,19 @@ namespace BlackWatch.Daemon
             CreateHostBuilder(args).Build().Run();
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
+        private static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((ctx, services) =>
                 {
                     services.AddHostedService<Worker>();
-                    services.AddStackExchangeRedisCache(options =>
+                    services.AddSingleton<IDataStore>(sp =>
+                        new RedisDataStore(
+                            ctx.Configuration["Redis:ConnectionString"],
+                            sp.GetService<ILogger<RedisDataStore>>()!));
+                    services.AddHttpClient<IPolygonApiClient>(http =>
                     {
-                        options.Configuration = ctx.Configuration["Redis:ConnectionString"];
+                        http.BaseAddress = new Uri("https://api.polygon.io/v2");
                     });
-                    services.AddSingleton<IDistributedCache, RedisCache>();
                 });
     }
 }

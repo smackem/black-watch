@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlackWatch.Api", "BlackWatc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlackWatch.Daemon", "BlackWatch.Daemon\BlackWatch.Daemon.csproj", "{8E96F798-7C60-42D4-9FE9-9749DCB9856A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlackWatch.Core", "BlackWatch.Core\BlackWatch.Core.csproj", "{E0D55B78-2A3F-4AF8-889E-0F92E57D5954}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,5 +46,17 @@ Global
 		{8E96F798-7C60-42D4-9FE9-9749DCB9856A}.Release|x64.Build.0 = Release|Any CPU
 		{8E96F798-7C60-42D4-9FE9-9749DCB9856A}.Release|x86.ActiveCfg = Release|Any CPU
 		{8E96F798-7C60-42D4-9FE9-9749DCB9856A}.Release|x86.Build.0 = Release|Any CPU
+		{E0D55B78-2A3F-4AF8-889E-0F92E57D5954}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0D55B78-2A3F-4AF8-889E-0F92E57D5954}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0D55B78-2A3F-4AF8-889E-0F92E57D5954}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E0D55B78-2A3F-4AF8-889E-0F92E57D5954}.Debug|x64.Build.0 = Debug|Any CPU
+		{E0D55B78-2A3F-4AF8-889E-0F92E57D5954}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E0D55B78-2A3F-4AF8-889E-0F92E57D5954}.Debug|x86.Build.0 = Debug|Any CPU
+		{E0D55B78-2A3F-4AF8-889E-0F92E57D5954}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0D55B78-2A3F-4AF8-889E-0F92E57D5954}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0D55B78-2A3F-4AF8-889E-0F92E57D5954}.Release|x64.ActiveCfg = Release|Any CPU
+		{E0D55B78-2A3F-4AF8-889E-0F92E57D5954}.Release|x64.Build.0 = Release|Any CPU
+		{E0D55B78-2A3F-4AF8-889E-0F92E57D5954}.Release|x86.ActiveCfg = Release|Any CPU
+		{E0D55B78-2A3F-4AF8-889E-0F92E57D5954}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

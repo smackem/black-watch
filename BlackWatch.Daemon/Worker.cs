@@ -1,7 +1,8 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Distributed;
+using BlackWatch.Core;
+using BlackWatch.Core.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -11,25 +12,22 @@ namespace BlackWatch.Daemon
     public class Worker : BackgroundService
     {
         private readonly ILogger<Worker> _logger;
-        private readonly IConfiguration _configuration;
-        private readonly IDistributedCache _cache;
+        private readonly IDataStore _dataStore;
 
-        public Worker(ILogger<Worker> logger, IConfiguration configuration, IDistributedCache cache)
+        public Worker(ILogger<Worker> logger, IDataStore dataStore)
         {
             _logger = logger;
-            _configuration = configuration;
-            _cache = cache;
+            _dataStore = dataStore;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                _logger.LogInformation("Worker running at: {Time}, redis @ {RedisConnectionString}",
-                    DateTimeOffset.Now,
-                    _configuration["Redis:ConnectionString"]);
+                _logger.LogInformation("Worker running at: {Time}", DateTimeOffset.Now);
+                await _dataStore.SetQuoteAsync(new Quote("BTCUSD", 1000, 1100, 1150, 950, "USD", DateTimeOffset.Now));
+                await _dataStore.GetQuoteAsync("BTCUSD", DateTimeOffset.Now);
 
-                await _cache.SetStringAsync("BlackWatch:Ticks", Environment.TickCount.ToString(), stoppingToken);
                 await Task.Delay(1000, stoppingToken);
             }
         }

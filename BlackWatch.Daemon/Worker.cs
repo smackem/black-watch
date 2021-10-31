@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BlackWatch.Core;
 using BlackWatch.Core.Contracts;
+using BlackWatch.Daemon.Features.Polygon;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -13,11 +14,13 @@ namespace BlackWatch.Daemon
     {
         private readonly ILogger<Worker> _logger;
         private readonly IDataStore _dataStore;
+        private readonly IPolygonApiClient _polygon;
 
-        public Worker(ILogger<Worker> logger, IDataStore dataStore)
+        public Worker(ILogger<Worker> logger, IDataStore dataStore, IPolygonApiClient polygon)
         {
             _logger = logger;
             _dataStore = dataStore;
+            _polygon = polygon;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -25,10 +28,12 @@ namespace BlackWatch.Daemon
             while (!stoppingToken.IsCancellationRequested)
             {
                 _logger.LogInformation("Worker running at: {Time}", DateTimeOffset.Now);
+                var x = await _polygon.GetGroupedDailyCryptoPrices(DateTimeOffset.Now.AddDays(-1));
+                _logger.LogDebug("{Response}", x);
                 await _dataStore.SetQuoteAsync(new Quote("BTCUSD", 1000, 1100, 1150, 950, "USD", DateTimeOffset.Now));
                 await _dataStore.GetQuoteAsync("BTCUSD", DateTimeOffset.Now);
 
-                await Task.Delay(1000, stoppingToken);
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
             }
         }
     }

@@ -28,9 +28,9 @@ namespace BlackWatch.Daemon
                         new RedisDataStore(
                             ctx.Configuration["Redis:ConnectionString"],
                             sp.GetService<ILogger<RedisDataStore>>()!));
-                    services.AddHttpClient<IPolygonApiClient>(http =>
+                    services.AddHttpClient<IPolygonApiClient, PolygonApiClient>(http =>
                     {
-                        http.BaseAddress = new Uri("https://api.polygon.io/v2");
+                        http.BaseAddress = new Uri("https://api.polygon.io/v2/");
                     });
                 });
     }

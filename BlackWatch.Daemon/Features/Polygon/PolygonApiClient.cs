@@ -27,7 +27,7 @@ namespace BlackWatch.Daemon.Features.Polygon
             var response = await _http.GetFromJsonAsync<GroupedDailyCryptoPricesResponse>(path,
                     new JsonSerializerOptions
                     {
-                        PropertyNamingPolicy = null,
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                     });
             return response!;
         }

@@ -8,7 +8,7 @@ namespace BlackWatch.Daemon.Features.Polygon
         string Status,
         string RequestId,
         int Count,
-        IEnumerable<GroupedDailyCryptoPriceResult> Results);
+        IReadOnlyCollection<GroupedDailyCryptoPriceResult> Results);
 
     public record GroupedDailyCryptoPriceResult(
         [property: JsonPropertyName("T")] string Symbol,

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,15 +24,35 @@ namespace BlackWatch.Core.Services
             _logger = logger;
         }
 
+        public async Task InsertTrackers(IEnumerable<Tracker> trackers)
+        {
+            var db = await GetDatabaseAsync().Linger();
+            var entries = trackers
+                .Select(t => new HashEntry(t.Symbol, JsonSerializer.SerializeToUtf8Bytes(t)))
+                .ToArray();
+            await db.HashSetAsync(RedisKeys.Trackers, entries).Linger();
+        }
+
+        public async Task<Tracker[]> GetTrackers()
+        {
+            var db = await GetDatabaseAsync().Linger();
+            var entries = await db.HashValuesAsync(RedisKeys.Trackers);
+            return entries
+                .Where(e => e.HasValue)
+                .Select(e => JsonSerializer.Deserialize<Tracker>((byte[]) e)!)
+                .ToArray();
+        }
+
         public async Task<Quote?> GetQuoteAsync(string symbol, DateTimeOffset date)
         {
-            var db = await GetDatabaseAsync();
-            var key = GetSymbolKey(symbol, date);
-            var value = await db.HashGetAsync(RedisKeys.Symbols, key);
+            var db = await GetDatabaseAsync().Linger();
+            var key = GetDateKey(date);
+            var hash = RedisKeys.Quotes.Append(symbol);
+            var value = await db.HashGetAsync(hash, key).Linger();
 
             if (value.HasValue == false)
             {
-                _logger.LogWarning("no quote found for symbol: {Key}", key);
+                _logger.LogWarning("no quote found @{Hash}[{Date}]", hash, key);
                 return null;
             }
 
@@ -40,11 +62,12 @@ namespace BlackWatch.Core.Services
 
         public async Task SetQuoteAsync(Quote quote)
         {
-            var db = await GetDatabaseAsync();
+            var db = await GetDatabaseAsync().Linger();
             var value = JsonSerializer.SerializeToUtf8Bytes(quote);
-            var key = GetSymbolKey(quote.Symbol, quote.Date);
-            await db.HashSetAsync(RedisKeys.Symbols, key, value);
-            _logger.LogDebug("quote set for symbol: {Symbol}", quote.Symbol);
+            var hash = RedisKeys.Quotes.Append(quote.Symbol);
+            var key = GetDateKey(quote.Date);
+            await db.HashSetAsync(hash, key, value).Linger();
+            _logger.LogDebug("quote set @{Hash}[{Date}]", hash, key);
         }
 
         public void Dispose()
@@ -53,7 +76,7 @@ namespace BlackWatch.Core.Services
             GC.SuppressFinalize(this);
         }
 
-        private static RedisValue GetSymbolKey(string symbol, DateTimeOffset date) => $"{symbol}:{date:yyyy-MM-dd}";
+        private static RedisValue GetDateKey(DateTimeOffset date) => $"{date:yyyy-MM-dd}";
 
         private async Task<IDatabaseAsync> GetDatabaseAsync()
         {
@@ -79,7 +102,8 @@ namespace BlackWatch.Core.Services
 
         private static class RedisKeys
         {
-            public static readonly RedisKey Symbols = new("black-watch:symbols");
+            public static readonly RedisKey Trackers = new("black-watch:symbols");
+            public static readonly RedisKey Quotes = new("black-watch:quotes");
         }
     }
 }

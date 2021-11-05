@@ -28,8 +28,11 @@ namespace BlackWatch.Daemon
             while (!stoppingToken.IsCancellationRequested)
             {
                 _logger.LogInformation("Worker running at: {Time}", DateTimeOffset.Now);
-                var x = await _polygon.GetGroupedDailyCryptoPrices(DateTimeOffset.Now.AddDays(-1));
+                var x = await _polygon.GetGroupedDailyCryptoPricesAsync(DateTimeOffset.Now.AddDays(-1));
                 _logger.LogDebug("{Response}", x);
+                var now = DateTimeOffset.Now;
+                var y = await _polygon.GetAggregateCryptoPricesAsync("X:BTCUSD", now.AddDays(-100), now);
+                _logger.LogDebug("{Response}", y);
                 await _dataStore.SetQuoteAsync(new Quote("BTCUSD", 1000, 1100, 1150, 950, "USD", DateTimeOffset.Now));
                 await _dataStore.GetQuoteAsync("BTCUSD", DateTimeOffset.Now);
 

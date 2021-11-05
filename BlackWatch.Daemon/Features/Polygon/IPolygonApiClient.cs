@@ -5,6 +5,7 @@ namespace BlackWatch.Daemon.Features.Polygon
 {
     public interface IPolygonApiClient
     {
-        Task<GroupedDailyCryptoPricesResponse> GetGroupedDailyCryptoPrices(DateTimeOffset date);
+        Task<GroupedDailyCurrencyPricesResponse> GetGroupedDailyCryptoPricesAsync(DateTimeOffset date);
+        Task<AggregateCurrencyPricesResponse> GetAggregateCryptoPricesAsync(string symbol, DateTimeOffset fromDate, DateTimeOffset toDate);
     }
 }

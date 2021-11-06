@@ -9,7 +9,7 @@ namespace BlackWatch.Core.Test.Util
     {
         public static IDisposable Redirect(ITestOutputHelper @out)
         {
-            return new Redirector(@out);
+            return new Redirection(@out);
         }
 
         private class Writer : TextWriter
@@ -39,11 +39,11 @@ namespace BlackWatch.Core.Test.Util
             }
         }
 
-        private class Redirector : IDisposable
+        private class Redirection : IDisposable
         {
             private readonly TextWriter _oldOut;
 
-            public Redirector(ITestOutputHelper @out)
+            public Redirection(ITestOutputHelper @out)
             {
                 _oldOut = Console.Out;
                 Console.SetOut(new Writer(@out));

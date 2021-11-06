@@ -360,3 +360,5 @@ redis-data
 
 # rider support files
 .idea
+
+**/appsettings.Development.json

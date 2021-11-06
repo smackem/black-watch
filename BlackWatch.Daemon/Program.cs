@@ -24,14 +24,18 @@ namespace BlackWatch.Daemon
                 .ConfigureServices((ctx, services) =>
                 {
                     services.AddHostedService<Worker>();
-                    services.AddSingleton<IDataStore>(sp =>
-                        new RedisDataStore(
-                            ctx.Configuration["Redis:ConnectionString"],
-                            sp.GetService<ILogger<RedisDataStore>>()!));
                     services.AddHttpClient<IPolygonApiClient, PolygonApiClient>(http =>
                     {
                         http.BaseAddress = new Uri("https://api.polygon.io/v2/");
                     });
+                    services.AddSingleton<IDataStore>(sp =>
+                        new RedisDataStore(
+                            ctx.Configuration["Redis:ConnectionString"],
+                            sp.GetService<ILogger<RedisDataStore>>()!));
+                    services.AddSingleton(sp =>
+                        new JobQueue(
+                            int.Parse(ctx.Configuration["Polygon:MaxRequestsPerMinute"]),
+                            sp.GetService<ILogger<JobQueue>>()!));
                 });
     }
 }

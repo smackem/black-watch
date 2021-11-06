@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace BlackWatch.Core.Util
 {
-    public class ThrottledQueue<T>
+    public class ThrottlingQueue<T>
     {
         private readonly Channel<T> _channel;
         private DateTime? _lastYieldTime;
         private int _yieldCount;
 
-        public ThrottledQueue(TimeSpan timeFrame, int maxItemsPerTimeFrame, int? limit = null)
+        public ThrottlingQueue(TimeSpan timeFrame, int maxItemsPerTimeFrame, int? limit = null)
         {
             if (timeFrame <= TimeSpan.Zero)
             {
@@ -36,14 +36,29 @@ namespace BlackWatch.Core.Util
         public TimeSpan TimeFrame { get; }
         public int MaxItemsPerTimeFrame { get; }
 
-        public bool TryEnqueue(T item)
+        public ValueTask<bool> EnqueueAsync(T item, CancellationToken ct = default)
         {
-            return _channel.Writer.TryWrite(item);
+            async ValueTask<bool> AsyncPath()
+            {
+                try
+                {
+                    await _channel.Writer.WriteAsync(item, ct).Linger();
+                }
+                catch (ChannelClosedException)
+                {
+                    return false;
+                }
+                return true;
+            }
+
+            return _channel.Writer.TryWrite(item)
+                ? ValueTask.FromResult(true)
+                : AsyncPath();
         }
 
         public void Complete()
         {
-            _channel.Writer.Complete();
+            _channel.Writer.TryComplete(); // only returns false if channel is already complete => ignore result
         }
 
         public async IAsyncEnumerable<T> DequeueAllAsync([EnumeratorCancellation] CancellationToken ct = default)
@@ -53,26 +68,25 @@ namespace BlackWatch.Core.Util
                 T item;
                 try
                 {
-                    item = await _channel.Reader.ReadAsync(ct);
+                    item = await _channel.Reader.ReadAsync(ct).Linger();
                 }
                 catch (ChannelClosedException)
                 {
                     break;
                 }
 
-                await Throttle(ct);
+                await Throttle(ct).Linger();
 
                 yield return item;
             }
         }
 
-        private async Task Throttle(CancellationToken ct)
+        private async ValueTask Throttle(CancellationToken ct)
         {
             var now = DateTime.Now;
 
             if (_lastYieldTime == null)
             {
-                Console.WriteLine("A");
                 _lastYieldTime = now;
                 _yieldCount = 1;
                 return;
@@ -80,7 +94,6 @@ namespace BlackWatch.Core.Util
 
             if (_yieldCount < MaxItemsPerTimeFrame)
             {
-                Console.WriteLine("B");
                 _yieldCount++;
                 return;
             }
@@ -88,8 +101,7 @@ namespace BlackWatch.Core.Util
             var elapsed = now - _lastYieldTime.Value;
             if (elapsed < TimeFrame)
             {
-                Console.WriteLine("C");
-                await Task.Delay(TimeFrame.Subtract(elapsed), ct);
+                await Task.Delay(TimeFrame - elapsed, ct).Linger();
                 _lastYieldTime = DateTime.Now;
                 _yieldCount = 1;
             }

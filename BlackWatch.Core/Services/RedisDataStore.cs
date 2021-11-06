@@ -24,7 +24,7 @@ namespace BlackWatch.Core.Services
             _logger = logger;
         }
 
-        public async Task InsertTrackers(IEnumerable<Tracker> trackers)
+        public async Task InsertTrackersAsync(IEnumerable<Tracker> trackers)
         {
             var db = await GetDatabaseAsync().Linger();
             var entries = trackers
@@ -33,7 +33,7 @@ namespace BlackWatch.Core.Services
             await db.HashSetAsync(RedisKeys.Trackers, entries).Linger();
         }
 
-        public async Task<Tracker[]> GetTrackers()
+        public async Task<Tracker[]> GetTrackersAsync()
         {
             var db = await GetDatabaseAsync().Linger();
             var entries = await db.HashValuesAsync(RedisKeys.Trackers);

@@ -30,6 +30,7 @@ namespace BlackWatch.Daemon.Features.Polygon
         [property: JsonPropertyName("o")] decimal Open,
         [property: JsonPropertyName("c")] decimal Close,
         [property: JsonPropertyName("h")] decimal High,
+        [property: JsonPropertyName("l")] decimal Low,
         [property: JsonPropertyName("t")] long Timestamp,
         [property: JsonPropertyName("n")] long TransactionCount);
 }

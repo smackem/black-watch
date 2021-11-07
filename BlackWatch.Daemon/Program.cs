@@ -6,6 +6,7 @@ using BlackWatch.Core;
 using BlackWatch.Core.Contracts;
 using BlackWatch.Core.Services;
 using BlackWatch.Daemon.Features.Polygon;
+using BlackWatch.Daemon.Jobs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,7 @@ namespace BlackWatch.Daemon
     {
         public static void Main(string[] args)
         {
+            AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
             CreateHostBuilder(args).Build().Run();
         }
 
@@ -26,7 +28,7 @@ namespace BlackWatch.Daemon
                     services.AddHostedService<Worker>();
                     services.AddHttpClient<IPolygonApiClient, PolygonApiClient>(http =>
                     {
-                        http.BaseAddress = new Uri("https://api.polygon.io/v2/");
+                        http.BaseAddress = new Uri(ctx.Configuration["Polygon:BaseAddress"]);
                     });
                     services.AddSingleton<IDataStore>(sp =>
                         new RedisDataStore(
@@ -37,5 +39,10 @@ namespace BlackWatch.Daemon
                             int.Parse(ctx.Configuration["Polygon:MaxRequestsPerMinute"]),
                             sp.GetService<ILogger<JobQueue>>()!));
                 });
+
+        private static void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            Console.WriteLine($"!!! unhandled exception: ${e.ExceptionObject}");
+        }
     }
 }

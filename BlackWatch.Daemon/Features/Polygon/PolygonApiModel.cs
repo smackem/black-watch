@@ -8,7 +8,7 @@ namespace BlackWatch.Daemon.Features.Polygon
         string Status,
         string RequestId,
         int Count,
-        IReadOnlyCollection<GroupedDailyCurrencyPriceResult> Results);
+        IReadOnlyCollection<GroupedDailyCurrencyPriceResult>? Results);
 
     public record GroupedDailyCurrencyPriceResult(
         [property: JsonPropertyName("T")] string Symbol,
@@ -23,7 +23,7 @@ namespace BlackWatch.Daemon.Features.Polygon
         string RequestId,
         int Count,
         string Ticker,
-        IReadOnlyCollection<AggregateCurrencyPriceResult> Results);
+        IReadOnlyCollection<AggregateCurrencyPriceResult>? Results);
 
     public record AggregateCurrencyPriceResult(
         [property: JsonPropertyName("v")] decimal Volume,

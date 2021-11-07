@@ -6,16 +6,17 @@ using System.Threading.Tasks;
 using BlackWatch.Core.Util;
 using Microsoft.Extensions.Logging;
 
-namespace BlackWatch.Daemon
+namespace BlackWatch.Daemon.Jobs
 {
     public class JobQueue
     {
         private readonly ThrottlingQueue<Job> _queue;
         private readonly ILogger<JobQueue> _logger;
+        private int _queueSize;
 
         public JobQueue(int maxJobsPerMinute, ILogger<JobQueue> logger)
         {
-            _queue = new ThrottlingQueue<Job>(TimeSpan.FromMinutes(1), maxJobsPerMinute);
+            _queue = new ThrottlingQueue<Job>(TimeSpan.FromSeconds(65), maxJobsPerMinute);
             _logger = logger;
         }
 
@@ -23,15 +24,20 @@ namespace BlackWatch.Daemon
         {
             await foreach (var job in _queue.DequeueAllAsync(ct))
             {
-                _logger.LogDebug("dequeued job: {Job}", job);
+                Interlocked.Decrement(ref _queueSize);
+                _logger.LogDebug("dequeued job: {Job} => queue size is {QueueSize}", job, _queueSize);
                 yield return job;
             }
         }
 
         public async Task EnqueueAsync(Job job, CancellationToken ct)
         {
-            _logger.LogDebug("enqueuing job: {Job}", job);
-            if (await _queue.EnqueueAsync(job, ct) == false)
+            if (await _queue.EnqueueAsync(job, ct))
+            {
+                Interlocked.Increment(ref _queueSize);
+                _logger.LogDebug("enqueued job: {Job} => queue size is {QueueSize}", job, _queueSize);
+            }
+            else
             {
                 _logger.LogWarning("failed to enqueue job: {Job}", job);
             }

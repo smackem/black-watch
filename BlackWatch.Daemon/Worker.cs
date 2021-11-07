@@ -58,7 +58,7 @@ namespace BlackWatch.Daemon
 
             await RunJobQueue(_jobQueue.DequeueAsync(stoppingToken), stoppingToken);
 
-            while (!stoppingToken.IsCancellationRequested)
+            while (stoppingToken.IsCancellationRequested == false)
             {
                 // _logger.LogInformation("Worker running at: {Time}", DateTimeOffset.Now);
                 // var now = DateTimeOffset.Now;

@@ -78,7 +78,7 @@ namespace BlackWatch.Core.Services
 
         private static RedisValue GetDateKey(DateTimeOffset date) => $"{date:yyyy-MM-dd}";
 
-        private async Task<IDatabaseAsync> GetDatabaseAsync()
+        private async Task<IDatabase> GetDatabaseAsync()
         {
             if (_redis == null)
             {

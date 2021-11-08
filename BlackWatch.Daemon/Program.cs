@@ -18,6 +18,7 @@ namespace BlackWatch.Daemon
         public static void Main(string[] args)
         {
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+            TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
             CreateHostBuilder(args).Build().Run();
         }
 
@@ -25,7 +26,9 @@ namespace BlackWatch.Daemon
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((ctx, services) =>
                 {
-                    services.AddHostedService<Worker>();
+                    services.AddHostedService<JobExecutionWorker>();
+                    services.AddHostedService<TrackerDownloadWorker>();
+                    services.AddHostedService<QuoteDownloadWorker>();
                     services.AddHttpClient<IPolygonApiClient, PolygonApiClient>(http =>
                     {
                         http.BaseAddress = new Uri(ctx.Configuration["Polygon:BaseAddress"]);
@@ -39,6 +42,11 @@ namespace BlackWatch.Daemon
                             int.Parse(ctx.Configuration["Polygon:MaxRequestsPerMinute"]),
                             sp.GetService<ILogger<JobQueue>>()!));
                 });
+
+        private static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+        {
+            Console.WriteLine($"!!! unhandled exception: ${e.Exception}");
+        }
 
         private static void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {

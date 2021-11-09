@@ -13,5 +13,13 @@ namespace BlackWatch.Core.Contracts
         public Task<Quote?> GetQuoteAsync(string symbol, DateTimeOffset date);
 
         public Task SetQuoteAsync(Quote quote);
+
+        public Task<long> EnqueueJobAsync(IEnumerable<JobInfo> jobs);
+
+        public Task EnqueueJobAsync(JobInfo job);
+
+        public Task<JobInfo[]> DequeueJobsAsync(int count);
+
+        public Task<long> GetJobQueueLengthAsync();
     }
 }

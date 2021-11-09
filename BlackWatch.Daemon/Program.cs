@@ -1,15 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using BlackWatch.Core;
 using BlackWatch.Core.Contracts;
 using BlackWatch.Core.Services;
 using BlackWatch.Daemon.Features.Polygon;
-using BlackWatch.Daemon.Jobs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace BlackWatch.Daemon
 {
@@ -26,21 +21,16 @@ namespace BlackWatch.Daemon
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((ctx, services) =>
                 {
+                    services.Configure<JobExecutionSettings>(ctx.Configuration.GetSection("JobExecution"));
+                    services.Configure<RedisSettings>(ctx.Configuration.GetSection("Redis"));
+
                     services.AddHostedService<JobExecutionWorker>();
-                    services.AddHostedService<TrackerDownloadWorker>();
-                    services.AddHostedService<QuoteDownloadWorker>();
+                    services.AddHostedService<JobSchedulingWorker>();
                     services.AddHttpClient<IPolygonApiClient, PolygonApiClient>(http =>
                     {
                         http.BaseAddress = new Uri(ctx.Configuration["Polygon:BaseAddress"]);
                     });
-                    services.AddSingleton<IDataStore>(sp =>
-                        new RedisDataStore(
-                            ctx.Configuration["Redis:ConnectionString"],
-                            sp.GetService<ILogger<RedisDataStore>>()!));
-                    services.AddSingleton(sp =>
-                        new JobQueue(
-                            int.Parse(ctx.Configuration["Polygon:MaxRequestsPerMinute"]),
-                            sp.GetService<ILogger<JobQueue>>()!));
+                    services.AddSingleton<IDataStore, RedisDataStore>();
                 });
 
         private static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)

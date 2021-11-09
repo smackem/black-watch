@@ -8,13 +8,13 @@ using Microsoft.Extensions.Logging;
 
 namespace BlackWatch.Daemon.Jobs
 {
-    public class JobQueue
+    public class InMemoryJobQueue
     {
         private readonly ThrottlingQueue<Job> _queue;
-        private readonly ILogger<JobQueue> _logger;
+        private readonly ILogger<InMemoryJobQueue> _logger;
         private int _queueSize;
 
-        public JobQueue(int maxJobsPerMinute, ILogger<JobQueue> logger)
+        public InMemoryJobQueue(int maxJobsPerMinute, ILogger<InMemoryJobQueue> logger)
         {
             _queue = new ThrottlingQueue<Job>(TimeSpan.FromSeconds(65), maxJobsPerMinute);
             _logger = logger;

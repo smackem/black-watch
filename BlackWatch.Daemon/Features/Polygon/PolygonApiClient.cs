@@ -49,7 +49,7 @@ namespace BlackWatch.Daemon.Features.Polygon
         {
             var options = new JsonSerializerOptions
             {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             };
 
             return _http.GetFromJsonAsync<T>(path, options);

@@ -1,27 +1,34 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace BlackWatch.Daemon.Jobs
 {
-    public class Job
+    public abstract class Job
     {
-        private readonly Func<JobExecutionContext, Task<JobExecutionResult>> _action;
         private readonly string _moniker;
 
-        public Job(string moniker, Func<JobExecutionContext, Task<JobExecutionResult>> action)
+        protected Job(string moniker)
         {
             _moniker = moniker;
-            _action = action;
         }
 
-        public Task<JobExecutionResult> ExecuteAsync(JobExecutionContext ctx)
-        {
-            return _action(ctx);
-        }
+        public abstract Task<JobExecutionResult> ExecuteAsync(JobExecutionContext ctx);
 
         public override string ToString()
         {
             return $"Job[{_moniker}]";
+        }
+    }
+
+    public class NopJob : Job
+    {
+        public NopJob() : base("nop") { }
+
+        public override Task<JobExecutionResult> ExecuteAsync(JobExecutionContext ctx)
+        {
+            ctx.Logger.LogWarning("executing nop job");
+            return Task.FromResult(JobExecutionResult.Ok);
         }
     }
 }

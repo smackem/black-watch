@@ -15,23 +15,23 @@ namespace BlackWatch.Daemon
         private readonly ILogger<JobExecutionWorker> _logger;
         private readonly IDataStore _dataStore;
         private readonly IPolygonApiClient _polygon;
-        private readonly JobExecutionSettings _settings;
+        private readonly JobExecutionConfig _config;
 
         public JobExecutionWorker(ILogger<JobExecutionWorker> logger, IDataStore dataStore, IPolygonApiClient polygon,
-            IOptions<JobExecutionSettings> settings)
+            IOptions<JobExecutionConfig> options)
         : base(logger)
         {
             _logger = logger;
             _dataStore = dataStore;
             _polygon = polygon;
-            _settings = ValidateSettings(settings.Value);
+            _config = options.Value;
         }
 
         protected override async Task ExecuteOverrideAsync(CancellationToken stoppingToken)
         {
             while (stoppingToken.IsCancellationRequested == false)
             {
-                var jobInfos = await _dataStore.DequeueJobsAsync(_settings.MaxJobsPerMinute);
+                var jobInfos = await _dataStore.DequeueJobsAsync(_config.MaxJobsPerMinute);
                 var jobs = jobInfos.Select(info => (BuildJob(info), info));
                 var ctx = new JobExecutionContext(_logger)
                 {
@@ -56,17 +56,6 @@ namespace BlackWatch.Daemon
             _logger.LogInformation("job execution stopped");
         }
 
-        private JobExecutionSettings ValidateSettings(JobExecutionSettings settings)
-        {
-            if (settings.MaxJobsPerMinute <= 0)
-            {
-                _logger.LogError("max jobs per minute must be > 0, but is {MaxJobsPerMinute}", _settings.MaxJobsPerMinute);
-                throw new ArgumentException($"max jobs per minute must be > 0, but is {_settings.MaxJobsPerMinute}");
-            }
-
-            return settings;
-        }
-
         private static LogLevel GetLogLevel(JobExecutionResult result)
         {
             return result switch
@@ -84,7 +73,7 @@ namespace BlackWatch.Daemon
             {
                 { AggregateCrypto: not null } => new QuoteDownloadJob(jobInfo.AggregateCrypto, _dataStore, _polygon),
                 { DailyGroupedCrypto: not null } => new TrackerDownloadJob(jobInfo.DailyGroupedCrypto, _dataStore, _polygon),
-                var info when info == JobInfo.Nop => new NopJob(),
+                var info when info == JobInfo.Nop => NopJob.Instance,
                 _ => throw new ArgumentException($"unkown kind of job: {jobInfo}"),
             };
         }
@@ -127,8 +116,11 @@ namespace BlackWatch.Daemon
                     return JobExecutionResult.Retry;
                 }
 
+                var currency = GetCryptoQuoteCurrency(_info.Symbol);
                 var quotes = prices.Results
-                    .Select(p => new Quote(_info.Symbol, p.Open, p.Close, p.High, 0, "", DateTimeOffset.FromUnixTimeMilliseconds(p.Timestamp)));
+                    .Select(p => new Quote(
+                        _info.Symbol, p.Open, p.Close, p.High, 0, currency,
+                        DateTimeOffset.FromUnixTimeMilliseconds(p.Timestamp)));
 
                 foreach (var quote in quotes)
                 {
@@ -137,8 +129,13 @@ namespace BlackWatch.Daemon
 
                 return JobExecutionResult.Ok;
             }
+
+            private static string GetCryptoQuoteCurrency(string symbol)
+            {
+                return symbol.Length > 3 ? symbol[^3..] : string.Empty;
+            }
         }
-        
+
         private class TrackerDownloadJob : Job
         {
             private readonly DailyGroupedCryptoJob _info;
@@ -158,7 +155,7 @@ namespace BlackWatch.Daemon
                 GroupedDailyCurrencyPricesResponse trackerPrices;
                 try
                 {
-                    trackerPrices = await _polygon.GetGroupedDailyCryptoPricesAsync(DateTimeOffset.Now.AddDays(-1));
+                    trackerPrices = await _polygon.GetGroupedDailyCryptoPricesAsync(_info.Date);
                 }
                 catch (Exception e)
                 {

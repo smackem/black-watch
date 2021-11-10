@@ -21,8 +21,12 @@ namespace BlackWatch.Daemon
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((ctx, services) =>
                 {
-                    services.Configure<JobExecutionSettings>(ctx.Configuration.GetSection("JobExecution"));
-                    services.Configure<RedisSettings>(ctx.Configuration.GetSection("Redis"));
+                    services.AddOptions<JobExecutionConfig>()
+                        .Bind(ctx.Configuration.GetSection("JobExecution"))
+                        .ValidateDataAnnotations();
+                    services.AddOptions<RedisConfig>()
+                        .Bind(ctx.Configuration.GetSection("Redis"))
+                        .ValidateDataAnnotations();
 
                     services.AddHostedService<JobExecutionWorker>();
                     services.AddHostedService<JobSchedulingWorker>();

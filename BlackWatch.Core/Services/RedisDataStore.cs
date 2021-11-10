@@ -16,16 +16,16 @@ namespace BlackWatch.Core.Services
     {
         private readonly ILogger<RedisDataStore> _logger;
         private readonly SemaphoreSlim _semaphore = new(1);
-        private readonly RedisSettings _settings;
+        private readonly RedisConfig _config;
         private volatile ConnectionMultiplexer? _redis;
         private static readonly JsonSerializerOptions SerializerOptions = new()
         {
             IgnoreNullValues = true,
         };
 
-        public RedisDataStore(ILogger<RedisDataStore> logger, IOptions<RedisSettings> settings)
+        public RedisDataStore(ILogger<RedisDataStore> logger, IOptions<RedisConfig> options)
         {
-            _settings = ValidateSettings(settings.Value);
+            _config = options.Value;
             _logger = logger;
         }
 
@@ -115,16 +115,6 @@ namespace BlackWatch.Core.Services
             GC.SuppressFinalize(this);
         }
 
-        private static RedisSettings ValidateSettings(RedisSettings settings)
-        {
-            if (string.IsNullOrWhiteSpace(settings.ConnectionString))
-            {
-                throw new ArgumentException("redis connection string must not be empty");
-            }
-
-            return settings;
-        }
-
         private static RedisValue GetDateKey(DateTimeOffset date) => $"{date:yyyy-MM-dd}";
 
         private async Task<IDatabase> GetDatabaseAsync()
@@ -137,7 +127,7 @@ namespace BlackWatch.Core.Services
 
                     if (_redis == null)
                     {
-                        _redis = await ConnectionMultiplexer.ConnectAsync(_settings.ConnectionString).Linger();
+                        _redis = await ConnectionMultiplexer.ConnectAsync(_config.ConnectionString).Linger();
                     }
                 }
                 finally

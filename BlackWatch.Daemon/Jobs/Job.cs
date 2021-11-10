@@ -23,7 +23,9 @@ namespace BlackWatch.Daemon.Jobs
 
     public class NopJob : Job
     {
-        public NopJob() : base("nop") { }
+        private NopJob() : base("nop") { }
+
+        public static Job Instance { get; } = new NopJob();
 
         public override Task<JobExecutionResult> ExecuteAsync(JobExecutionContext ctx)
         {

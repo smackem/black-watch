@@ -4,21 +4,23 @@ using System.Threading;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
 using BlackWatch.Core.Util;
-using BlackWatch.Daemon.Features.Polygon;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace BlackWatch.Daemon
 {
-    public class JobSchedulingWorker : WorkerBase
+    public class JobScheduler : WorkerBase
     {
-        private readonly ILogger<JobSchedulingWorker> _logger;
+        private readonly ILogger<JobScheduler> _logger;
         private readonly IDataStore _dataStore;
+        private readonly JobSchedulerOptions _options;
 
-        public JobSchedulingWorker(ILogger<JobSchedulingWorker> logger, IDataStore dataStore, IPolygonApiClient polygon)
+        public JobScheduler(ILogger<JobScheduler> logger, IDataStore dataStore, IOptions<JobSchedulerOptions> options)
             : base(logger)
         {
             _logger = logger;
             _dataStore = dataStore;
+            _options = options.Value;
         }
 
         protected override async Task ExecuteOverrideAsync(CancellationToken stoppingToken)
@@ -30,7 +32,7 @@ namespace BlackWatch.Daemon
             {
                 _logger.LogInformation("getting quotes");
                 var trackers = await _dataStore.GetTrackersAsync();
-                var (from, to) = DateRange.DaysUntilToday(10);
+                var (from, to) = DateRange.DaysUntilToday(_options.QuoteHistoryDays);
                 await _dataStore.EnqueueJobAsync(trackers.Select(t =>
                     JobInfo.GetAggregateCrypto(new AggregateCryptoJob(t.Symbol, from, to))));
 

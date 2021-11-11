@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using BlackWatch.Core.Util;
 using Microsoft.Extensions.Logging;
 
-namespace BlackWatch.Daemon.Jobs
+namespace BlackWatch.Daemon.JobEngine
 {
     public class InMemoryJobQueue
     {

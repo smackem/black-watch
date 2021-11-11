@@ -16,16 +16,16 @@ namespace BlackWatch.Core.Services
     {
         private readonly ILogger<RedisDataStore> _logger;
         private readonly SemaphoreSlim _semaphore = new(1);
-        private readonly RedisConfig _config;
+        private readonly RedisOptions _options;
         private volatile ConnectionMultiplexer? _redis;
         private static readonly JsonSerializerOptions SerializerOptions = new()
         {
             IgnoreNullValues = true,
         };
 
-        public RedisDataStore(ILogger<RedisDataStore> logger, IOptions<RedisConfig> options)
+        public RedisDataStore(ILogger<RedisDataStore> logger, IOptions<RedisOptions> options)
         {
-            _config = options.Value;
+            _options = options.Value;
             _logger = logger;
         }
 
@@ -86,7 +86,7 @@ namespace BlackWatch.Core.Services
         {
             var db = await GetDatabaseAsync().Linger();
             var key = GetDateKey(date);
-            var hash = RedisKeys.Quotes.Join(symbol);
+            var hash = RedisKeys.DailyQuotes.Join(symbol);
             var value = await db.HashGetAsync(hash, key).Linger();
 
             if (value.HasValue == false)
@@ -103,7 +103,7 @@ namespace BlackWatch.Core.Services
         {
             var db = await GetDatabaseAsync().Linger();
             var value = Serialize(quote);
-            var hash = RedisKeys.Quotes.Join(quote.Symbol);
+            var hash = RedisKeys.DailyQuotes.Join(quote.Symbol);
             var key = GetDateKey(quote.Date);
             await db.HashSetAsync(hash, key, value).Linger();
             _logger.LogDebug("quote set @{Hash}[{Date}]", hash, key);
@@ -127,7 +127,7 @@ namespace BlackWatch.Core.Services
 
                     if (_redis == null)
                     {
-                        _redis = await ConnectionMultiplexer.ConnectAsync(_config.ConnectionString).Linger();
+                        _redis = await ConnectionMultiplexer.ConnectAsync(_options.ConnectionString).Linger();
                     }
                 }
                 finally
@@ -151,8 +151,8 @@ namespace BlackWatch.Core.Services
 
         private static class RedisKeys
         {
-            public static readonly RedisKey Trackers = new("black-watch:symbols");
-            public static readonly RedisKey Quotes = new("black-watch:quotes");
+            public static readonly RedisKey Trackers = new("black-watch:trackers");
+            public static readonly RedisKey DailyQuotes = new("black-watch:quotes:daily");
             public static readonly RedisKey Jobs = new("black-watch:jobs");
         }
     }

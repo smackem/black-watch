@@ -1,4 +1,4 @@
-namespace BlackWatch.Daemon.Jobs
+namespace BlackWatch.Daemon.JobEngine
 {
     public enum JobExecutionResult
     {

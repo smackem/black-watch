@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace BlackWatch.Core.Services
 {
-    public class RedisConfig
+    public class RedisOptions
     {
         [Required]
         public string ConnectionString { get; set; } = string.Empty;

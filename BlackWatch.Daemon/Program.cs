@@ -21,15 +21,15 @@ namespace BlackWatch.Daemon
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((ctx, services) =>
                 {
-                    services.AddOptions<JobExecutionConfig>()
+                    services.AddOptions<JobExecutorOptions>()
                         .Bind(ctx.Configuration.GetSection("JobExecution"))
                         .ValidateDataAnnotations();
-                    services.AddOptions<RedisConfig>()
+                    services.AddOptions<RedisOptions>()
                         .Bind(ctx.Configuration.GetSection("Redis"))
                         .ValidateDataAnnotations();
 
-                    services.AddHostedService<JobExecutionWorker>();
-                    services.AddHostedService<JobSchedulingWorker>();
+                    services.AddHostedService<JobExecutor>();
+                    services.AddHostedService<JobScheduler>();
                     services.AddHttpClient<IPolygonApiClient, PolygonApiClient>(http =>
                     {
                         http.BaseAddress = new Uri(ctx.Configuration["Polygon:BaseAddress"]);

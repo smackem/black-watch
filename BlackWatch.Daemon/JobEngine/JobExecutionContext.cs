@@ -1,7 +1,7 @@
 using System.Threading;
 using Microsoft.Extensions.Logging;
 
-namespace BlackWatch.Daemon.Jobs
+namespace BlackWatch.Daemon.JobEngine
 {
     public class JobExecutionContext
     {

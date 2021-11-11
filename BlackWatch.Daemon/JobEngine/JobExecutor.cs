@@ -4,21 +4,21 @@ using System.Threading;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
 using BlackWatch.Daemon.Features.Polygon;
-using BlackWatch.Daemon.Jobs;
+using BlackWatch.Daemon.JobEngine;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace BlackWatch.Daemon
 {
-    public class JobExecutionWorker : WorkerBase
+    public class JobExecutor : WorkerBase
     {
-        private readonly ILogger<JobExecutionWorker> _logger;
+        private readonly ILogger<JobExecutor> _logger;
         private readonly IDataStore _dataStore;
         private readonly IPolygonApiClient _polygon;
-        private readonly JobExecutionConfig _config;
+        private readonly JobExecutorOptions _config;
 
-        public JobExecutionWorker(ILogger<JobExecutionWorker> logger, IDataStore dataStore, IPolygonApiClient polygon,
-            IOptions<JobExecutionConfig> options)
+        public JobExecutor(ILogger<JobExecutor> logger, IDataStore dataStore, IPolygonApiClient polygon,
+            IOptions<JobExecutorOptions> options)
         : base(logger)
         {
             _logger = logger;

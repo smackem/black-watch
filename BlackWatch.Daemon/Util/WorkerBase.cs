@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace BlackWatch.Daemon
+namespace BlackWatch.Daemon.Util
 {
     public abstract class WorkerBase : BackgroundService
     {

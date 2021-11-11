@@ -2,13 +2,16 @@ using System;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
 using BlackWatch.Core.Services;
+using BlackWatch.Daemon.Features.Jobs;
 using BlackWatch.Daemon.Features.Polygon;
+using BlackWatch.Daemon.JobEngine;
+using BlackWatch.Daemon.Scheduling;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace BlackWatch.Daemon
 {
-    public class Program
+    public static class Program
     {
         public static void Main(string[] args)
         {
@@ -21,11 +24,14 @@ namespace BlackWatch.Daemon
             Host.CreateDefaultBuilder(args)
                 .ConfigureServices((ctx, services) =>
                 {
+                    services.AddOptions<RedisOptions>()
+                        .Bind(ctx.Configuration.GetSection("Redis"))
+                        .ValidateDataAnnotations();
                     services.AddOptions<JobExecutorOptions>()
                         .Bind(ctx.Configuration.GetSection("JobExecution"))
                         .ValidateDataAnnotations();
-                    services.AddOptions<RedisOptions>()
-                        .Bind(ctx.Configuration.GetSection("Redis"))
+                    services.AddOptions<JobSchedulerOptions>()
+                        .Bind(ctx.Configuration.GetSection("JobScheduling"))
                         .ValidateDataAnnotations();
 
                     services.AddHostedService<JobExecutor>();
@@ -35,6 +41,7 @@ namespace BlackWatch.Daemon
                         http.BaseAddress = new Uri(ctx.Configuration["Polygon:BaseAddress"]);
                     });
                     services.AddSingleton<IDataStore, RedisDataStore>();
+                    services.AddSingleton<IJobFactory, JobFactory>();
                 });
 
         private static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)

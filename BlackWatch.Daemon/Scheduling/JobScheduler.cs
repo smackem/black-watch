@@ -4,10 +4,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
 using BlackWatch.Core.Util;
+using BlackWatch.Daemon.Util;
+using Cronos;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace BlackWatch.Daemon
+namespace BlackWatch.Daemon.Scheduling
 {
     public class JobScheduler : WorkerBase
     {

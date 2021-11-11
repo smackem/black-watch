@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace BlackWatch.Daemon
+namespace BlackWatch.Daemon.JobEngine
 {
     public class JobExecutorOptions
     {

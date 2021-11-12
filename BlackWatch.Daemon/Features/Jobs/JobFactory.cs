@@ -15,8 +15,8 @@ namespace BlackWatch.Daemon.Features.Jobs
 
             return jobInfo switch
             {
-                { AggregateCrypto: not null } => new QuoteDownloadJob(jobInfo.AggregateCrypto, dataStore, polygon),
-                { DailyGroupedCrypto: not null } => new TrackerDownloadJob(jobInfo.DailyGroupedCrypto, dataStore, polygon),
+                { QuoteHistoryDownload: not null } => new QuoteDownloadJob(jobInfo.QuoteHistoryDownload, dataStore, polygon),
+                { TrackerDownload: not null } => new TrackerDownloadJob(jobInfo.TrackerDownload, dataStore, polygon),
                 var info when info == JobInfo.Nop => NopJob.Instance,
                 _ => throw new ArgumentException($"unkown kind of job: {jobInfo}"),
             };

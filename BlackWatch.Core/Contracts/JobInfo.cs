@@ -6,25 +6,25 @@ namespace BlackWatch.Core.Contracts
     public record JobInfo
     {
         [JsonInclude]
-        public DailyGroupedCryptoJob? DailyGroupedCrypto { get; private init; }
+        public TrackerDownloadJob? TrackerDownload { get; private init; }
 
         [JsonInclude]
-        public AggregateCryptoJob? AggregateCrypto { get; private init; }
+        public QuoteHistoryDownloadJob? QuoteHistoryDownload { get; private init; }
 
         public static readonly JobInfo Nop = new();
 
-        public static JobInfo GetDailyGroupedCrypto(DailyGroupedCryptoJob job)
+        public static JobInfo DownloadTrackers(TrackerDownloadJob job)
         {
-            return new JobInfo { DailyGroupedCrypto = job };
+            return new JobInfo { TrackerDownload = job };
         }
 
-        public static JobInfo GetAggregateCrypto(AggregateCryptoJob job)
+        public static JobInfo DownloadQuoteHistory(QuoteHistoryDownloadJob job)
         {
-            return new JobInfo { AggregateCrypto = job };
+            return new JobInfo { QuoteHistoryDownload = job };
         }
     }
 
-    public record DailyGroupedCryptoJob(DateTimeOffset Date);
+    public record TrackerDownloadJob(DateTimeOffset Date);
 
-    public record AggregateCryptoJob(string Symbol, DateTimeOffset FromDate, DateTimeOffset ToDate);
+    public record QuoteHistoryDownloadJob(string Symbol, DateTimeOffset FromDate, DateTimeOffset ToDate);
 }

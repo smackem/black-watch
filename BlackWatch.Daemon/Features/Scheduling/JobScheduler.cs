@@ -89,15 +89,16 @@ namespace BlackWatch.Daemon.Features.Scheduling
                 "queue job: download quote history for {TrackerCount} trackers from {FromDate} to {ToDate}",
                 trackers.Length, from, to);
 
-            await _dataStore.EnqueueJobAsync(trackers.Select(t =>
-                JobInfo.GetAggregateCrypto(new AggregateCryptoJob(t.Symbol, from, to)))).Linger();
+            var jobInfos = trackers
+                .Select(t => JobInfo.DownloadQuoteHistory(new QuoteHistoryDownloadJob(t.Symbol, from, to)));
 
+            await _dataStore.EnqueueJobAsync(jobInfos).Linger();
             return trackers.Length;
         }
 
         private async Task<bool> DownloadTrackersAsync()
         {
-            var jobInfo = JobInfo.GetDailyGroupedCrypto(new DailyGroupedCryptoJob(DateTimeOffset.UtcNow.AddDays(-1)));
+            var jobInfo = JobInfo.DownloadTrackers(new TrackerDownloadJob(DateTimeOffset.UtcNow.AddDays(-1)));
             _logger.LogInformation("queue job: download trackers {JobInfo}", jobInfo);
 
             await _dataStore.EnqueueJobAsync(jobInfo).Linger();

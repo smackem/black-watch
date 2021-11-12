@@ -10,11 +10,11 @@ namespace BlackWatch.Daemon.Features.Jobs
 {
     public class QuoteDownloadJob : Job
     {
-        private readonly AggregateCryptoJob _info;
+        private readonly QuoteHistoryDownloadJob _info;
         private readonly IPolygonApiClient _polygon;
         private readonly IDataStore _dataStore;
 
-        public QuoteDownloadJob(AggregateCryptoJob info, IDataStore dataStore, IPolygonApiClient polygon)
+        public QuoteDownloadJob(QuoteHistoryDownloadJob info, IDataStore dataStore, IPolygonApiClient polygon)
             : base($"download aggregates for {info.Symbol}")
         {
             _info = info;

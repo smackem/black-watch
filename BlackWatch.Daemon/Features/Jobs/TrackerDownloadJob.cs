@@ -10,11 +10,11 @@ namespace BlackWatch.Daemon.Features.Jobs
 {
     public class TrackerDownloadJob : Job
     {
-        private readonly DailyGroupedCryptoJob _info;
+        private readonly Core.Contracts.TrackerDownloadJob _info;
         private readonly IPolygonApiClient _polygon;
         private readonly IDataStore _dataStore;
 
-        public TrackerDownloadJob(DailyGroupedCryptoJob info, IDataStore dataStore, IPolygonApiClient polygon)
+        public TrackerDownloadJob(Core.Contracts.TrackerDownloadJob info, IDataStore dataStore, IPolygonApiClient polygon)
             : base("download crypto trackers")
         {
             _info = info;

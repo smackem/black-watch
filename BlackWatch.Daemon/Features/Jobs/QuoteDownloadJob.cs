@@ -50,12 +50,15 @@ namespace BlackWatch.Daemon.Features.Jobs
             var quotes = prices.Results
                 .Select(p => new Quote(
                     _info.Symbol, p.Open, p.Close, p.High, 0, currency,
-                    DateTimeOffset.FromUnixTimeMilliseconds(p.Timestamp)));
+                    DateTimeOffset.FromUnixTimeMilliseconds(p.Timestamp)))
+                .ToArray();
 
             foreach (var quote in quotes)
             {
                 await _dataStore.SetQuoteAsync(quote);
             }
+
+            await UpdateTracker(quotes);
 
             return JobExecutionResult.Ok;
         }
@@ -63,6 +66,34 @@ namespace BlackWatch.Daemon.Features.Jobs
         private static string GetCryptoQuoteCurrency(string symbol)
         {
             return symbol.Length > 3 ? symbol[^3..] : string.Empty;
+        }
+
+        private Task UpdateTracker(Quote[] quotes)
+        {
+            var (from, to) = GetTrackerDateRange(quotes);
+            var tracker = new Tracker(_info.Symbol, from, to);
+            return _dataStore.InsertTrackersAsync(new[] { tracker });
+        }
+
+        private (DateTimeOffset? from, DateTimeOffset? to) GetTrackerDateRange(Quote[] quotes)
+        {
+            DateTimeOffset? from = null;
+            DateTimeOffset? to = null;
+
+            foreach (var quote in quotes)
+            {
+                if (from == null || quote.Date < from)
+                {
+                    from = quote.Date;
+                }
+
+                if (to == null || quote.Date > to)
+                {
+                    to = quote.Date;
+                }
+            }
+
+            return (from, to);
         }
     }
 }

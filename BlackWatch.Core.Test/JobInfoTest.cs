@@ -20,7 +20,7 @@ namespace BlackWatch.Core.Test
         [Fact]
         public void SerializeAggregateCrypto()
         {
-            var (from, to) = DateRange.DaysUntilToday(1);
+            var (from, to) = DateRange.DaysUntilYesterdayUtc(1);
             var jobInfo = JobInfo.GetAggregateCrypto(new AggregateCryptoJob("SYM", from, to));
             var json = JsonSerializer.Serialize(jobInfo, new JsonSerializerOptions { IgnoreNullValues = true });
             _out.WriteLine($"serialized JobInfo: {json}");

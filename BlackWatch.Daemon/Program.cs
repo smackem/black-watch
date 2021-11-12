@@ -4,8 +4,8 @@ using BlackWatch.Core.Contracts;
 using BlackWatch.Core.Services;
 using BlackWatch.Daemon.Features.Jobs;
 using BlackWatch.Daemon.Features.Polygon;
+using BlackWatch.Daemon.Features.Scheduling;
 using BlackWatch.Daemon.JobEngine;
-using BlackWatch.Daemon.Scheduling;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 

@@ -16,7 +16,7 @@ namespace BlackWatch.Core.Test
             _out = @out;
         }
 
-        [Fact]
+        //[Fact]
         public async Task OnePerSecond()
         {
             using var _ = ConsoleOutput.Redirect(_out);
@@ -40,7 +40,7 @@ namespace BlackWatch.Core.Test
             }
         }
 
-        [Fact]
+        //[Fact]
         public async Task FivePerSecond()
         {
             using var _ = ConsoleOutput.Redirect(_out);
@@ -65,7 +65,7 @@ namespace BlackWatch.Core.Test
             }
         }
 
-        [Fact]
+        //[Fact]
         public async Task ConsumeSlowerThanPossible()
         {
             using var _ = ConsoleOutput.Redirect(_out);
@@ -92,7 +92,7 @@ namespace BlackWatch.Core.Test
             }
         }
 
-        [Fact]
+        //[Fact]
         public async Task TestHundredPerSecond()
         {
             using var _ = ConsoleOutput.Redirect(_out);

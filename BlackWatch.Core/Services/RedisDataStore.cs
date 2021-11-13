@@ -86,7 +86,7 @@ namespace BlackWatch.Core.Services
         {
             var db = await GetDatabaseAsync().Linger();
             var key = GetDateKey(date);
-            var hash = RedisKeys.DailyQuotes.Join(symbol);
+            var hash = RedisKeys.DailyQuotes(symbol);
             var value = await db.HashGetAsync(hash, key).Linger();
 
             if (value.HasValue == false)
@@ -103,7 +103,7 @@ namespace BlackWatch.Core.Services
         {
             var db = await GetDatabaseAsync().Linger();
             var value = Serialize(quote);
-            var hash = RedisKeys.DailyQuotes.Join(quote.Symbol);
+            var hash = RedisKeys.DailyQuotes(quote.Symbol);
             var key = GetDateKey(quote.Date);
             await db.HashSetAsync(hash, key, value).Linger();
             _logger.LogDebug("quote set @{Hash}[{Date}]", hash, key);
@@ -151,9 +151,30 @@ namespace BlackWatch.Core.Services
 
         private static class RedisKeys
         {
+            /// <summary>
+            /// HASH{Symbol => Tracker}
+            /// </summary>
             public static readonly RedisKey Trackers = new("black-watch:trackers");
-            public static readonly RedisKey DailyQuotes = new("black-watch:quotes:daily");
+
+            /// <summary>
+            /// LIST{JobInfo}
+            /// </summary>
             public static readonly RedisKey Jobs = new("black-watch:jobs");
+
+            /// <summary>
+            /// HASH{Guid => TallySource}
+            /// </summary>
+            public static RedisKey TallySources(Guid userId) => $"black-watch:user-{userId}:tally-sources";
+
+            /// <summary>
+            /// HASH{Date => Quote}
+            /// </summary>
+            public static RedisKey DailyQuotes(string symbol) => $"black-watch:quotes:daily:{symbol}";
+
+            /// <summary>
+            /// LIST{Tally}
+            /// </summary>
+            public static RedisKey Tally(Guid tallySourceId) => $"black-watch:tally-{tallySourceId}";
         }
     }
 }

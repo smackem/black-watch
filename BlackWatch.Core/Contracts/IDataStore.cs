@@ -23,5 +23,7 @@ namespace BlackWatch.Core.Contracts
         public Task<JobInfo[]> DequeueJobsAsync(int count);
 
         public Task<long> GetJobQueueLengthAsync();
+
+        public Task<TallySource[]> GetTallySources(string userId);
     }
 }

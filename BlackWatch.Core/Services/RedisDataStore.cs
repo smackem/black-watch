@@ -116,6 +116,17 @@ namespace BlackWatch.Core.Services
             _logger.LogDebug("quote set @{Hash}[{Date}]", hash, key);
         }
 
+        public async Task<TallySource[]> GetTallySources(string userId)
+        {
+            var db = await GetDatabaseAsync().Linger();
+            var key = RedisKeys.TallySources(userId);
+            var entries = await db.HashValuesAsync(key);
+            return entries
+                .Where(e => e.HasValue)
+                .Select(Deserialize<TallySource>)
+                .ToArray();
+        }
+
         public void Dispose()
         {
             _redis?.Dispose();
@@ -169,9 +180,9 @@ namespace BlackWatch.Core.Services
             public static readonly RedisKey Jobs = new("black-watch:jobs");
 
             /// <summary>
-            /// HASH{Guid => TallySource}
+            /// HASH{id => TallySource}
             /// </summary>
-            public static RedisKey TallySources(Guid userId) => $"black-watch:user-{userId}:tally-sources";
+            public static RedisKey TallySources(string userId) => $"black-watch:user-{userId}:tally-sources";
 
             /// <summary>
             /// HASH{Date => Quote}
@@ -181,7 +192,7 @@ namespace BlackWatch.Core.Services
             /// <summary>
             /// LIST{TallyService}
             /// </summary>
-            public static RedisKey Tally(Guid tallySourceId) => $"black-watch:tally-{tallySourceId}";
+            public static RedisKey Tally(string tallySourceId) => $"black-watch:tally-{tallySourceId}";
 
             /// <summary>
             /// INTEGER

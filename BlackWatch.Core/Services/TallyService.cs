@@ -12,7 +12,7 @@ namespace BlackWatch.Core.Services
     {
         private readonly IDataStore _dataStore;
         private readonly ILogger<TallyService> _logger;
-        
+
         public TallyService(IDataStore dataStore, ILogger<TallyService> logger)
         {
             _dataStore = dataStore;
@@ -21,6 +21,12 @@ namespace BlackWatch.Core.Services
 
         public async Task<Tally[]> EvaluateAsync(EvaluationInterval interval)
         {
+            var ctx = await BuildContextAsync();
+            var tallySources = await _dataStore.GetTallySources("0");
+            foreach (var tallySource in tallySources)
+            {
+                var tally = await EvaluateAsync(tallySource, ctx);
+            }
             return Array.Empty<Tally>();
         }
 
@@ -47,6 +53,14 @@ namespace BlackWatch.Core.Services
                 var s when DateTimeOffset.TryParse(s, out var date) => date,
                 _ => throw new ArgumentException($"invalid date or date offset: {dateStr}", nameof(dateStr)),
             };
+        }
+
+        public Task<Tally> EvaluateAsync(TallySource tallySource, IDictionary<string, Func<string, Quote?>> ctx)
+        {
+            var engine = new Engine();
+            engine.SetValue("X", ctx);
+            var value = engine.Evaluate(tallySource.Code);
+            return Task.FromResult(new Tally(tallySource.Id, DateTimeOffset.Now, TallyState.Indeterminate, value.ToString()));
         }
 
         public async Task<object> EvaluateAsync()

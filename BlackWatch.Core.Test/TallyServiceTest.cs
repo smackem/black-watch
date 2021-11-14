@@ -2,21 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
-using BlackWatch.Core.Scripting;
+using BlackWatch.Core.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace BlackWatch.Core.Test
 {
-    public class TallyTest
+    public class TallyServiceTest
     {
         [Fact]
         public async void EvaluateAsync()
         {
-            var tally = new Tally("", new DataStore(), new NullLogger<Tally>());
+            var tally = new TallyService(new DataStore(), new NullLogger<TallyService>());
             var x = await tally.EvaluateAsync();
         }
-        
+
         private class DataStore : IDataStore
         {
             public Task<Tracker[]> GetTrackersAsync()
@@ -27,6 +27,10 @@ namespace BlackWatch.Core.Test
                 });
             }
             public Task<Quote?> GetQuoteAsync(string symbol, DateTimeOffset date)
+            {
+                throw new NotImplementedException();
+            }
+            public Task<string> GenerateIdAsync()
             {
                 throw new NotImplementedException();
             }

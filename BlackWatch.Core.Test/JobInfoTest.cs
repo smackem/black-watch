@@ -26,7 +26,7 @@ namespace BlackWatch.Core.Test
             _out.WriteLine($"serialized JobInfo: {json}");
             var deserialized = JsonSerializer.Deserialize<JobInfo>(json);
             Assert.NotNull(deserialized);
-            Assert.Null(deserialized.TrackerDownload);
+            Assert.Null(deserialized!.TrackerDownload);
             Assert.NotNull(deserialized.QuoteHistoryDownload);
             Assert.Equal(jobInfo.QuoteHistoryDownload, deserialized.QuoteHistoryDownload);
         }
@@ -39,7 +39,7 @@ namespace BlackWatch.Core.Test
             _out.WriteLine($"serialized JobInfo: {json}");
             var deserialized = JsonSerializer.Deserialize<JobInfo>(json);
             Assert.NotNull(deserialized);
-            Assert.Null(deserialized.QuoteHistoryDownload);
+            Assert.Null(deserialized!.QuoteHistoryDownload);
             Assert.NotNull(deserialized.TrackerDownload);
             Assert.Equal(jobInfo.TrackerDownload, deserialized.TrackerDownload);
         }

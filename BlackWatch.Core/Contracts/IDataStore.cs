@@ -6,6 +6,8 @@ namespace BlackWatch.Core.Contracts
 {
     public interface IDataStore
     {
+        public Task<string> GenerateIdAsync();
+
         public Task InsertTrackersAsync(IEnumerable<Tracker> trackers);
 
         public Task<Tracker[]> GetTrackersAsync();

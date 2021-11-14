@@ -63,6 +63,13 @@ namespace BlackWatch.Core.Services
             return await db.ListLengthAsync(RedisKeys.Jobs);
         }
 
+        public async Task<string> GenerateIdAsync()
+        {
+            var db = await GetDatabaseAsync().Linger();
+            var id = await db.StringIncrementAsync(RedisKeys.NextId);
+            return id.ToString();
+        }
+
         public async Task InsertTrackersAsync(IEnumerable<Tracker> trackers)
         {
             var db = await GetDatabaseAsync().Linger();
@@ -172,9 +179,14 @@ namespace BlackWatch.Core.Services
             public static RedisKey DailyQuotes(string symbol) => $"black-watch:quotes:daily:{symbol}";
 
             /// <summary>
-            /// LIST{Tally}
+            /// LIST{TallyService}
             /// </summary>
             public static RedisKey Tally(Guid tallySourceId) => $"black-watch:tally-{tallySourceId}";
+
+            /// <summary>
+            /// INTEGER
+            /// </summary>
+            public static readonly RedisKey NextId = new("black-watch:next-id");
         }
     }
 }

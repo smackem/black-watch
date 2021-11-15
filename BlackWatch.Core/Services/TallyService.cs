@@ -12,6 +12,8 @@ namespace BlackWatch.Core.Services
     {
         private readonly IDataStore _dataStore;
         private readonly ILogger<TallyService> _logger;
+        private const string CodePrefix = "(function() {\n";
+        private const string CodeSuffix = "\n})();";
 
         public TallyService(IDataStore dataStore, ILogger<TallyService> logger)
         {
@@ -59,18 +61,8 @@ namespace BlackWatch.Core.Services
         {
             var engine = new Engine();
             engine.SetValue("X", ctx);
-            var value = engine.Evaluate(tallySource.Code);
+            var value = engine.Evaluate($"{CodePrefix}{tallySource.Code}{CodeSuffix}");
             return Task.FromResult(new Tally(tallySource.Id, DateTimeOffset.Now, TallyState.Indeterminate, value.ToString()));
-        }
-
-        public async Task<object> EvaluateAsync()
-        {
-            var trackers = await _dataStore.GetTrackersAsync();
-            var engine = new Engine();
-            var obj = trackers.ToDictionary(t => t.Symbol, _ => new Func<int>(() => 100));
-            engine.SetValue("X", obj);
-            var value = engine.Evaluate("X.BTCUSD()");
-            return value;
         }
     }
 }

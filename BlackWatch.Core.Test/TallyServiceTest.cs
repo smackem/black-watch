@@ -6,29 +6,36 @@ using BlackWatch.Core.Services;
 using Jint;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace BlackWatch.Core.Test
 {
     public class TallyServiceTest
     {
+        private readonly ITestOutputHelper _out;
+
+        public TallyServiceTest(ITestOutputHelper @out)
+        {
+            _out = @out;
+        }
+        
         [Fact]
         public async void EvaluateAsync()
         {
             var tally = new TallyService(new DataStore(), new NullLogger<TallyService>());
-            var x = await tally.EvaluateAsync();
+            //var x = await tally.EvaluateAsync();
         }
 
         [Fact]
-        public async void JsTest()
+        public void JsTest()
         {
             var engine = new Engine();
             var value = engine.Evaluate(@"
-function doIt() {
+(function() {
     return { state: 1, result: ""abc"" }
-}
-return doIt();
+})();
 ");
-            value.ToString();
+            _out.WriteLine($"{value}");
         }
 
         private class DataStore : IDataStore

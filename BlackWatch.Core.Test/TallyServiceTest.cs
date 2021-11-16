@@ -23,7 +23,8 @@ namespace BlackWatch.Core.Test
         public async void EvaluateAsync()
         {
             var tally = new TallyService(new DataStore(), new NullLogger<TallyService>());
-            //var x = await tally.EvaluateAsync();
+            var x = await tally.EvaluateAsync(EvaluationInterval.OneHour);
+            
         }
 
         [Fact]
@@ -40,16 +41,32 @@ namespace BlackWatch.Core.Test
 
         private class DataStore : IDataStore
         {
+            private static class Symbols
+            {
+                public const string BtcUsd = "BTCUSD";
+                public const string EthUsd = "ETHUSD";
+                public const string UniUsd = "UNIUSD";
+            }
+            
             public Task<Tracker[]> GetTrackersAsync()
             {
                 return Task.FromResult(new[]
                 {
-                    new Tracker("BTCUSD", null, null),
+                    new Tracker(Symbols.BtcUsd, null, null),
+                    new Tracker(Symbols.EthUsd, null, null),
+                    new Tracker(Symbols.UniUsd, null, null),
                 });
             }
             public Task<Quote?> GetQuoteAsync(string symbol, DateTimeOffset date)
             {
-                throw new NotImplementedException();
+                var quote = symbol switch
+                {
+                    Symbols.BtcUsd => new Quote(symbol, 1000, 2000, 2500, 800, "USD", date),
+                    Symbols.EthUsd => new Quote(symbol, 100, 200, 250, 80, "USD", date),
+                    Symbols.UniUsd => new Quote(symbol, 10, 20, 25, 8, "USD", date),
+                    _ => null,
+                };
+                return Task.FromResult(quote);
             }
             public Task<TallySource[]> GetTallySources(string userId)
             {

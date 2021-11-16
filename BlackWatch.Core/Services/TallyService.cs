@@ -81,7 +81,8 @@ namespace BlackWatch.Core.Services
             var state = value switch
             {
                 null => TallyState.Error,
-                var v when v.IsBoolean() => v.AsBoolean() ? TallyState.Signalled : TallyState.NonSignalled,
+                JsBoolean b when b == JsBoolean.True => TallyState.Signalled,
+                JsBoolean b when b == JsBoolean.False => TallyState.NonSignalled,
                 _ => TallyState.Indeterminate,
             };
 

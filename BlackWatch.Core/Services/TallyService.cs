@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
 using Jint;
+using Jint.Native;
 using Microsoft.Extensions.Logging;
 
 namespace BlackWatch.Core.Services
@@ -25,11 +26,14 @@ namespace BlackWatch.Core.Services
         {
             var ctx = await BuildContextAsync();
             var tallySources = await _dataStore.GetTallySources("0");
+            var tallies = new List<Tally>();
             foreach (var tallySource in tallySources)
             {
                 var tally = await EvaluateAsync(tallySource, ctx);
+                tallies.Add(tally);
             }
-            return Array.Empty<Tally>();
+
+            return tallies.ToArray();
         }
 
         private async Task<IDictionary<string, Func<string, Quote?>>> BuildContextAsync()
@@ -60,9 +64,28 @@ namespace BlackWatch.Core.Services
         public Task<Tally> EvaluateAsync(TallySource tallySource, IDictionary<string, Func<string, Quote?>> ctx)
         {
             var engine = new Engine();
+            var code = $"{CodePrefix}{tallySource.Code}{CodeSuffix}";
             engine.SetValue("X", ctx);
-            var value = engine.Evaluate($"{CodePrefix}{tallySource.Code}{CodeSuffix}");
-            return Task.FromResult(new Tally(tallySource.Id, DateTimeOffset.Now, TallyState.Indeterminate, value.ToString()));
+
+            JsValue? value;
+            try
+            {
+                value = engine.Evaluate(code);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "error evaluating javascript {Code}", code);
+                value = null;
+            }
+
+            var state = value switch
+            {
+                null => TallyState.Error,
+                var v when v.IsBoolean() => v.AsBoolean() ? TallyState.Signalled : TallyState.NonSignalled,
+                _ => TallyState.Indeterminate,
+            };
+
+            return Task.FromResult(new Tally(tallySource.Id, DateTimeOffset.Now, state, value?.ToString()));
         }
     }
 }

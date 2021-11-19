@@ -18,13 +18,46 @@ namespace BlackWatch.Core.Test
         {
             _out = @out;
         }
-        
+
         [Fact]
-        public async void EvaluateAsync()
+        public async void EvaluateEmpty()
         {
-            var tally = new TallyService(new DataStore(), new NullLogger<TallyService>());
-            var x = await tally.EvaluateAsync(EvaluationInterval.OneHour);
-            
+            var dataStore = new DataStore();
+            var service = new TallyService(dataStore, new NullLogger<TallyService>());
+            var tallies = await service.EvaluateAsync(EvaluationInterval.OneHour);
+            Assert.Empty(tallies);
+        }
+
+        [Fact]
+        public async void EvaluateSingleSignalledTally()
+        {
+            var dataStore = new DataStore(
+                new TallySource("1", "return true;", 1, DateTimeOffset.UtcNow, EvaluationInterval.OneHour));
+
+            var service = new TallyService(dataStore, new NullLogger<TallyService>());
+            var tallies = await service.EvaluateAsync(EvaluationInterval.OneHour);
+            Assert.Collection(tallies,
+                t =>
+                {
+                    Assert.Equal(TallyState.Signalled, t.State);
+                    Assert.Null(t.Result);
+                });
+        }
+
+        [Fact]
+        public async void EvaluateSingleNonSignalledTally()
+        {
+            var dataStore = new DataStore(
+                new TallySource("1", "return false;", 1, DateTimeOffset.UtcNow, EvaluationInterval.OneHour));
+
+            var service = new TallyService(dataStore, new NullLogger<TallyService>());
+            var tallies = await service.EvaluateAsync(EvaluationInterval.OneHour);
+            Assert.Collection(tallies,
+            t =>
+            {
+                Assert.Equal(TallyState.NonSignalled, t.State);
+                Assert.Null(t.Result);
+            });
         }
 
         [Fact]
@@ -47,6 +80,13 @@ namespace BlackWatch.Core.Test
                 public const string EthUsd = "ETHUSD";
                 public const string UniUsd = "UNIUSD";
             }
+
+            private readonly TallySource[] _tallySources;
+
+            public DataStore(params TallySource[] tallySources)
+            {
+                _tallySources = tallySources;
+            }
             
             public Task<Tracker[]> GetTrackersAsync()
             {
@@ -57,6 +97,7 @@ namespace BlackWatch.Core.Test
                     new Tracker(Symbols.UniUsd, null, null),
                 });
             }
+
             public Task<Quote?> GetQuoteAsync(string symbol, DateTimeOffset date)
             {
                 var quote = symbol switch
@@ -68,9 +109,10 @@ namespace BlackWatch.Core.Test
                 };
                 return Task.FromResult(quote);
             }
+
             public Task<TallySource[]> GetTallySources(string userId)
             {
-                throw new NotImplementedException();
+                return Task.FromResult(_tallySources);
             }
             public Task<string> GenerateIdAsync()
             {

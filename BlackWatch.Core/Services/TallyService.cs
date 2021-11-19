@@ -29,6 +29,11 @@ namespace BlackWatch.Core.Services
             var tallies = new List<Tally>();
             foreach (var tallySource in tallySources)
             {
+                if (tallySource.Interval != interval)
+                {
+                    continue;
+                }
+
                 var tally = await EvaluateAsync(tallySource, ctx);
                 tallies.Add(tally);
             }
@@ -78,15 +83,15 @@ namespace BlackWatch.Core.Services
                 value = null;
             }
 
-            var state = value switch
+            var (state, result) = value switch
             {
-                null => TallyState.Error,
-                JsBoolean b when b == JsBoolean.True => TallyState.Signalled,
-                JsBoolean b when b == JsBoolean.False => TallyState.NonSignalled,
-                _ => TallyState.Indeterminate,
+                null => (TallyState.Error, null),
+                JsBoolean b when b == JsBoolean.True => (TallyState.Signalled, null),
+                JsBoolean b when b == JsBoolean.False => (TallyState.NonSignalled, null),
+                _ => (TallyState.Indeterminate, value.ToString()),
             };
 
-            return Task.FromResult(new Tally(tallySource.Id, DateTimeOffset.Now, state, value?.ToString()));
+            return Task.FromResult(new Tally(tallySource.Id, DateTimeOffset.Now, state, result));
         }
     }
 }

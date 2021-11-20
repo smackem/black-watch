@@ -66,7 +66,7 @@ namespace BlackWatch.Core.Services
             };
         }
 
-        public Task<Tally> EvaluateAsync(TallySource tallySource, IDictionary<string, Func<string, Quote?>> ctx)
+        private Task<Tally> EvaluateAsync(TallySource tallySource, IDictionary<string, Func<string, Quote?>> ctx)
         {
             var engine = new Engine();
             var code = $"{CodePrefix}{tallySource.Code}{CodeSuffix}";

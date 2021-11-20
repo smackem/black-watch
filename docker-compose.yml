@@ -21,6 +21,7 @@ services:
             - cache
         environment:
             - Redis__ConnectionString=cache:6379
+            - Polygon__ApiKey=${POLYGON_API_KEY}
     cache:
         image: redis:6.2.6-alpine
         restart: always

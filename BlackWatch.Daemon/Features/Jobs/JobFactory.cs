@@ -18,7 +18,7 @@ namespace BlackWatch.Daemon.Features.Jobs
                 { QuoteHistoryDownload: not null } => new QuoteDownloadJob(jobInfo.QuoteHistoryDownload, dataStore, polygon),
                 { TrackerDownload: not null } => new TrackerDownloadJob(jobInfo.TrackerDownload, dataStore, polygon),
                 var info when info == JobInfo.Nop => NopJob.Instance,
-                _ => throw new ArgumentException($"unkown kind of job: {jobInfo}"),
+                _ => throw new ArgumentException($"unknown kind of job: {jobInfo}"),
             };
         }
     }

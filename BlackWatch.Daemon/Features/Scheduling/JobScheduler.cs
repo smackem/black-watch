@@ -52,7 +52,7 @@ namespace BlackWatch.Daemon.Features.Scheduling
 
                 if (occurrence == null)
                 {
-                    _logger.LogWarning("{CronActionMoniker}: no next occurrence => quit cron runner", moniker, occurrence);
+                    _logger.LogWarning("{CronActionMoniker}: no next occurrence => quit cron runner", moniker);
                     break;
                 }
 

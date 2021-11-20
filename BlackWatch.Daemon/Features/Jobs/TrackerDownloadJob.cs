@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace BlackWatch.Daemon.Features.Jobs
 {
-    public class TrackerDownloadJob : Job
+    internal class TrackerDownloadJob : Job
     {
         private readonly Core.Contracts.TrackerDownloadJob _info;
         private readonly IPolygonApiClient _polygon;

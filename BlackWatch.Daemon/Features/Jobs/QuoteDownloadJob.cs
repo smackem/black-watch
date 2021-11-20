@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace BlackWatch.Daemon.Features.Jobs
 {
-    public class QuoteDownloadJob : Job
+    internal class QuoteDownloadJob : Job
     {
         private readonly QuoteHistoryDownloadJob _info;
         private readonly IPolygonApiClient _polygon;
@@ -75,7 +75,7 @@ namespace BlackWatch.Daemon.Features.Jobs
             return _dataStore.InsertTrackersAsync(new[] { tracker });
         }
 
-        private (DateTimeOffset? from, DateTimeOffset? to) GetTrackerDateRange(Quote[] quotes)
+        private static (DateTimeOffset? from, DateTimeOffset? to) GetTrackerDateRange(Quote[] quotes)
         {
             DateTimeOffset? from = null;
             DateTimeOffset? to = null;

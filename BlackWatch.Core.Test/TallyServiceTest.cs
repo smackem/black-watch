@@ -53,11 +53,11 @@ namespace BlackWatch.Core.Test
             var service = new TallyService(dataStore, new NullLogger<TallyService>());
             var tallies = await service.EvaluateAsync(EvaluationInterval.OneHour);
             Assert.Collection(tallies,
-            t =>
-            {
-                Assert.Equal(TallyState.NonSignalled, t.State);
-                Assert.Null(t.Result);
-            });
+                t =>
+                {
+                    Assert.Equal(TallyState.NonSignalled, t.State);
+                    Assert.Null(t.Result);
+                });
         }
 
         [Fact]

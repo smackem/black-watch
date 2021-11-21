@@ -12,6 +12,9 @@ using StackExchange.Redis;
 
 namespace BlackWatch.Core.Services
 {
+    /// <summary>
+    /// implements a <see cref="IDataStore"/> backed by the redis persistent cache 
+    /// </summary>
     public class RedisDataStore : IDataStore, IDisposable
     {
         private readonly ILogger<RedisDataStore> _logger;
@@ -70,7 +73,7 @@ namespace BlackWatch.Core.Services
             return id.ToString();
         }
 
-        public async Task InsertTrackersAsync(IEnumerable<Tracker> trackers)
+        public async Task PutTrackersAsync(IEnumerable<Tracker> trackers)
         {
             var db = await GetDatabaseAsync().Linger();
             var entries = trackers

@@ -118,7 +118,7 @@ namespace BlackWatch.Core.Test
             {
                 throw new NotImplementedException();
             }
-            public Task InsertTrackersAsync(IEnumerable<Tracker> trackers)
+            public Task PutTrackersAsync(IEnumerable<Tracker> trackers)
             {
                 throw new NotImplementedException();
             }

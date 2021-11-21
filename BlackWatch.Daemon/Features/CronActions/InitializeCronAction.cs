@@ -31,14 +31,14 @@ namespace BlackWatch.Daemon.Features.CronActions
             if (trackers.Length > 0)
             {
                 // queue quote download and quit
-                await _quoteDownloader.ExecuteAsync();
+                await _quoteDownloader.ExecuteAsync().Linger();
                 return false;
             }
 
             // ReSharper disable once InvertIf
             if (_trackersDownloadQueued == false)
             {
-                await _trackerDownloader.ExecuteAsync();
+                await _trackerDownloader.ExecuteAsync().Linger();
                 _trackersDownloadQueued = true;
             }
             return true;

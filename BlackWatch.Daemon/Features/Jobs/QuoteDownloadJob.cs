@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
 using BlackWatch.Daemon.Features.Polygon;
@@ -28,6 +30,11 @@ namespace BlackWatch.Daemon.Features.Jobs
             try
             {
                 prices = await _polygon.GetAggregateCryptoPricesAsync(_info.Symbol, _info.FromDate, _info.ToDate);
+            }
+            catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                ctx.Logger.LogWarning(e, "received {StatusCode} while getting aggregate crypto prices for {Symbol} => wait and retry", e.StatusCode, _info.Symbol);
+                return JobExecutionResult.WaitAndRetry;
             }
             catch (Exception e)
             {
@@ -72,7 +79,7 @@ namespace BlackWatch.Daemon.Features.Jobs
         {
             var (from, to) = GetTrackerDateRange(quotes);
             var tracker = new Tracker(_info.Symbol, from, to);
-            return _dataStore.InsertTrackersAsync(new[] { tracker });
+            return _dataStore.PutTrackersAsync(new[] { tracker });
         }
 
         private static (DateTimeOffset? from, DateTimeOffset? to) GetTrackerDateRange(Quote[] quotes)

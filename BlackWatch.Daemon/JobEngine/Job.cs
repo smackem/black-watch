@@ -3,6 +3,9 @@ using Microsoft.Extensions.Logging;
 
 namespace BlackWatch.Daemon.JobEngine
 {
+    /// <summary>
+    /// a job executed by the <see cref="JobExecutor"/>
+    /// </summary>
     public abstract class Job
     {
         private readonly string _moniker;
@@ -20,6 +23,9 @@ namespace BlackWatch.Daemon.JobEngine
         }
     }
 
+    /// <summary>
+    /// a job that does nothing, only logs a warning. can be used to signal some misunderstanding...
+    /// </summary>
     public class NopJob : Job
     {
         private NopJob() : base("nop") { }

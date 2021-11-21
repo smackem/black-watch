@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
 using BlackWatch.Daemon.Features.Polygon;
@@ -29,6 +31,11 @@ namespace BlackWatch.Daemon.Features.Jobs
             {
                 trackerPrices = await _polygon.GetGroupedDailyCryptoPricesAsync(_info.Date);
             }
+            catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                ctx.Logger.LogWarning(e, "received {StatusCode} while getting trackers => wait and retry", e.StatusCode);
+                return JobExecutionResult.WaitAndRetry;
+            }
             catch (Exception e)
             {
                 ctx.Logger.LogError(e, "error getting grouped daily crypto prices");
@@ -52,7 +59,7 @@ namespace BlackWatch.Daemon.Features.Jobs
                 .Select(tp => new Tracker(tp.Symbol, null, null))
                 .ToArray();
 
-            await _dataStore.InsertTrackersAsync(trackers);
+            await _dataStore.PutTrackersAsync(trackers);
             return JobExecutionResult.Ok;
         }
     }

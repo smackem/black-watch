@@ -37,7 +37,7 @@ namespace BlackWatch.Daemon.Features.CronActions
                     _dataStore,
                     _logger);
                 var initializer = new InitializeCronAction(
-                    CronExpression.Parse("* * * * *"),
+                    CronExpression.Parse("@every_minute"),
                     _dataStore,
                     quoteDownloader,
                     trackerDownloader);

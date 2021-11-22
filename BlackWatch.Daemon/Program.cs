@@ -9,6 +9,8 @@ using BlackWatch.Daemon.Features.Polygon;
 using BlackWatch.Daemon.JobEngine;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 
 namespace BlackWatch.Daemon
 {
@@ -23,6 +25,16 @@ namespace BlackWatch.Daemon
 
         private static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .ConfigureLogging((_, builder) =>
+                {
+                    builder.AddSimpleConsole(options =>
+                    {
+                        options.TimestampFormat = "yyyy-MM-dd HH:mm:ssZ ";
+                        options.SingleLine = true;
+                        options.UseUtcTimestamp = true;
+                        options.ColorBehavior = LoggerColorBehavior.Disabled;
+                    });
+                })
                 .ConfigureServices((ctx, services) =>
                 {
                     services.AddSingleton<IDataStore, RedisDataStore>();

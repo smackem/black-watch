@@ -61,6 +61,18 @@ namespace BlackWatch.Core.Contracts
         /// <summary>
         /// retrieves all <see cref="TallySource"/>s of the specified user from the database
         /// </summary>
-        public Task<TallySource[]> GetTallySources(string userId);
+        public Task<TallySource[]> GetTallySourcesAsync(string userId);
+
+        /// <summary>
+        /// gets the user's <see cref="TallySource"/> with the specified <paramref name="id"/> or <c>null</c>
+        /// if no matching tally source exists
+        /// </summary>
+        public Task<TallySource?> GetTallySourceAsync(string userId, string id);
+
+        /// <summary>
+        /// inserts the specified <see cref="TallySource"/> into the database, overwriting any existing tally source
+        /// with the same id
+        /// </summary>
+        public Task PutTallySourceAsync(string userId, TallySource tallySource);
     }
 }

@@ -119,7 +119,7 @@ namespace BlackWatch.Core.Services
             _logger.LogDebug("quote set @{Hash}[{Date}]", hash, key);
         }
 
-        public async Task<TallySource[]> GetTallySources(string userId)
+        public async Task<TallySource[]> GetTallySourcesAsync(string userId)
         {
             var db = await GetDatabaseAsync().Linger();
             var key = RedisKeys.TallySources(userId);
@@ -128,6 +128,31 @@ namespace BlackWatch.Core.Services
                 .Where(e => e.HasValue)
                 .Select(Deserialize<TallySource>)
                 .ToArray();
+        }
+
+        public async Task<TallySource?> GetTallySourceAsync(string userId, string id)
+        {
+            var db = await GetDatabaseAsync().Linger();
+            var key = RedisKeys.TallySources(userId);
+            var entry = await db.HashGetAsync(key, id);
+
+            if (entry.HasValue == false)
+            {
+                _logger.LogWarning("no tally source found for user id {UserId} with id {TallySourceId}", userId, id);
+                return null;
+            }
+            
+            _logger.LogDebug("got tally source: {TallySource}", entry);
+            return Deserialize<TallySource>(entry);
+        }
+
+        public async Task PutTallySourceAsync(string userId, TallySource tallySource)
+        {
+            var db = await GetDatabaseAsync().Linger();
+            var hash = RedisKeys.TallySources(userId);
+            var value = Serialize(tallySource);
+            await db.HashSetAsync(hash, tallySource.Id, value);
+            _logger.LogDebug("tally source set @{Hash}[{TallySourceId}]", hash, tallySource.Id);
         }
 
         public void Dispose()
@@ -140,12 +165,14 @@ namespace BlackWatch.Core.Services
 
         private async Task<IDatabase> GetDatabaseAsync()
         {
+            // ReSharper disable once InvertIf
             if (_redis == null)
             {
                 try
                 {
                     await _semaphore.WaitAsync().Linger();
 
+                    // ReSharper disable once ConvertIfStatementToNullCoalescingAssignment
                     if (_redis == null)
                     {
                         _redis = await ConnectionMultiplexer.ConnectAsync(_options.ConnectionString).Linger();

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
 using BlackWatch.Core.Services;
@@ -13,6 +14,7 @@ namespace BlackWatch.Core.Test
     public class TallyServiceTest
     {
         private readonly ITestOutputHelper _out;
+        private static readonly string UserId = string.Empty;
 
         public TallyServiceTest(ITestOutputHelper @out)
         {
@@ -20,11 +22,54 @@ namespace BlackWatch.Core.Test
         }
 
         [Fact]
+        public unsafe void Something()
+        {
+            static void Write(ITestOutputHelper @out, string s)
+            {
+                @out.WriteLine(s);
+            }
+
+            delegate*<ITestOutputHelper, string, void> print = &Write;
+            print(_out, "hello");
+
+            var arr = Enumerable.Range(1, 50).Select(n => n * n).ToArray();
+            var span = arr.AsSpan(3 .. 10);
+            fixed (int* arrayPtr = span)
+            {
+                var ptr = arrayPtr;
+                for (var i = 0; i < span.Length; i++, ptr++)
+                {
+                    print(_out, $"{i}: {*ptr}");
+                }
+            }
+        }
+
+        [Fact]
+        public void CompilerDirectives()
+        {
+            #if NET
+            _out.WriteLine("NET");
+            #endif
+            #if NETCOREAPP
+            _out.WriteLine("NETCOREAPP");
+            #endif
+            #if NET5_0
+            _out.WriteLine("NET5_0");
+            #endif
+            #if NET5_0_OR_GREATER
+            _out.WriteLine("NET5_0_OR_GREATER");
+            #endif
+            #if NETCOREAPP1_0_OR_GREATER
+            _out.WriteLine("NETCOREAPP1_0_OR_GREATER");
+            #endif
+        }
+
+        [Fact]
         public async void EvaluateEmpty()
         {
             var dataStore = new DataStore();
             var service = new TallyService(dataStore, new NullLogger<TallyService>());
-            var tallies = await service.EvaluateAsync(EvaluationInterval.OneHour);
+            var tallies = await service.EvaluateAsync(UserId, EvaluationInterval.OneHour);
             Assert.Empty(tallies);
         }
 
@@ -35,7 +80,7 @@ namespace BlackWatch.Core.Test
                 new TallySource("1", "return true;", 1, DateTimeOffset.UtcNow, EvaluationInterval.OneHour));
 
             var service = new TallyService(dataStore, new NullLogger<TallyService>());
-            var tallies = await service.EvaluateAsync(EvaluationInterval.OneHour);
+            var tallies = await service.EvaluateAsync(UserId, EvaluationInterval.OneHour);
             Assert.Collection(tallies,
                 t =>
                 {
@@ -51,7 +96,7 @@ namespace BlackWatch.Core.Test
                 new TallySource("1", "return false;", 1, DateTimeOffset.UtcNow, EvaluationInterval.OneHour));
 
             var service = new TallyService(dataStore, new NullLogger<TallyService>());
-            var tallies = await service.EvaluateAsync(EvaluationInterval.OneHour);
+            var tallies = await service.EvaluateAsync(UserId, EvaluationInterval.OneHour);
             Assert.Collection(tallies,
                 t =>
                 {
@@ -110,10 +155,21 @@ namespace BlackWatch.Core.Test
                 return Task.FromResult(quote);
             }
 
-            public Task<TallySource[]> GetTallySources(string userId)
+            public Task<TallySource[]> GetTallySourcesAsync(string userId)
             {
                 return Task.FromResult(_tallySources);
             }
+
+            public Task<TallySource?> GetTallySourceAsync(string userId, string id)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task PutTallySourceAsync(string userId, TallySource tallySource)
+            {
+                throw new NotImplementedException();
+            }
+
             public Task<string> GenerateIdAsync()
             {
                 throw new NotImplementedException();

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BlackWatch.Core.Contracts;
+using BlackWatch.Core.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -31,6 +33,8 @@ namespace BlackWatch.Api
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "BlackWatch.Api", Version = "v1" });
             });
+            services.AddSingleton<IDataStore, RedisDataStore>();
+            services.AddOptions<RedisOptions>().Bind(Configuration.GetSection("Redis")).ValidateDataAnnotations();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -21,11 +21,12 @@ namespace BlackWatch.Core.Contracts
         /// creates a new version of this tally source with the same id and the specified code,
         /// with updated <see cref="Version"/> and <see cref="DateModified"/>
         /// </summary>
-        public TallySource Update(string code)
+        public TallySource Update(string code, EvaluationInterval interval)
         {
             return this with
             {
                 Code = code,
+                Interval = interval,
                 Version = Version + 1,
                 DateModified = DateTimeOffset.Now,
             };

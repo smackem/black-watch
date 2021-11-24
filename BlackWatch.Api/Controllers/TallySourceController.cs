@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
+using BlackWatch.Core.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -13,15 +14,19 @@ namespace BlackWatch.Api.Controllers
     {
         private readonly IDataStore _dataStore;
         private readonly ILogger<TallySourceController> _logger;
+        private readonly TallyService _tallyService;
         private const string UserId = "0";
+        private const string ResponseMimeType = "application/json";
 
-        public TallySourceController(IDataStore dataStore, ILogger<TallySourceController> logger)
+        public TallySourceController(IDataStore dataStore, ILogger<TallySourceController> logger, TallyService tallyService)
         {
             _dataStore = dataStore;
             _logger = logger;
+            _tallyService = tallyService;
         }
 
         [HttpGet("{id}")]
+        [Produces(ResponseMimeType)]
         public async Task<ActionResult<TallySource>> GetById(string id)
         {
             var tallySource = await _dataStore.GetTallySourceAsync(UserId, id);
@@ -35,29 +40,61 @@ namespace BlackWatch.Api.Controllers
             return Ok(tallySource);
         }
 
-        [HttpGet("all")]
+        [HttpGet("{id}/eval")]
+        [ProducesResponseType(typeof(Tally), (int) HttpStatusCode.OK)]
+        [Produces(ResponseMimeType)]
+        public async Task<ActionResult<Tally>> Evaluate(string id)
+        {
+            var tallySource = await _dataStore.GetTallySourceAsync(UserId, id);
+            // ReSharper disable once InvertIf
+            if (tallySource == null)
+            {
+                _logger.LogWarning("tally source not found: {TallySourceId}", id);
+                return NotFound();
+            }
+
+            var tally = await _tallyService.EvaluateAsync(tallySource);
+            return Ok(tally);
+        }
+
+        [HttpGet]
+        [ProducesResponseType(typeof(TallySource[]), (int) HttpStatusCode.OK)]
+        [Produces(ResponseMimeType)]
         public async Task<TallySource[]> Index()
         {
             return await _dataStore.GetTallySourcesAsync(UserId);
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(TallySource), 201)]
-        public async Task<IActionResult> Create([FromBody] CreateTallySourceCommand command)
+        [ProducesResponseType(typeof(TallySource), (int) HttpStatusCode.Created)]
+        [Produces(ResponseMimeType)]
+        public async Task<IActionResult> Create([FromBody] PutTallySourceCommand command)
         {
             var id = await _dataStore.GenerateIdAsync();
-            var tallySource = new TallySource(id, command.Code, 1, DateTimeOffset.UtcNow, command.Interval);
+            var (code, interval) = command;
+            var tallySource = new TallySource(id, code, 1, DateTimeOffset.UtcNow, interval);
             await _dataStore.PutTallySourceAsync(UserId, tallySource);
             return CreatedAtAction(nameof(GetById), new { id = tallySource.Id }, tallySource);
         }
 
         [HttpPut("{id}")]
-        [ProducesResponseType(typeof(TallySource), 200)]
-        public Task<IActionResult> Update(string id, [FromBody] CreateTallySourceCommand command)
+        [ProducesResponseType(typeof(TallySource), (int) HttpStatusCode.OK)]
+        [Produces(ResponseMimeType)]
+        public async Task<IActionResult> Update(string id, [FromBody] PutTallySourceCommand command)
         {
-            return Task.FromResult((IActionResult) NotFound());
+            var tallySource = await _dataStore.GetTallySourceAsync(UserId, id);
+            if (tallySource == null)
+            {
+                _logger.LogWarning("tally source not found: {TallySourceId}", id);
+                return NotFound();
+            }
+
+            var (code, interval) = command;
+            var modifiedTallySource = tallySource.Update(code, interval);
+            await _dataStore.PutTallySourceAsync(UserId, modifiedTallySource);
+            return Ok(modifiedTallySource);
         }
 
-        public record CreateTallySourceCommand(string Code, EvaluationInterval Interval);
+        public record PutTallySourceCommand(string Code, EvaluationInterval Interval);
     }
 }

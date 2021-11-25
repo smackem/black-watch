@@ -32,7 +32,7 @@ namespace BlackWatch.Core.Services
             _logger = logger;
         }
 
-        public async Task<long> EnqueueJobAsync(IEnumerable<JobInfo> jobs)
+        public async Task<long> EnqueueJobsAsync(IEnumerable<JobInfo> jobs)
         {
             var db = await GetDatabaseAsync().Linger();
             var values = jobs
@@ -43,9 +43,9 @@ namespace BlackWatch.Core.Services
             return count;
         }
 
-        public Task EnqueueJobAsync(JobInfo job)
+        public Task<long> EnqueueJobAsync(JobInfo job)
         {
-            return EnqueueJobAsync(new[] { job });
+            return EnqueueJobsAsync(new[] { job });
         }
 
         public async Task<JobInfo[]> DequeueJobsAsync(int count)

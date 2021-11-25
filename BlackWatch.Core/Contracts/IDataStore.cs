@@ -41,12 +41,13 @@ namespace BlackWatch.Core.Contracts
         /// inserts the specified <see cref="JobInfo" />s at the end of the job queue and returns
         /// the new length of the job queue
         /// </summary>
-        public Task<long> EnqueueJobAsync(IEnumerable<JobInfo> jobs);
+        public Task<long> EnqueueJobsAsync(IEnumerable<JobInfo> jobs);
 
         /// <summary>
-        /// inserts the specified <see cref="JobInfo" />s at the end of the job queue
+        /// inserts the specified <see cref="JobInfo" />s at the end of the job queue and returns
+        /// the new length of the job queue
         /// </summary>
-        public Task EnqueueJobAsync(JobInfo job);
+        public Task<long> EnqueueJobAsync(JobInfo job);
 
         /// <summary>
         /// gets and removes up to <paramref name="count"/> jobs from the head of the job queue

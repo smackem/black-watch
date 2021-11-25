@@ -33,6 +33,7 @@ namespace BlackWatch.Daemon
                         options.SingleLine = true;
                         options.UseUtcTimestamp = true;
                         options.ColorBehavior = LoggerColorBehavior.Disabled;
+                        options.IncludeScopes = true;
                     });
                 })
                 .ConfigureServices((ctx, services) =>

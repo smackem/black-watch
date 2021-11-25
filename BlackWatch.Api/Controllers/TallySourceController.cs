@@ -15,6 +15,7 @@ namespace BlackWatch.Api.Controllers
         private readonly IDataStore _dataStore;
         private readonly ILogger<TallySourceController> _logger;
         private readonly TallyService _tallyService;
+
         private const string UserId = "0";
         private const string ResponseMimeType = "application/json";
 
@@ -93,6 +94,22 @@ namespace BlackWatch.Api.Controllers
             var modifiedTallySource = tallySource.Update(code, interval);
             await _dataStore.PutTallySourceAsync(UserId, modifiedTallySource);
             return Ok(modifiedTallySource);
+        }
+
+        [HttpDelete("{id}")]
+        [ProducesResponseType((int) HttpStatusCode.NoContent)]
+        [ProducesResponseType((int) HttpStatusCode.NotFound)]
+        public async Task<IActionResult> Delete(string id)
+        {
+            // ReSharper disable once InvertIf
+            if (await _dataStore.DeleteTallySourceAsync(UserId, id) == false)
+            {
+                _logger.LogWarning("tally source not found: {TallySourceId}", id);
+                return NotFound();
+            }
+
+            _logger.LogInformation("tally source removed: {TallySourceId}", id);
+            return NoContent();
         }
 
         public record PutTallySourceCommand(string Code, EvaluationInterval Interval);

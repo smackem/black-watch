@@ -38,7 +38,7 @@ namespace BlackWatch.Core.Services
             var values = jobs
                 .Select(Serialize)
                 .ToArray();
-            var count = await db.ListLeftPushAsync(RedisKeys.Jobs, values).Linger();
+            var count = await db.ListLeftPushAsync(Names.Jobs, values).Linger();
             _logger.LogDebug("enqueued {EnqueuedJobs} jobs => queue length = {JobQueueLength}", values.Length, count);
             return count;
         }
@@ -51,7 +51,7 @@ namespace BlackWatch.Core.Services
         public async Task<JobInfo[]> DequeueJobsAsync(int count)
         {
             var db = await GetDatabaseAsync().Linger();
-            var values = await db.ListRightPopAsync(RedisKeys.Jobs, count).Linger();
+            var values = await db.ListRightPopAsync(Names.Jobs, count).Linger();
             var result = values
                 .Where(v => v.HasValue)
                 .Select(Deserialize<JobInfo>)
@@ -63,13 +63,13 @@ namespace BlackWatch.Core.Services
         public async Task<long> GetJobQueueLengthAsync()
         {
             var db = await GetDatabaseAsync().Linger();
-            return await db.ListLengthAsync(RedisKeys.Jobs);
+            return await db.ListLengthAsync(Names.Jobs);
         }
 
         public async Task<string> GenerateIdAsync()
         {
             var db = await GetDatabaseAsync().Linger();
-            var id = await db.StringIncrementAsync(RedisKeys.NextId);
+            var id = await db.StringIncrementAsync(Names.NextId);
             return id.ToString();
         }
 
@@ -79,13 +79,13 @@ namespace BlackWatch.Core.Services
             var entries = trackers
                 .Select(t => new HashEntry(t.Symbol, Serialize(t)))
                 .ToArray();
-            await db.HashSetAsync(RedisKeys.Trackers, entries).Linger();
+            await db.HashSetAsync(Names.Trackers, entries).Linger();
         }
 
         public async Task<Tracker[]> GetTrackersAsync()
         {
             var db = await GetDatabaseAsync().Linger();
-            var entries = await db.HashValuesAsync(RedisKeys.Trackers).Linger();
+            var entries = await db.HashValuesAsync(Names.Trackers).Linger();
             return entries
                 .Where(e => e.HasValue)
                 .Select(Deserialize<Tracker>)
@@ -95,8 +95,8 @@ namespace BlackWatch.Core.Services
         public async Task<Quote?> GetQuoteAsync(string symbol, DateTimeOffset date)
         {
             var db = await GetDatabaseAsync().Linger();
-            var key = GetDateKey(date);
-            var hash = RedisKeys.DailyQuotes(symbol);
+            var key = Names.DateKey(date);
+            var hash = Names.DailyQuotes(symbol);
             var value = await db.HashGetAsync(hash, key).Linger();
 
             if (value.HasValue == false)
@@ -113,8 +113,8 @@ namespace BlackWatch.Core.Services
         {
             var db = await GetDatabaseAsync().Linger();
             var value = Serialize(quote);
-            var hash = RedisKeys.DailyQuotes(quote.Symbol);
-            var key = GetDateKey(quote.Date);
+            var hash = Names.DailyQuotes(quote.Symbol);
+            var key = Names.DateKey(quote.Date);
             await db.HashSetAsync(hash, key, value).Linger();
             _logger.LogDebug("quote set @{Hash}[{Date}]", hash, key);
         }
@@ -122,26 +122,35 @@ namespace BlackWatch.Core.Services
         public async Task<TallySource[]> GetTallySourcesAsync(string userId)
         {
             var db = await GetDatabaseAsync().Linger();
-            var key = RedisKeys.TallySources(userId);
-            var entries = await db.HashValuesAsync(key);
-            return entries
-                .Where(e => e.HasValue)
-                .Select(Deserialize<TallySource>)
-                .ToArray();
+            var pattern = Names.TallySourceKey(userId, "*");
+            var tallySources = new List<TallySource>();
+
+            await foreach (var entry in db.HashScanAsync(Names.TallySources, pattern))
+            {
+                if (entry.Value.HasValue == false)
+                {
+                    _logger.LogWarning("HSCAN yielded an empty value @ {TallySourceKey}", entry.Name);
+                    continue;
+                }
+
+                tallySources.Add(Deserialize<TallySource>(entry.Value));
+            }
+
+            return tallySources.ToArray();
         }
 
         public async Task<TallySource?> GetTallySourceAsync(string userId, string id)
         {
             var db = await GetDatabaseAsync().Linger();
-            var key = RedisKeys.TallySources(userId);
-            var entry = await db.HashGetAsync(key, id);
+            var key = Names.TallySourceKey(userId, id);
+            var entry = await db.HashGetAsync(Names.TallySources, key);
 
             if (entry.HasValue == false)
             {
-                _logger.LogWarning("no tally source found for user id {UserId} with id {TallySourceId}", userId, id);
+                _logger.LogWarning("no tally source found for {TallySourceKey}", key);
                 return null;
             }
-            
+
             _logger.LogDebug("got tally source: {TallySource}", entry);
             return Deserialize<TallySource>(entry);
         }
@@ -149,10 +158,25 @@ namespace BlackWatch.Core.Services
         public async Task PutTallySourceAsync(string userId, TallySource tallySource)
         {
             var db = await GetDatabaseAsync().Linger();
-            var hash = RedisKeys.TallySources(userId);
+            var key = Names.TallySourceKey(userId, tallySource.Id);
             var value = Serialize(tallySource);
-            await db.HashSetAsync(hash, tallySource.Id, value);
-            _logger.LogDebug("tally source set @{Hash}[{TallySourceId}]", hash, tallySource.Id);
+            await db.HashSetAsync(Names.TallySources, key, value);
+            _logger.LogDebug("tally source set @{Hash}[{TallySourceKey}]", Names.TallySources, key);
+        }
+
+        public async Task<bool> DeleteTallySourceAsync(string userId, string id)
+        {
+            var db = await GetDatabaseAsync().Linger();
+            var key = Names.TallySourceKey(userId, id);
+
+            if (await db.HashDeleteAsync(Names.TallySources, key) == false)
+            {
+                _logger.LogWarning("tally source removed from @{Hash}[{TallySourceKey}]", Names.TallySources, key);
+                return false;
+            }
+
+            _logger.LogDebug("tally source to be removed from @{Hash}[{TallySourceKey}] not found", Names.TallySources, key);
+            return true;
         }
 
         public void Dispose()
@@ -160,8 +184,6 @@ namespace BlackWatch.Core.Services
             _redis?.Dispose();
             GC.SuppressFinalize(this);
         }
-
-        private static RedisValue GetDateKey(DateTimeOffset date) => $"{date:yyyy-MM-dd}";
 
         private async Task<IDatabase> GetDatabaseAsync()
         {
@@ -197,7 +219,7 @@ namespace BlackWatch.Core.Services
             return JsonSerializer.Deserialize<T>((byte[]) value, SerializerOptions)!;
         }
 
-        private static class RedisKeys
+        private static class Names
         {
             /// <summary>
             /// HASH{Symbol => Tracker}
@@ -210,9 +232,19 @@ namespace BlackWatch.Core.Services
             public static readonly RedisKey Jobs = new("black-watch:jobs");
 
             /// <summary>
-            /// HASH{id => TallySource}
+            /// HASH{TallySourceKey => TallySource}
             /// </summary>
-            public static RedisKey TallySources(string userId) => $"black-watch:user-{userId}:tally-sources";
+            public static readonly RedisKey TallySources = new($"black-watch:tally-sources");
+
+            /// <summary>
+            /// STRING
+            /// </summary>
+            public static RedisValue TallySourceKey(string userId, string tallySourceId) => $"user-{userId}:{tallySourceId}";
+
+            /// <summary>
+            /// STRING
+            /// </summary>
+            public static RedisValue DateKey(DateTimeOffset date) => $"{date:yyyy-MM-dd}";
 
             /// <summary>
             /// HASH{Date => Quote}
@@ -220,7 +252,7 @@ namespace BlackWatch.Core.Services
             public static RedisKey DailyQuotes(string symbol) => $"black-watch:quotes:daily:{symbol}";
 
             /// <summary>
-            /// LIST{TallyService}
+            /// LIST{Tally}
             /// </summary>
             public static RedisKey Tally(string tallySourceId) => $"black-watch:tally-{tallySourceId}";
 

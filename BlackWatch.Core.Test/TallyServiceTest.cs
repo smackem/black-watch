@@ -170,6 +170,11 @@ namespace BlackWatch.Core.Test
                 throw new NotImplementedException();
             }
 
+            public Task<bool> DeleteTallySourceAsync(string userId, string id)
+            {
+                throw new NotImplementedException();
+            }
+
             public Task<string> GenerateIdAsync()
             {
                 throw new NotImplementedException();

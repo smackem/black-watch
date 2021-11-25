@@ -75,5 +75,11 @@ namespace BlackWatch.Core.Contracts
         /// with the same id
         /// </summary>
         public Task PutTallySourceAsync(string userId, TallySource tallySource);
+
+        /// <summary>
+        /// removes the <see cref="TallySource"/> with the specified <paramref name="id"/> from the database and
+        /// returns <c>true</c> on success or <c>false</c> if not found
+        /// </summary>
+        public Task<bool> DeleteTallySourceAsync(string userId, string id);
     }
 }

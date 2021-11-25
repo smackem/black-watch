@@ -38,7 +38,7 @@ namespace BlackWatch.Core.Services
             var values = jobs
                 .Select(Serialize)
                 .ToArray();
-            var count = await db.ListLeftPushAsync(Names.Jobs, values).Linger();
+            var count = await db.ListRightPushAsync(Names.Jobs, values).Linger();
             _logger.LogDebug("enqueued {EnqueuedJobs} jobs => queue length = {JobQueueLength}", values.Length, count);
             return count;
         }
@@ -51,7 +51,7 @@ namespace BlackWatch.Core.Services
         public async Task<JobInfo[]> DequeueJobsAsync(int count)
         {
             var db = await GetDatabaseAsync().Linger();
-            var values = await db.ListRightPopAsync(Names.Jobs, count).Linger();
+            var values = await db.ListLeftPopAsync(Names.Jobs, count).Linger();
             var result = values
                 .Where(v => v.HasValue)
                 .Select(Deserialize<JobInfo>)
@@ -63,13 +63,13 @@ namespace BlackWatch.Core.Services
         public async Task<long> GetJobQueueLengthAsync()
         {
             var db = await GetDatabaseAsync().Linger();
-            return await db.ListLengthAsync(Names.Jobs);
+            return await db.ListLengthAsync(Names.Jobs).Linger();
         }
 
         public async Task<string> GenerateIdAsync()
         {
             var db = await GetDatabaseAsync().Linger();
-            var id = await db.StringIncrementAsync(Names.NextId);
+            var id = await db.StringIncrementAsync(Names.NextId).Linger();
             return id.ToString();
         }
 
@@ -125,7 +125,7 @@ namespace BlackWatch.Core.Services
             var pattern = Names.TallySourceKey(userId, "*");
             var tallySources = new List<TallySource>();
 
-            await foreach (var entry in db.HashScanAsync(Names.TallySources, pattern))
+            await foreach (var entry in db.HashScanAsync(Names.TallySources, pattern).ConfigureAwait(false))
             {
                 if (entry.Value.HasValue == false)
                 {
@@ -143,7 +143,7 @@ namespace BlackWatch.Core.Services
         {
             var db = await GetDatabaseAsync().Linger();
             var key = Names.TallySourceKey(userId, id);
-            var entry = await db.HashGetAsync(Names.TallySources, key);
+            var entry = await db.HashGetAsync(Names.TallySources, key).Linger();
 
             if (entry.HasValue == false)
             {
@@ -160,7 +160,7 @@ namespace BlackWatch.Core.Services
             var db = await GetDatabaseAsync().Linger();
             var key = Names.TallySourceKey(userId, tallySource.Id);
             var value = Serialize(tallySource);
-            await db.HashSetAsync(Names.TallySources, key, value);
+            await db.HashSetAsync(Names.TallySources, key, value).Linger();
             _logger.LogDebug("tally source set @{Hash}[{TallySourceKey}]", Names.TallySources, key);
         }
 
@@ -169,14 +169,51 @@ namespace BlackWatch.Core.Services
             var db = await GetDatabaseAsync().Linger();
             var key = Names.TallySourceKey(userId, id);
 
-            if (await db.HashDeleteAsync(Names.TallySources, key) == false)
+            if (await db.HashDeleteAsync(Names.TallySources, key).Linger() == false)
             {
-                _logger.LogWarning("tally source removed from @{Hash}[{TallySourceKey}]", Names.TallySources, key);
+                _logger.LogDebug("tally source to be removed from @{Hash}[{TallySourceKey}] not found", Names.TallySources, key);
                 return false;
             }
 
-            _logger.LogDebug("tally source to be removed from @{Hash}[{TallySourceKey}] not found", Names.TallySources, key);
+            _logger.LogWarning("tally source removed from @{Hash}[{TallySourceKey}]", Names.TallySources, key);
             return true;
+        }
+
+        public async Task PutTallyAsync(Tally tally)
+        {
+            var db = await GetDatabaseAsync();
+            var key = Names.Tally(tally.TallySourceId);
+            var value = Serialize(tally);
+            var length = await db.ListLengthAsync(key).Linger();
+            var tx = db.CreateTransaction();
+            var txTasks = new List<Task>
+            {
+                tx.ListRightPushAsync(key, value),
+            };
+
+            if (length >= _options.MaxTallyHistoryLength)
+            {
+                _logger.LogDebug("tally added @{TallyKey}: {Tally}", key, tally);
+                txTasks.Add(tx.ListLeftPopAsync(key));
+            }
+
+            if (await tx.ExecuteAsync().Linger())
+            {
+                await Task.WhenAll(txTasks).Linger();
+                _logger.LogDebug("tally added @{TallyKey}: {Tally}", key, tally);
+            }
+            else
+            {
+                _logger.LogError("failed to add tally @{TallyKey}: {Tally}", key, tally);
+            }
+        }
+
+        public async Task<Tally[]> GetTallies(string tallySourceId, int count)
+        {
+            var db = await GetDatabaseAsync().Linger();
+            var key = Names.Tally(tallySourceId);
+            var values = await db.ListRangeAsync(key, -count, -1).Linger();
+            return Array.Empty<Tally>();
         }
 
         public void Dispose()

@@ -6,5 +6,8 @@ namespace BlackWatch.Core.Services
     {
         [Required]
         public string ConnectionString { get; set; } = string.Empty;
+
+        [Range(1, 1000)]
+        public int MaxTallyHistoryLength { get; set; } = 100;
     }
 }

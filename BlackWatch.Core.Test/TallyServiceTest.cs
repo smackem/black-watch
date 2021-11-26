@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
 using BlackWatch.Core.Services;
@@ -22,49 +21,6 @@ namespace BlackWatch.Core.Test
         }
 
         [Fact]
-        public unsafe void Something()
-        {
-            static void Write(ITestOutputHelper @out, string s)
-            {
-                @out.WriteLine(s);
-            }
-
-            delegate*<ITestOutputHelper, string, void> print = &Write;
-            print(_out, "hello");
-
-            var arr = Enumerable.Range(1, 50).Select(n => n * n).ToArray();
-            var span = arr.AsSpan(3 .. 10);
-            fixed (int* arrayPtr = span)
-            {
-                var ptr = arrayPtr;
-                for (var i = 0; i < span.Length; i++, ptr++)
-                {
-                    print(_out, $"{i}: {*ptr}");
-                }
-            }
-        }
-
-        [Fact]
-        public void CompilerDirectives()
-        {
-            #if NET
-            _out.WriteLine("NET");
-            #endif
-            #if NETCOREAPP
-            _out.WriteLine("NETCOREAPP");
-            #endif
-            #if NET5_0
-            _out.WriteLine("NET5_0");
-            #endif
-            #if NET5_0_OR_GREATER
-            _out.WriteLine("NET5_0_OR_GREATER");
-            #endif
-            #if NETCOREAPP1_0_OR_GREATER
-            _out.WriteLine("NETCOREAPP1_0_OR_GREATER");
-            #endif
-        }
-
-        [Fact]
         public async void EvaluateEmpty()
         {
             var dataStore = new DataStore();
@@ -76,11 +32,7 @@ namespace BlackWatch.Core.Test
         [Fact]
         public async void EvaluateSingleSignalledTally()
         {
-            var dataStore = new DataStore(
-                new TallySource("1", "return true;", 1, DateTimeOffset.UtcNow, EvaluationInterval.OneHour));
-
-            var service = new TallyService(dataStore, new NullLogger<TallyService>());
-            var tallies = await service.EvaluateAsync(UserId, EvaluationInterval.OneHour);
+            var tallies = await EvaluateSingleTallySource("return true;", EvaluationInterval.OneHour);
             Assert.Collection(tallies,
                 t =>
                 {
@@ -92,11 +44,7 @@ namespace BlackWatch.Core.Test
         [Fact]
         public async void EvaluateSingleNonSignalledTally()
         {
-            var dataStore = new DataStore(
-                new TallySource("1", "return false;", 1, DateTimeOffset.UtcNow, EvaluationInterval.OneHour));
-
-            var service = new TallyService(dataStore, new NullLogger<TallyService>());
-            var tallies = await service.EvaluateAsync(UserId, EvaluationInterval.OneHour);
+            var tallies = await EvaluateSingleTallySource("return false;", EvaluationInterval.OneHour);
             Assert.Collection(tallies,
                 t =>
                 {
@@ -106,15 +54,79 @@ namespace BlackWatch.Core.Test
         }
 
         [Fact]
+        public async void EvaluateBtcGreaterZero()
+        {
+            const string source = @"
+    var n = 10;
+    return X.BTCUSD(-n).Close > 0;
+";
+            var tallies = await EvaluateSingleTallySource(source, EvaluationInterval.OneHour);
+            Assert.Collection(tallies,
+                t =>
+                {
+                    Assert.Equal(TallyState.Signalled, t.State);
+                    Assert.Null(t.Result);
+                });
+        }
+
+        [Fact]
+        public async void EvaluateWithResult()
+        {
+            const string source = @"return { signal: true, result: 'hello' };";
+            var tallies = await EvaluateSingleTallySource(source, EvaluationInterval.OneHour);
+            Assert.Collection(tallies,
+                t =>
+                {
+                    Assert.Equal(TallyState.Signalled, t.State);
+                    Assert.Equal("hello", t.Result);
+                });
+        }
+
+        [Fact]
+        public async void EvaluateReturnedObjectWithoutResult()
+        {
+            const string source = @"return { signal: true };";
+            var tallies = await EvaluateSingleTallySource(source, EvaluationInterval.OneHour);
+            Assert.Collection(tallies,
+                t =>
+                {
+                    Assert.Equal(TallyState.Signalled, t.State);
+                    Assert.Null(t.Result);
+                });
+        }
+
+        [Fact]
+        public async void EvaluateInvalidReturnValue()
+        {
+            const string source = @"return 123;";
+            var tallies = await EvaluateSingleTallySource(source, EvaluationInterval.OneHour);
+            Assert.Collection(tallies,
+                t =>
+                {
+                    Assert.Equal(TallyState.Indeterminate, t.State);
+                    Assert.Equal("123", t.Result);
+                });
+        }
+
+        [Fact]
         public void JsTest()
         {
             var engine = new Engine();
             var value = engine.Evaluate(@"
 (function() {
-    return { state: 1, result: ""abc"" }
+    return { state: 1, result: 'abc' }
 })();
 ");
             _out.WriteLine($"{value}");
+        }
+
+        private static async Task<Tally[]> EvaluateSingleTallySource(string source, EvaluationInterval interval)
+        {
+            var dataStore = new DataStore(
+                new TallySource("1", source, 1, DateTimeOffset.UtcNow, interval));
+
+            var service = new TallyService(dataStore, new NullLogger<TallyService>());
+            return await service.EvaluateAsync(UserId, EvaluationInterval.OneHour);
         }
 
         private class DataStore : IDataStore
@@ -147,9 +159,9 @@ namespace BlackWatch.Core.Test
             {
                 var quote = symbol switch
                 {
-                    Symbols.BtcUsd => new Quote(symbol, 1000, 2000, 2500, 800, "USD", date),
-                    Symbols.EthUsd => new Quote(symbol, 100, 200, 250, 80, "USD", date),
-                    Symbols.UniUsd => new Quote(symbol, 10, 20, 25, 8, "USD", date),
+                    Symbols.BtcUsd => new Quote(symbol, Open: 1000, Close: 2000, High: 2500, Low: 800, Currency: "USD", Date: date),
+                    Symbols.EthUsd => new Quote(symbol, Open: 100, Close: 200, High: 250, Low: 80, Currency: "USD", Date: date),
+                    Symbols.UniUsd => new Quote(symbol, Open: 10, Close: 20, High: 25, Low: 8, Currency: "USD", Date: date),
                     _ => null,
                 };
                 return Task.FromResult(quote);
@@ -164,17 +176,22 @@ namespace BlackWatch.Core.Test
             {
                 throw new NotImplementedException();
             }
-
             public Task PutTallySourceAsync(string userId, TallySource tallySource)
             {
                 throw new NotImplementedException();
             }
-
             public Task<bool> DeleteTallySourceAsync(string userId, string id)
             {
                 throw new NotImplementedException();
             }
-
+            public Task PutTallyAsync(Tally tally)
+            {
+                throw new NotImplementedException();
+            }
+            public Task<Tally[]> GetTallies(string tallySourceId, int count)
+            {
+                throw new NotImplementedException();
+            }
             public Task<string> GenerateIdAsync()
             {
                 throw new NotImplementedException();

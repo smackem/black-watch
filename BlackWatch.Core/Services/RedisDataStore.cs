@@ -167,15 +167,31 @@ namespace BlackWatch.Core.Services
         public async Task<bool> DeleteTallySourceAsync(string userId, string id)
         {
             var db = await GetDatabaseAsync().Linger();
-            var key = Names.TallySourceKey(userId, id);
+            var tallySourceKey = Names.TallySourceKey(userId, id);
+            var tallyKey = Names.Tally(id);
 
-            if (await db.HashDeleteAsync(Names.TallySources, key).Linger() == false)
+            var tx = db.CreateTransaction();
+            var deleteTallySourceTask = tx.HashDeleteAsync(Names.TallySources, tallySourceKey);
+            var deleteTalliesTask = tx.KeyDeleteAsync(tallyKey);
+
+            if (await tx.ExecuteAsync().Linger() == false)
             {
-                _logger.LogDebug("tally source to be removed from @{Hash}[{TallySourceKey}] not found", Names.TallySources, key);
+                _logger.LogError("tally source removal: transaction failed @{Hash}[{TallySourceKey}]", Names.TallySources, tallySourceKey);
                 return false;
             }
 
-            _logger.LogWarning("tally source removed from @{Hash}[{TallySourceKey}]", Names.TallySources, key);
+            if (await deleteTalliesTask.Linger() == false)
+            {
+                _logger.LogDebug("no tallies removed for tally source @{Hash}[{TallySourceKey}]", Names.TallySources, tallySourceKey);
+            }
+
+            if (await deleteTallySourceTask.Linger() == false)
+            {
+                _logger.LogWarning("tally source to be removed from @{Hash}[{TallySourceKey}] not found", Names.TallySources, tallySourceKey);
+                return false;
+            }
+
+            _logger.LogDebug("tally source removed from @{Hash}[{TallySourceKey}]", Names.TallySources, tallySourceKey);
             return true;
         }
 
@@ -188,13 +204,14 @@ namespace BlackWatch.Core.Services
             var tx = db.CreateTransaction();
             var txTasks = new List<Task>
             {
-                tx.ListRightPushAsync(key, value),
+                tx.ListLeftPushAsync(key, value), // push left so that most recent tally is always at position 0
             };
 
             if (length >= _options.MaxTallyHistoryLength)
             {
-                _logger.LogDebug("tally added @{TallyKey}: {Tally}", key, tally);
-                txTasks.Add(tx.ListLeftPopAsync(key));
+                _logger.LogDebug("tally count {TallyCount} exceeds maximum ({MaxTallyCount}), removing least recent tally @{TallyKey}",
+                    length, _options.MaxTallyHistoryLength, key);
+                txTasks.Add(tx.ListRightPopAsync(key));
             }
 
             if (await tx.ExecuteAsync().Linger())
@@ -212,8 +229,12 @@ namespace BlackWatch.Core.Services
         {
             var db = await GetDatabaseAsync().Linger();
             var key = Names.Tally(tallySourceId);
-            var values = await db.ListRangeAsync(key, -count, -1).Linger();
-            return Array.Empty<Tally>();
+            var values = await db.ListRangeAsync(key, 0, count).Linger();
+            var tallies = values
+                .Where(value => value.HasValue)
+                .Select(Deserialize<Tally>)
+                .ToArray();
+            return tallies;
         }
 
         public void Dispose()

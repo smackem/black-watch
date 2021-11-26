@@ -75,6 +75,7 @@ namespace BlackWatch.Api.Controllers
             var (code, interval) = command;
             var tallySource = new TallySource(id, code, 1, DateTimeOffset.UtcNow, interval);
             await _dataStore.PutTallySourceAsync(UserId, tallySource);
+            _logger.LogInformation("tally source created: user-{UserId}:{TallySourceId}", UserId, id);
             return CreatedAtAction(nameof(GetById), new { id = tallySource.Id }, tallySource);
         }
 
@@ -86,13 +87,14 @@ namespace BlackWatch.Api.Controllers
             var tallySource = await _dataStore.GetTallySourceAsync(UserId, id);
             if (tallySource == null)
             {
-                _logger.LogWarning("tally source not found: {TallySourceId}", id);
+                _logger.LogWarning("tally source not found: user-{UserId}:{TallySourceId}", UserId, id);
                 return NotFound();
             }
 
             var (code, interval) = command;
             var modifiedTallySource = tallySource.Update(code, interval);
             await _dataStore.PutTallySourceAsync(UserId, modifiedTallySource);
+            _logger.LogInformation("tally source updated: user-{UserId}:{TallySourceId}", UserId, id);
             return Ok(modifiedTallySource);
         }
 
@@ -104,11 +106,11 @@ namespace BlackWatch.Api.Controllers
             // ReSharper disable once InvertIf
             if (await _dataStore.DeleteTallySourceAsync(UserId, id) == false)
             {
-                _logger.LogWarning("tally source not found: {TallySourceId}", id);
+                _logger.LogWarning("tally source not found: user-{UserId}:{TallySourceId}", UserId, id);
                 return NotFound();
             }
 
-            _logger.LogInformation("tally source removed: {TallySourceId}", id);
+            _logger.LogInformation("tally source removed: user-{UserId}:{TallySourceId}", UserId, id);
             return NoContent();
         }
 

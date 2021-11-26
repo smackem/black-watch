@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
 using Jint;
 using Jint.Native;
+using Jint.Native.Object;
 using Microsoft.Extensions.Logging;
 
 namespace BlackWatch.Core.Services
@@ -94,10 +95,39 @@ namespace BlackWatch.Core.Services
                 null => (TallyState.Error, null),
                 JsBoolean b when b == JsBoolean.True => (TallyState.Signalled, null),
                 JsBoolean b when b == JsBoolean.False => (TallyState.NonSignalled, null),
+                ObjectInstance obj => DecodeReturnedObject(obj),
                 _ => (TallyState.Indeterminate, value.ToString()),
             };
 
-            return Task.FromResult(new Tally(tallySource.Id, DateTimeOffset.Now, state, result));
+            return Task.FromResult(new Tally(tallySource.Id, tallySource.Version, DateTimeOffset.Now, state, result));
+        }
+
+        private static (TallyState signal, string? result) DecodeReturnedObject(ObjectInstance obj)
+        {
+            if (obj.TryGetValue("signal", out var signalVal) == false)
+            {
+                return (TallyState.Indeterminate, obj.ToString());
+            }
+
+            TallyState signal;
+
+            switch (signalVal)
+            {
+                case JsBoolean b when b == JsBoolean.True:
+                    signal = TallyState.Signalled;
+                    break;
+                case JsBoolean b when b == JsBoolean.False:
+                    signal = TallyState.NonSignalled;
+                    break;
+                default:
+                    return (TallyState.Indeterminate, obj.ToString());
+            }
+
+            var result = obj.TryGetValue("result", out var resultVal)
+                ? resultVal.ToString()
+                : null;
+
+            return (signal, result);
         }
     }
 }

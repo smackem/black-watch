@@ -23,12 +23,10 @@ namespace BlackWatch.Core.Services
             _logger = logger;
         }
 
-        public async Task<Tally[]> EvaluateAsync(string userId, EvaluationInterval interval)
+        public async IAsyncEnumerable<Tally> EvaluateAsync(EvaluationInterval interval, string? userId = null)
         {
             var ctx = await BuildContextAsync();
-            var tallySources = await _dataStore.GetTallySourcesAsync(userId);
-            var tallies = new List<Tally>();
-            foreach (var tallySource in tallySources)
+            await foreach (var tallySource in _dataStore.GetTallySourcesAsync(userId).ConfigureAwait(false))
             {
                 if (tallySource.Interval != interval)
                 {
@@ -36,10 +34,8 @@ namespace BlackWatch.Core.Services
                 }
 
                 var tally = await EvaluateAsync(tallySource, ctx);
-                tallies.Add(tally);
+                yield return tally;
             }
-
-            return tallies.ToArray();
         }
 
         public async Task<Tally> EvaluateAsync(TallySource tallySource)

@@ -60,9 +60,10 @@ namespace BlackWatch.Core.Contracts
         public Task<long> GetJobQueueLengthAsync();
 
         /// <summary>
-        /// retrieves all <see cref="TallySource"/>s of the specified user from the database
+        /// enumerates all <see cref="TallySource"/>s of the specified user from the database or all
+        /// tally sources if <paramref name="userId"/> is <c>null</c>
         /// </summary>
-        public Task<TallySource[]> GetTallySourcesAsync(string userId);
+        public IAsyncEnumerable<TallySource> GetTallySourcesAsync(string? userId = null);
 
         /// <summary>
         /// gets the user's <see cref="TallySource"/> with the specified <paramref name="id"/> or <c>null</c>

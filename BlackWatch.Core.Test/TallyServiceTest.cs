@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
 using BlackWatch.Core.Services;
+using BlackWatch.Core.Test.Util;
+using BlackWatch.Core.Util;
 using Jint;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
@@ -25,7 +27,7 @@ namespace BlackWatch.Core.Test
         {
             var dataStore = new DataStore();
             var service = new TallyService(dataStore, new NullLogger<TallyService>());
-            var tallies = await service.EvaluateAsync(UserId, EvaluationInterval.OneHour);
+            var tallies = await service.EvaluateAsync(EvaluationInterval.OneHour, UserId).ToList();
             Assert.Empty(tallies);
         }
 
@@ -66,6 +68,21 @@ namespace BlackWatch.Core.Test
                 {
                     Assert.Equal(TallyState.Signalled, t.State);
                     Assert.Null(t.Result);
+                });
+        }
+
+        [Fact]
+        public async void CheckQuoteOfToday()
+        {
+            const string source = @"
+    return { signal: true, result: X.BTCUSD(0).Date };
+";
+            var tallies = await EvaluateSingleTallySource(source, EvaluationInterval.OneHour);
+            Assert.Collection(tallies,
+                t =>
+                {
+                    Assert.Equal(TallyState.Signalled, t.State);
+                    Assert.NotNull(t.Result);
                 });
         }
 
@@ -120,13 +137,13 @@ namespace BlackWatch.Core.Test
             _out.WriteLine($"{value}");
         }
 
-        private static async Task<Tally[]> EvaluateSingleTallySource(string source, EvaluationInterval interval)
+        private static async Task<IReadOnlyList<Tally>> EvaluateSingleTallySource(string source, EvaluationInterval interval)
         {
             var dataStore = new DataStore(
                 new TallySource("1", source, 1, DateTimeOffset.UtcNow, interval));
 
             var service = new TallyService(dataStore, new NullLogger<TallyService>());
-            return await service.EvaluateAsync(UserId, EvaluationInterval.OneHour);
+            return await service.EvaluateAsync(EvaluationInterval.OneHour, UserId).ToList();
         }
 
         private class DataStore : IDataStore
@@ -167,9 +184,9 @@ namespace BlackWatch.Core.Test
                 return Task.FromResult(quote);
             }
 
-            public Task<TallySource[]> GetTallySourcesAsync(string userId)
+            public IAsyncEnumerable<TallySource> GetTallySourcesAsync(string? userId)
             {
-                return Task.FromResult(_tallySources);
+                return _tallySources.ToAsyncEnumerable();
             }
 
             public Task<TallySource?> GetTallySourceAsync(string userId, string id)

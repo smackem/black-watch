@@ -119,13 +119,12 @@ namespace BlackWatch.Core.Services
             _logger.LogDebug("quote set @{Hash}[{Date}]", hash, key);
         }
 
-        public async Task<TallySource[]> GetTallySourcesAsync(string userId)
+        public async IAsyncEnumerable<TallySource> GetTallySourcesAsync(string? userId)
         {
             var db = await GetDatabaseAsync().Linger();
-            var pattern = Names.TallySourceKey(userId, "*");
-            var tallySources = new List<TallySource>();
+            var pattern = Names.TallySourceKey(userId ?? "*", "*");
 
-            await foreach (var entry in db.HashScanAsync(Names.TallySources, pattern).ConfigureAwait(false))
+            await foreach (var entry in db.HashScanAsync(Names.TallySources, pattern).Linger())
             {
                 if (entry.Value.HasValue == false)
                 {
@@ -133,10 +132,8 @@ namespace BlackWatch.Core.Services
                     continue;
                 }
 
-                tallySources.Add(Deserialize<TallySource>(entry.Value));
+                yield return Deserialize<TallySource>(entry.Value);
             }
-
-            return tallySources.ToArray();
         }
 
         public async Task<TallySource?> GetTallySourceAsync(string userId, string id)

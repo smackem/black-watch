@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
 using BlackWatch.Core.Services;
+using BlackWatch.Core.Util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -61,9 +63,14 @@ namespace BlackWatch.Api.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(TallySource[]), (int) HttpStatusCode.OK)]
         [Produces(ResponseMimeType)]
-        public async Task<TallySource[]> Index()
+        public async Task<IReadOnlyCollection<TallySource>> Index()
         {
-            return await _dataStore.GetTallySourcesAsync(UserId);
+            var tallySources = new List<TallySource>();
+            await foreach (var tallySource in _dataStore.GetTallySourcesAsync(UserId).Linger())
+            {
+                tallySources.Add(tallySource);
+            }
+            return tallySources;
         }
 
         [HttpPost]

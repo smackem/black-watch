@@ -61,16 +61,11 @@ namespace BlackWatch.Api.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(TallySource[]), (int) HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(IReadOnlyCollection<TallySource>), (int) HttpStatusCode.OK)]
         [Produces(ResponseMimeType)]
         public async Task<IReadOnlyCollection<TallySource>> Index()
         {
-            var tallySources = new List<TallySource>();
-            await foreach (var tallySource in _dataStore.GetTallySourcesAsync(UserId).Linger())
-            {
-                tallySources.Add(tallySource);
-            }
-            return tallySources;
+            return await _dataStore.GetTallySourcesAsync().ToList().ConfigureAwait(false);
         }
 
         [HttpPost]

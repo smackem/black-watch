@@ -205,7 +205,7 @@ namespace BlackWatch.Core.Test
             {
                 throw new NotImplementedException();
             }
-            public Task<Tally[]> GetTallies(string tallySourceId, int count)
+            public Task<Tally[]> GetTalliesAsync(string tallySourceId, int count)
             {
                 throw new NotImplementedException();
             }

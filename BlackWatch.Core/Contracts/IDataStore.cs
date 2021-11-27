@@ -94,6 +94,6 @@ namespace BlackWatch.Core.Contracts
         /// gets the most recent <paramref name="count"/> <see cref="Tally"/>s from the database, starting with
         /// the most recent one
         /// </summary>
-        public Task<Tally[]> GetTallies(string tallySourceId, int count);
+        public Task<Tally[]> GetTalliesAsync(string tallySourceId, int count);
     }
 }

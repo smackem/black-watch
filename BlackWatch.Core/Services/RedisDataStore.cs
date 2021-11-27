@@ -222,7 +222,7 @@ namespace BlackWatch.Core.Services
             }
         }
 
-        public async Task<Tally[]> GetTallies(string tallySourceId, int count)
+        public async Task<Tally[]> GetTalliesAsync(string tallySourceId, int count)
         {
             var db = await GetDatabaseAsync().Linger();
             var key = Names.Tally(tallySourceId);

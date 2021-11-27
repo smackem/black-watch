@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
 using BlackWatch.Core.Util;
@@ -51,8 +52,18 @@ namespace BlackWatch.Core.Services
         {
             var trackers = await _dataStore.GetTrackersAsync();
             return trackers.ToDictionary(
-                t => t.Symbol,
+                t => GetFunctionName(t.Symbol),
                 t => new Func<string, Quote?>(dateStr => FetchQuote(t, dateStr)));
+        }
+
+        private static string GetFunctionName(string symbol)
+        {
+            var match = Regex.Match(symbol, @"[\w]\:(\w+)");
+            if (match.Success == false)
+            {
+                throw new ArgumentException($"symbol name {symbol} does not match expected format");
+            }
+            return match.Groups[1].Value;
         }
 
         private Quote? FetchQuote(Tracker tracker, string dateStr)
@@ -79,6 +90,7 @@ namespace BlackWatch.Core.Services
             engine.SetValue("X", ctx);
 
             JsValue? value;
+            string? errorMessage = null;
             try
             {
                 value = engine.Evaluate(code);
@@ -87,11 +99,12 @@ namespace BlackWatch.Core.Services
             {
                 _logger.LogError(e, "error evaluating javascript {Code}", code);
                 value = null;
+                errorMessage = e.Message;
             }
 
             var (state, result) = value switch
             {
-                null => (TallyState.Error, null),
+                null => (TallyState.Error, errorMessage),
                 JsBoolean b when b == JsBoolean.True => (TallyState.Signalled, null),
                 JsBoolean b when b == JsBoolean.False => (TallyState.NonSignalled, null),
                 ObjectInstance obj => DecodeReturnedObject(obj),

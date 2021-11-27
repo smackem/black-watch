@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using BlackWatch.Core.Contracts;
+using BlackWatch.Core.Services;
 using BlackWatch.Daemon.Cron;
 using Cronos;
 using Microsoft.Extensions.Logging;
@@ -10,15 +11,18 @@ namespace BlackWatch.Daemon.Features.CronActions
     public class CronActionSupplier : ICronActionSupplier
     {
         private readonly IDataStore _dataStore;
+        private readonly TallyService _tallyService;
         private readonly ILogger<CronActionSupplier> _logger;
         private readonly SchedulerOptions _options;
 
         public CronActionSupplier(
             IDataStore dataStore,
             IOptions<SchedulerOptions> options,
+            TallyService tallyService,
             ILogger<CronActionSupplier> logger)
         {
             _dataStore = dataStore;
+            _tallyService = tallyService;
             _logger = logger;
             _options = options.Value;
         }
@@ -47,9 +51,15 @@ namespace BlackWatch.Daemon.Features.CronActions
                 {
                     quoteDownloader,
                     trackerDownloader,
-                    initializer
+                    initializer,
+                    CreateEvaluationAction(_options.Cron.EvaluationEveryHour, EvaluationInterval.OneHour),
+                    CreateEvaluationAction(_options.Cron.EvaluationEverySixHours, EvaluationInterval.SixHours),
+                    CreateEvaluationAction(_options.Cron.EvaluationEveryDay, EvaluationInterval.OneDay),
                 };
             }
         }
+
+        private EvaluationAction CreateEvaluationAction(string cronStr, EvaluationInterval interval) =>
+            new(CronExpression.Parse(cronStr), interval, _tallyService, _dataStore, _logger);
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
+using BlackWatch.Core.Util;
 using Jint;
 using Jint.Native;
 using Jint.Native.Object;
@@ -26,7 +27,9 @@ namespace BlackWatch.Core.Services
         public async IAsyncEnumerable<Tally> EvaluateAsync(EvaluationInterval interval, string? userId = null)
         {
             var ctx = await BuildContextAsync();
-            await foreach (var tallySource in _dataStore.GetTallySourcesAsync(userId).ConfigureAwait(false))
+            var tallySources = _dataStore.GetTallySourcesAsync(userId);
+
+            await foreach (var tallySource in tallySources.Linger())
             {
                 if (tallySource.Interval != interval)
                 {

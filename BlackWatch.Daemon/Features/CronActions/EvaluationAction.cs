@@ -8,19 +8,22 @@ using Microsoft.Extensions.Logging;
 
 namespace BlackWatch.Daemon.Features.CronActions
 {
-    public class HourlyEvalAction : CronAction
+    public class EvaluationAction : CronAction
     {
+        private readonly EvaluationInterval _interval;
         private readonly TallyService _tallyService;
         private readonly IDataStore _dataStore;
         private readonly ILogger _logger;
 
-        public HourlyEvalAction(
+        public EvaluationAction(
             CronExpression cronExpr,
+            EvaluationInterval interval,
             TallyService tallyService,
             IDataStore dataStore,
             ILogger logger)
             : base(cronExpr, "evaluate hourly tally sources")
         {
+            _interval = interval;
             _tallyService = tallyService;
             _dataStore = dataStore;
             _logger = logger;
@@ -28,11 +31,17 @@ namespace BlackWatch.Daemon.Features.CronActions
 
         public override async Task<bool> ExecuteAsync()
         {
-            await foreach (var tally in _tallyService.EvaluateAsync(EvaluationInterval.OneHour).Linger())
+            var tallies = _tallyService.EvaluateAsync(_interval);
+            var count = 0;
+            _logger.LogDebug("evaluating tally sources with interval {Interval}", _interval);
+
+            await foreach (var tally in tallies.Linger())
             {
                 await _dataStore.PutTallyAsync(tally);
+                count++;
             }
 
+            _logger.LogInformation("evaluating tally sources with interval {Interval} yielded {TallyCount} tallies", _interval, count);
             return true;
         }
     }

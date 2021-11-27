@@ -18,5 +18,14 @@ namespace BlackWatch.Daemon.Features.CronActions
 
         [Required]
         public string DownloadQuoteHistory { get; set; } = "@hourly";
+
+        [Required]
+        public string EvaluationEveryHour { get; set; } = "30 * * * *";
+
+        [Required]
+        public string EvaluationEverySixHours { get; set; } = "0 */6 * * *";
+
+        [Required]
+        public string EvaluationEveryDay { get; set; } = "0 1 * * *";
     }
 }

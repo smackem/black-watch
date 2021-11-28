@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlackWatch.Api", "BlackWatch.Api\BlackWatch.Api.csproj", "{2D407CA4-5CBD-4822-A603-7F0A14B493C1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlackWatch.Api", "src\BlackWatch.Api\BlackWatch.Api.csproj", "{2D407CA4-5CBD-4822-A603-7F0A14B493C1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlackWatch.Daemon", "BlackWatch.Daemon\BlackWatch.Daemon.csproj", "{8E96F798-7C60-42D4-9FE9-9749DCB9856A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlackWatch.Daemon", "src\BlackWatch.Daemon\BlackWatch.Daemon.csproj", "{8E96F798-7C60-42D4-9FE9-9749DCB9856A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlackWatch.Core", "BlackWatch.Core\BlackWatch.Core.csproj", "{E0D55B78-2A3F-4AF8-889E-0F92E57D5954}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlackWatch.Core", "src\BlackWatch.Core\BlackWatch.Core.csproj", "{E0D55B78-2A3F-4AF8-889E-0F92E57D5954}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlackWatch.Core.Test", "BlackWatch.Core.Test\BlackWatch.Core.Test.csproj", "{D72970E7-D249-4E8B-BED5-B9378CD5C7C0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlackWatch.Core.Test", "tests\BlackWatch.Core.Test\BlackWatch.Core.Test.csproj", "{D72970E7-D249-4E8B-BED5-B9378CD5C7C0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

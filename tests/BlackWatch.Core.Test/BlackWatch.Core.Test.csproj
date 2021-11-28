@@ -22,7 +22,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\BlackWatch.Core\BlackWatch.Core.csproj" />
+      <ProjectReference Include="..\..\src\BlackWatch.Core\BlackWatch.Core.csproj" />
     </ItemGroup>
 
 </Project>

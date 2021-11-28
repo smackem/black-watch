@@ -9,8 +9,11 @@ services:
             dockerfile: ./BlackWatch.Api.Dockerfile
         ports:
             - "6000:5000"
+            - "6001:5001"
         depends_on:
             - cache
+        environment:
+            - Redis__ConnectionString=cache:6379
     daemon:
         image: blackwatch-daemon
         restart: always
@@ -20,7 +23,7 @@ services:
         depends_on:
             - cache
         environment:
-            - Redis__ConnectionString=cache:6379
+            - Redis__ConnectionString=cache:6379,abortConnect=false
             - Polygon__ApiKey=${POLYGON_API_KEY}
     cache:
         image: redis:6.2.6-alpine

@@ -28,6 +28,8 @@ namespace BlackWatch.Api.Controllers
             _tallyService = tallyService;
         }
 
+        public record PutTallySourceCommand(string Code, EvaluationInterval Interval);
+
         [HttpGet("{id}")]
         [Produces(ResponseMimeType)]
         public async Task<ActionResult<TallySource>> GetById(string id)
@@ -48,6 +50,34 @@ namespace BlackWatch.Api.Controllers
         [Produces(ResponseMimeType)]
         public async Task<ActionResult<Tally>> Evaluate(string id)
         {
+            var tally = await InternalEvaluateAsync(id);
+
+            return tally != null
+                ? Ok(tally)
+                : NotFound();
+        }
+
+        [HttpPost("{id}/eval")]
+        [ProducesResponseType(typeof(Tally), (int) HttpStatusCode.Created)]
+        [Produces(ResponseMimeType)]
+        public async Task<ActionResult<Tally>> EvaluateAndStoreTally(string id)
+        {
+            var tally = await InternalEvaluateAsync(id);
+            if (tally == null)
+            {
+                return NotFound();
+            }
+
+            await _dataStore.PutTallyAsync(tally);
+            _logger.LogInformation("tally stored: {Tally}", tally);
+            return CreatedAtAction(nameof(GetTally), new { id, count = 1 }, tally);
+        }
+
+        [HttpGet("{id}/tally")]
+        [ProducesResponseType(typeof(Tally), (int)HttpStatusCode.OK)]
+        [Produces(ResponseMimeType)]
+        public async Task<ActionResult<Tally[]>> GetTally(string id, [FromQuery] int count = 1)
+        {
             var tallySource = await _dataStore.GetTallySourceAsync(UserId, id);
             // ReSharper disable once InvertIf
             if (tallySource == null)
@@ -56,8 +86,8 @@ namespace BlackWatch.Api.Controllers
                 return NotFound();
             }
 
-            var tally = await _tallyService.EvaluateAsync(tallySource);
-            return Ok(tally);
+            var tallies = await _dataStore.GetTalliesAsync(id, count);
+            return Ok(tallies);
         }
 
         [HttpGet]
@@ -116,6 +146,17 @@ namespace BlackWatch.Api.Controllers
             return NoContent();
         }
 
-        public record PutTallySourceCommand(string Code, EvaluationInterval Interval);
+        private async Task<Tally?> InternalEvaluateAsync(string id)
+        {
+            var tallySource = await _dataStore.GetTallySourceAsync(UserId, id);
+            // ReSharper disable once InvertIf
+            if (tallySource == null)
+            {
+                _logger.LogWarning("tally source not found: {TallySourceId}", id);
+                return null;
+            }
+
+            return await _tallyService.EvaluateAsync(tallySource);
+        }
     }
 }

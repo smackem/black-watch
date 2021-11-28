@@ -16,8 +16,10 @@ namespace BlackWatch.Core.Services
     {
         private readonly IDataStore _dataStore;
         private readonly ILogger<TallyService> _logger;
+
         private const string CodePrefix = "(function() {\n";
         private const string CodeSuffix = "\n})();";
+        private static readonly Regex SymbolFunctionRegex = new(@"[\w]\:(\w+)", RegexOptions.Compiled);
 
         public TallyService(IDataStore dataStore, ILogger<TallyService> logger)
         {
@@ -58,7 +60,7 @@ namespace BlackWatch.Core.Services
 
         private static string GetFunctionName(string symbol)
         {
-            var match = Regex.Match(symbol, @"[\w]\:(\w+)");
+            var match = SymbolFunctionRegex.Match(symbol);
             if (match.Success == false)
             {
                 throw new ArgumentException($"symbol name {symbol} does not match expected format");

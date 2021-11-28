@@ -59,6 +59,8 @@ namespace BlackWatch.Daemon
                     services.AddOptions<SchedulerOptions>()
                         .Bind(ctx.Configuration.GetSection("Scheduling"))
                         .ValidateDataAnnotations();
+
+                    services.AddTransient<TallyService>();
                 });
 
         private static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)

@@ -150,9 +150,9 @@ namespace BlackWatch.Core.Test
         {
             private static class Symbols
             {
-                public const string BtcUsd = "BTCUSD";
-                public const string EthUsd = "ETHUSD";
-                public const string UniUsd = "UNIUSD";
+                public const string BtcUsd = "X:BTCUSD";
+                public const string EthUsd = "X:ETHUSD";
+                public const string UniUsd = "X:UNIUSD";
             }
 
             private readonly TallySource[] _tallySources;

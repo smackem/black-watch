@@ -8,13 +8,13 @@ using Microsoft.Extensions.Logging;
 
 namespace BlackWatch.Daemon.Features.CronActions
 {
-    internal class QuoteDownloadTriggerAction : CronAction
+    internal class QuoteHistoryRequestAction : CronAction
     {
         private readonly IDataStore _dataStore;
         private readonly ILogger _logger;
         private readonly int _quoteHistoryDays;
 
-        public QuoteDownloadTriggerAction(CronExpression cronExpr, IDataStore dataStore, ILogger logger, int quoteHistoryDays)
+        public QuoteHistoryRequestAction(CronExpression cronExpr, IDataStore dataStore, ILogger logger, int quoteHistoryDays)
             : base(cronExpr, "trigger download of quote history")
         {
             _dataStore = dataStore;
@@ -32,9 +32,9 @@ namespace BlackWatch.Daemon.Features.CronActions
                 trackers.Length, from, to);
 
             var jobInfos = trackers
-                .Select(t => RequestInfo.DownloadQuoteHistory(new QuoteHistoryRequest(t.Symbol, from, to)));
+                .Select(t => RequestInfo.DownloadQuoteHistory(new QuoteHistoryRequestInfo(t.Symbol, from, to), ApiTags.Polygon));
 
-            await _dataStore.EnqueueJobsAsync(jobInfos).Linger();
+            await _dataStore.EnqueueRequestsAsync(jobInfos).Linger();
             return true;
         }
     }

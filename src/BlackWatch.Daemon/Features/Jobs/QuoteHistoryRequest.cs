@@ -10,13 +10,13 @@ using Microsoft.Extensions.Logging;
 
 namespace BlackWatch.Daemon.Features.Jobs
 {
-    internal class QuoteDownloadRequest : Request
+    internal class QuoteHistoryRequest : Request
     {
-        private readonly QuoteHistoryRequest _info;
+        private readonly QuoteHistoryRequestInfo _info;
         private readonly IPolygonApiClient _polygon;
         private readonly IDataStore _dataStore;
 
-        public QuoteDownloadRequest(QuoteHistoryRequest info, IDataStore dataStore, IPolygonApiClient polygon)
+        public QuoteHistoryRequest(QuoteHistoryRequestInfo info, IDataStore dataStore, IPolygonApiClient polygon)
             : base($"download aggregates for {info.Symbol}")
         {
             _info = info;

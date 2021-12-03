@@ -6,8 +6,8 @@ namespace BlackWatch.Core.Util
     {
         public static (DateTimeOffset from, DateTimeOffset to) DaysUntilYesterdayUtc(int days)
         {
-            var now = DateTimeOffset.UtcNow.AddDays(-1);
-            return (now.AddDays(-days), now);
+            var yesterday = DateTimeOffset.UtcNow.AddDays(-1);
+            return (yesterday.AddDays(-days), yesterday);
         }
     }
 }

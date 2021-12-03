@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
 using BlackWatch.Core.Util;
+using BlackWatch.Daemon.Features;
 using BlackWatch.Daemon.Util;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -42,7 +43,7 @@ namespace BlackWatch.Daemon.RequestEngine
 
             while (stoppingToken.IsCancellationRequested == false)
             {
-                var jobInfos = await _dataStore.DequeueJobsAsync(_config.MaxRequestsPerMinute).Linger();
+                var jobInfos = await _dataStore.DequeueRequestsAsync(_config.MaxRequestsPerMinute, ApiTags.Polygon).Linger();
                 var jobs = jobInfos.Select(info => (_requestFactory.BuildRequest(info, _sp), info));
                 var ctx = new RequestContext(_logger)
                 {
@@ -58,12 +59,12 @@ namespace BlackWatch.Daemon.RequestEngine
                     // ReSharper disable once ConvertIfStatementToSwitchStatement
                     if (result == RequestResult.WaitAndRetry)
                     {
-                        await _dataStore.EnqueueJobAsync(jobInfo).Linger();
+                        await _dataStore.EnqueueRequestAsync(jobInfo).Linger();
                         await Task.Delay(interval, stoppingToken).Linger();
                     }
                     else if (result == RequestResult.Retry)
                     {
-                        await _dataStore.EnqueueJobAsync(jobInfo).Linger();
+                        await _dataStore.EnqueueRequestAsync(jobInfo).Linger();
                     }
                 }
 

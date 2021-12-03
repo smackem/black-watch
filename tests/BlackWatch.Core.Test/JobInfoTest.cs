@@ -21,7 +21,7 @@ namespace BlackWatch.Core.Test
         public void SerializeAggregateCrypto()
         {
             var (from, to) = DateRange.DaysUntilYesterdayUtc(1);
-            var jobInfo = RequestInfo.DownloadQuoteHistory(new QuoteHistoryRequest("SYM", from, to));
+            var jobInfo = RequestInfo.DownloadQuoteHistory(new QuoteHistoryRequestInfo("SYM", from, to), "some_api");
             var json = JsonSerializer.Serialize(jobInfo, new JsonSerializerOptions { IgnoreNullValues = true });
             _out.WriteLine($"serialized JobInfo: {json}");
             var deserialized = JsonSerializer.Deserialize<RequestInfo>(json);
@@ -34,7 +34,7 @@ namespace BlackWatch.Core.Test
         [Fact]
         public void SerializeDailyGroupedCrypto()
         {
-            var jobInfo = RequestInfo.DownloadTrackers(new TrackersRequest(DateTimeOffset.Now));
+            var jobInfo = RequestInfo.DownloadTrackers(new TrackerRequestInfo(DateTimeOffset.Now), "some_api");
             var json = JsonSerializer.Serialize(jobInfo, new JsonSerializerOptions { IgnoreNullValues = true });
             _out.WriteLine($"serialized JobInfo: {json}");
             var deserialized = JsonSerializer.Deserialize<RequestInfo>(json);

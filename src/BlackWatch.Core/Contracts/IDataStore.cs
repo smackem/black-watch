@@ -38,26 +38,27 @@ namespace BlackWatch.Core.Contracts
         public Task SetQuoteAsync(Quote quote);
 
         /// <summary>
-        /// inserts the specified <see cref="RequestInfo" />s at the end of the job queue and returns
-        /// the new length of the job queue
+        /// inserts the specified <see cref="RequestInfo" />s in the request queues responsible for the request's
+        /// api tags
         /// </summary>
-        public Task<long> EnqueueJobsAsync(IEnumerable<RequestInfo> jobs);
+        public Task EnqueueRequestsAsync(IEnumerable<RequestInfo> jobs);
 
         /// <summary>
-        /// inserts the specified <see cref="RequestInfo" />s at the end of the job queue and returns
-        /// the new length of the job queue
+        /// inserts the specified <see cref="RequestInfo" />s at the end of the job queue responsible for the
+        /// request's api tag
         /// </summary>
-        public Task<long> EnqueueJobAsync(RequestInfo request);
+        public Task EnqueueRequestAsync(RequestInfo request);
 
         /// <summary>
-        /// gets and removes up to <paramref name="count"/> jobs from the head of the job queue
+        /// gets and removes up to <paramref name="count"/> jobs from the head of the request queue responsible
+        /// for the given <paramref name="apiTag"/>
         /// </summary>
-        public Task<RequestInfo[]> DequeueJobsAsync(int count);
+        public Task<RequestInfo[]> DequeueRequestsAsync(int count, string apiTag);
 
         /// <summary>
-        /// gets the current job queue length
+        /// gets the current request queue length for the given <paramref name="apiTag"/>
         /// </summary>
-        public Task<long> GetJobQueueLengthAsync();
+        public Task<long> GetRequestQueueLengthAsync(string apiTag);
 
         /// <summary>
         /// enumerates all <see cref="TallySource"/>s of the specified user from the database or all

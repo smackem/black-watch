@@ -32,26 +32,38 @@ namespace BlackWatch.Core.Services
             _logger = logger;
         }
 
-        public async Task<long> EnqueueJobsAsync(IEnumerable<RequestInfo> jobs)
+        public async Task EnqueueRequestsAsync(IEnumerable<RequestInfo> requests)
         {
             var db = await GetDatabaseAsync().Linger();
-            var values = jobs
-                .Select(Serialize)
-                .ToArray();
-            var count = await db.ListRightPushAsync(Names.Jobs, values).Linger();
-            _logger.LogDebug("enqueued {EnqueuedJobs} jobs => queue length = {JobQueueLength}", values.Length, count);
-            return count;
+            var groups = requests.GroupBy(request => request.ApiTag);
+
+            foreach (var group in groups)
+            {
+                if (group.Key == null)
+                {
+                    throw new ArgumentException("requests without api tag found", nameof(requests));
+                }
+
+                var values = group
+                    .Select(Serialize)
+                    .ToArray();
+
+                var count = await db.ListRightPushAsync(Names.Requests(group.Key), values).Linger();
+                _logger.LogDebug(
+                    "enqueued {EnqueuedJobs} requests for {ApiTag} => total queue length = {JobQueueLength}",
+                    values.Length, group.Key, count);
+            }
         }
 
-        public Task<long> EnqueueJobAsync(RequestInfo request)
+        public Task EnqueueRequestAsync(RequestInfo request)
         {
-            return EnqueueJobsAsync(new[] { request });
+            return EnqueueRequestsAsync(new[] { request });
         }
 
-        public async Task<RequestInfo[]> DequeueJobsAsync(int count)
+        public async Task<RequestInfo[]> DequeueRequestsAsync(int count, string apiTag)
         {
             var db = await GetDatabaseAsync().Linger();
-            var values = await db.ListLeftPopAsync(Names.Jobs, count).Linger();
+            var values = await db.ListLeftPopAsync(Names.Requests(apiTag), count).Linger();
             var result = values
                 .Where(v => v.HasValue)
                 .Select(Deserialize<RequestInfo>)
@@ -60,10 +72,10 @@ namespace BlackWatch.Core.Services
             return result;
         }
 
-        public async Task<long> GetJobQueueLengthAsync()
+        public async Task<long> GetRequestQueueLengthAsync(string apiTag)
         {
             var db = await GetDatabaseAsync().Linger();
-            return await db.ListLengthAsync(Names.Jobs).Linger();
+            return await db.ListLengthAsync(Names.Requests(apiTag)).Linger();
         }
 
         public async Task<string> GenerateIdAsync()
@@ -282,9 +294,9 @@ namespace BlackWatch.Core.Services
             public static readonly RedisKey Trackers = new("black-watch:trackers");
 
             /// <summary>
-            /// LIST{JobInfo}
+            /// LIST{RequestInfo}
             /// </summary>
-            public static readonly RedisKey Jobs = new("black-watch:jobs");
+            public static RedisKey Requests(string apiTag) => new($"black-watch:requests:{apiTag}");
 
             /// <summary>
             /// HASH{TallySourceKey => TallySource}

@@ -31,12 +31,12 @@ namespace BlackWatch.Daemon.Features.CronActions
         {
             get
             {
-                var quoteDownloader = new QuoteDownloadTriggerAction(
+                var quoteDownloader = new QuoteHistoryRequestAction(
                     CronExpression.Parse(_options.Cron.DownloadQuoteHistory),
                     _dataStore,
                     _logger,
                     _options.QuoteHistoryDays);
-                var trackerDownloader = new TrackerDownloadTriggerAction(
+                var trackerDownloader = new TrackerRequestAction(
                     CronExpression.Parse(_options.Cron.DownloadTrackers),
                     _dataStore,
                     _logger);

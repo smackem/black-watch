@@ -9,32 +9,35 @@ namespace BlackWatch.Core.Contracts
     public record RequestInfo
     {
         [JsonInclude]
-        public TrackersRequest? TrackerDownload { get; private init; }
+        public TrackerRequestInfo? TrackerDownload { get; private init; }
 
         [JsonInclude]
-        public QuoteHistoryRequest? QuoteHistoryDownload { get; private init; }
+        public QuoteHistoryRequestInfo? QuoteHistoryDownload { get; private init; }
+
+        [JsonInclude]
+        public string? ApiTag { get; private init; }
 
         public static readonly RequestInfo Nop = new();
 
-        public static RequestInfo DownloadTrackers(TrackersRequest request)
+        public static RequestInfo DownloadTrackers(TrackerRequestInfo requestInfo, string apiTag)
         {
-            return new RequestInfo { TrackerDownload = request };
+            return new RequestInfo { TrackerDownload = requestInfo, ApiTag = apiTag };
         }
 
-        public static RequestInfo DownloadQuoteHistory(QuoteHistoryRequest request)
+        public static RequestInfo DownloadQuoteHistory(QuoteHistoryRequestInfo requestInfo, string apiTag)
         {
-            return new RequestInfo { QuoteHistoryDownload = request };
+            return new RequestInfo { QuoteHistoryDownload = requestInfo, ApiTag = apiTag };
         }
     }
 
     /// <summary>
     /// download all trackers including their market infos at <paramref name="Date"/>
     /// </summary>
-    public record TrackersRequest(DateTimeOffset Date);
+    public record TrackerRequestInfo(DateTimeOffset Date);
 
     /// <summary>
     /// download the daily quotes for the tracker with symbol <paramref name="Symbol"/>, starting
     /// at <paramref name="FromDate"/> up to and including <paramref name="ToDate"/>
     /// </summary>
-    public record QuoteHistoryRequest(string Symbol, DateTimeOffset FromDate, DateTimeOffset ToDate);
+    public record QuoteHistoryRequestInfo(string Symbol, DateTimeOffset FromDate, DateTimeOffset ToDate);
 }

@@ -10,13 +10,13 @@ using Microsoft.Extensions.Logging;
 
 namespace BlackWatch.Daemon.Features.Jobs
 {
-    internal class TrackerDownloadRequest : Request
+    internal class TrackerRequest : Request
     {
-        private readonly Core.Contracts.TrackersRequest _info;
+        private readonly TrackerRequestInfo _info;
         private readonly IPolygonApiClient _polygon;
         private readonly IDataStore _dataStore;
 
-        public TrackerDownloadRequest(Core.Contracts.TrackersRequest info, IDataStore dataStore, IPolygonApiClient polygon)
+        public TrackerRequest(TrackerRequestInfo info, IDataStore dataStore, IPolygonApiClient polygon)
             : base("download crypto trackers")
         {
             _info = info;

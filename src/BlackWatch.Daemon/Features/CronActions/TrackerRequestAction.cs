@@ -8,12 +8,12 @@ using Microsoft.Extensions.Logging;
 
 namespace BlackWatch.Daemon.Features.CronActions
 {
-    public class TrackerDownloadTriggerAction : CronAction
+    public class TrackerRequestAction : CronAction
     {
         private readonly IDataStore _dataStore;
         private readonly ILogger _logger;
 
-        public TrackerDownloadTriggerAction(CronExpression cronExpr, IDataStore dataStore, ILogger logger)
+        public TrackerRequestAction(CronExpression cronExpr, IDataStore dataStore, ILogger logger)
             : base(cronExpr, "download trackers")
         {
             _dataStore = dataStore;
@@ -22,10 +22,10 @@ namespace BlackWatch.Daemon.Features.CronActions
 
         public override async Task<bool> ExecuteAsync()
         {
-            var jobInfo = RequestInfo.DownloadTrackers(new TrackersRequest(DateTimeOffset.UtcNow.AddDays(-1)));
+            var jobInfo = RequestInfo.DownloadTrackers(new TrackerRequestInfo(DateTimeOffset.UtcNow.AddDays(-1)), ApiTags.Polygon);
             _logger.LogInformation("queue job: download trackers {JobInfo}", jobInfo);
 
-            await _dataStore.EnqueueJobAsync(jobInfo).Linger();
+            await _dataStore.EnqueueRequestAsync(jobInfo).Linger();
 
             return true; // always continue
         }

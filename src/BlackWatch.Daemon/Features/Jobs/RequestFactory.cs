@@ -15,8 +15,8 @@ namespace BlackWatch.Daemon.Features.Jobs
 
             return requestInfo switch
             {
-                { QuoteHistoryDownload: not null } => new QuoteDownloadRequest(requestInfo.QuoteHistoryDownload, dataStore, polygon),
-                { TrackerDownload: not null } => new TrackerDownloadRequest(requestInfo.TrackerDownload, dataStore, polygon),
+                { QuoteHistoryDownload: not null } => new QuoteHistoryRequest(requestInfo.QuoteHistoryDownload, dataStore, polygon),
+                { TrackerDownload: not null } => new TrackerRequest(requestInfo.TrackerDownload, dataStore, polygon),
                 var info when info == RequestInfo.Nop => NopRequest.Instance,
                 _ => throw new ArgumentException($"unknown kind of job: {requestInfo}"),
             };

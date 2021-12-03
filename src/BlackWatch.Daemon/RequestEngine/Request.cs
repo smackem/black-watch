@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 namespace BlackWatch.Daemon.RequestEngine
 {
     /// <summary>
-    /// a job executed by the <see cref="RequestRunner"/>
+    /// a request executed by the <see cref="RequestRunner"/>
     /// </summary>
     public abstract class Request
     {
@@ -19,12 +19,12 @@ namespace BlackWatch.Daemon.RequestEngine
 
         public override string ToString()
         {
-            return $"Job[{_moniker}]";
+            return $"Request[{_moniker}]";
         }
     }
 
     /// <summary>
-    /// a job that does nothing, only logs a warning. can be used to signal some misunderstanding...
+    /// a request that does nothing, only logs a warning. can be used to signal some misunderstanding...
     /// </summary>
     public class NopRequest : Request
     {
@@ -34,7 +34,7 @@ namespace BlackWatch.Daemon.RequestEngine
 
         public override Task<RequestResult> ExecuteAsync(RequestContext ctx)
         {
-            ctx.Logger.LogWarning("executing nop job");
+            ctx.Logger.LogWarning("executing nop request");
             return Task.FromResult(RequestResult.Ok);
         }
     }

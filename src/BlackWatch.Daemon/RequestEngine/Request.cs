@@ -1,21 +1,21 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace BlackWatch.Daemon.JobEngine
+namespace BlackWatch.Daemon.RequestEngine
 {
     /// <summary>
-    /// a job executed by the <see cref="JobExecutor"/>
+    /// a job executed by the <see cref="RequestRunner"/>
     /// </summary>
-    public abstract class Job
+    public abstract class Request
     {
         private readonly string _moniker;
 
-        protected Job(string moniker)
+        protected Request(string moniker)
         {
             _moniker = moniker;
         }
 
-        public abstract Task<JobExecutionResult> ExecuteAsync(JobExecutionContext ctx);
+        public abstract Task<RequestResult> ExecuteAsync(RequestContext ctx);
 
         public override string ToString()
         {
@@ -26,16 +26,16 @@ namespace BlackWatch.Daemon.JobEngine
     /// <summary>
     /// a job that does nothing, only logs a warning. can be used to signal some misunderstanding...
     /// </summary>
-    public class NopJob : Job
+    public class NopRequest : Request
     {
-        private NopJob() : base("nop") { }
+        private NopRequest() : base("nop") { }
 
-        public static Job Instance { get; } = new NopJob();
+        public static Request Instance { get; } = new NopRequest();
 
-        public override Task<JobExecutionResult> ExecuteAsync(JobExecutionContext ctx)
+        public override Task<RequestResult> ExecuteAsync(RequestContext ctx)
         {
             ctx.Logger.LogWarning("executing nop job");
-            return Task.FromResult(JobExecutionResult.Ok);
+            return Task.FromResult(RequestResult.Ok);
         }
     }
 }

@@ -5,18 +5,18 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
 using BlackWatch.Daemon.Features.Polygon;
-using BlackWatch.Daemon.JobEngine;
+using BlackWatch.Daemon.RequestEngine;
 using Microsoft.Extensions.Logging;
 
 namespace BlackWatch.Daemon.Features.Jobs
 {
-    internal class QuoteDownloadJob : Job
+    internal class QuoteDownloadRequest : Request
     {
-        private readonly QuoteHistoryDownloadJob _info;
+        private readonly QuoteHistoryRequest _info;
         private readonly IPolygonApiClient _polygon;
         private readonly IDataStore _dataStore;
 
-        public QuoteDownloadJob(QuoteHistoryDownloadJob info, IDataStore dataStore, IPolygonApiClient polygon)
+        public QuoteDownloadRequest(QuoteHistoryRequest info, IDataStore dataStore, IPolygonApiClient polygon)
             : base($"download aggregates for {info.Symbol}")
         {
             _info = info;
@@ -24,7 +24,7 @@ namespace BlackWatch.Daemon.Features.Jobs
             _dataStore = dataStore;
         }
 
-        public override async Task<JobExecutionResult> ExecuteAsync(JobExecutionContext ctx)
+        public override async Task<RequestResult> ExecuteAsync(RequestContext ctx)
         {
             AggregateCurrencyPricesResponse prices;
             try
@@ -34,12 +34,12 @@ namespace BlackWatch.Daemon.Features.Jobs
             catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.TooManyRequests)
             {
                 ctx.Logger.LogWarning(e, "received {StatusCode} while getting aggregate crypto prices for {Symbol} => wait and retry", e.StatusCode, _info.Symbol);
-                return JobExecutionResult.WaitAndRetry;
+                return RequestResult.WaitAndRetry;
             }
             catch (Exception e)
             {
                 ctx.Logger.LogError(e, "error getting aggregate crypto prices for {Symbol}", _info.Symbol);
-                return JobExecutionResult.Fatal;
+                return RequestResult.Fatal;
             }
 
             if (prices.Status != PolygonApiStatus.Ok)
@@ -50,7 +50,7 @@ namespace BlackWatch.Daemon.Features.Jobs
             if (prices.Results == null)
             {
                 ctx.Logger.LogWarning("aggregate crypto prices: got empty result set: {Response}", prices);
-                return JobExecutionResult.Retry;
+                return RequestResult.Retry;
             }
 
             var currency = GetCryptoQuoteCurrency(_info.Symbol);
@@ -67,7 +67,7 @@ namespace BlackWatch.Daemon.Features.Jobs
 
             await UpdateTracker(quotes);
 
-            return JobExecutionResult.Ok;
+            return RequestResult.Ok;
         }
 
         private static string GetCryptoQuoteCurrency(string symbol)

@@ -1,24 +1,24 @@
 using System;
 using BlackWatch.Core.Contracts;
 using BlackWatch.Daemon.Features.Polygon;
-using BlackWatch.Daemon.JobEngine;
+using BlackWatch.Daemon.RequestEngine;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BlackWatch.Daemon.Features.Jobs
 {
-    public class JobFactory : IJobFactory
+    public class RequestFactory : IRequestFactory
     {
-        public Job BuildJob(JobInfo jobInfo, IServiceProvider sp)
+        public Request BuildRequest(RequestInfo requestInfo, IServiceProvider sp)
         {
             var dataStore = sp.GetRequiredService<IDataStore>();
             var polygon = sp.GetRequiredService<IPolygonApiClient>();
 
-            return jobInfo switch
+            return requestInfo switch
             {
-                { QuoteHistoryDownload: not null } => new QuoteDownloadJob(jobInfo.QuoteHistoryDownload, dataStore, polygon),
-                { TrackerDownload: not null } => new TrackerDownloadJob(jobInfo.TrackerDownload, dataStore, polygon),
-                var info when info == JobInfo.Nop => NopJob.Instance,
-                _ => throw new ArgumentException($"unknown kind of job: {jobInfo}"),
+                { QuoteHistoryDownload: not null } => new QuoteDownloadRequest(requestInfo.QuoteHistoryDownload, dataStore, polygon),
+                { TrackerDownload: not null } => new TrackerDownloadRequest(requestInfo.TrackerDownload, dataStore, polygon),
+                var info when info == RequestInfo.Nop => NopRequest.Instance,
+                _ => throw new ArgumentException($"unknown kind of job: {requestInfo}"),
             };
         }
     }

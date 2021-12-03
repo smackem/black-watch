@@ -5,18 +5,18 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
 using BlackWatch.Daemon.Features.Polygon;
-using BlackWatch.Daemon.JobEngine;
+using BlackWatch.Daemon.RequestEngine;
 using Microsoft.Extensions.Logging;
 
 namespace BlackWatch.Daemon.Features.Jobs
 {
-    internal class TrackerDownloadJob : Job
+    internal class TrackerDownloadRequest : Request
     {
-        private readonly Core.Contracts.TrackerDownloadJob _info;
+        private readonly Core.Contracts.TrackersRequest _info;
         private readonly IPolygonApiClient _polygon;
         private readonly IDataStore _dataStore;
 
-        public TrackerDownloadJob(Core.Contracts.TrackerDownloadJob info, IDataStore dataStore, IPolygonApiClient polygon)
+        public TrackerDownloadRequest(Core.Contracts.TrackersRequest info, IDataStore dataStore, IPolygonApiClient polygon)
             : base("download crypto trackers")
         {
             _info = info;
@@ -24,7 +24,7 @@ namespace BlackWatch.Daemon.Features.Jobs
             _polygon = polygon;
         }
 
-        public override async Task<JobExecutionResult> ExecuteAsync(JobExecutionContext ctx)
+        public override async Task<RequestResult> ExecuteAsync(RequestContext ctx)
         {
             GroupedDailyCurrencyPricesResponse trackerPrices;
             try
@@ -34,12 +34,12 @@ namespace BlackWatch.Daemon.Features.Jobs
             catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.TooManyRequests)
             {
                 ctx.Logger.LogWarning(e, "received {StatusCode} while getting trackers => wait and retry", e.StatusCode);
-                return JobExecutionResult.WaitAndRetry;
+                return RequestResult.WaitAndRetry;
             }
             catch (Exception e)
             {
                 ctx.Logger.LogError(e, "error getting grouped daily crypto prices");
-                return JobExecutionResult.Fatal;
+                return RequestResult.Fatal;
             }
 
             ctx.Logger.LogDebug("{Response}", trackerPrices);
@@ -52,7 +52,7 @@ namespace BlackWatch.Daemon.Features.Jobs
             if (trackerPrices.Results == null)
             {
                 ctx.Logger.LogWarning("grouped daily crypto prices: got empty result set: {Response}", trackerPrices);
-                return JobExecutionResult.Retry;
+                return RequestResult.Retry;
             }
 
             var trackers = trackerPrices.Results
@@ -60,7 +60,7 @@ namespace BlackWatch.Daemon.Features.Jobs
                 .ToArray();
 
             await _dataStore.PutTrackersAsync(trackers);
-            return JobExecutionResult.Ok;
+            return RequestResult.Ok;
         }
     }
 }

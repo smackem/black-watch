@@ -38,21 +38,21 @@ namespace BlackWatch.Core.Contracts
         public Task SetQuoteAsync(Quote quote);
 
         /// <summary>
-        /// inserts the specified <see cref="JobInfo" />s at the end of the job queue and returns
+        /// inserts the specified <see cref="RequestInfo" />s at the end of the job queue and returns
         /// the new length of the job queue
         /// </summary>
-        public Task<long> EnqueueJobsAsync(IEnumerable<JobInfo> jobs);
+        public Task<long> EnqueueJobsAsync(IEnumerable<RequestInfo> jobs);
 
         /// <summary>
-        /// inserts the specified <see cref="JobInfo" />s at the end of the job queue and returns
+        /// inserts the specified <see cref="RequestInfo" />s at the end of the job queue and returns
         /// the new length of the job queue
         /// </summary>
-        public Task<long> EnqueueJobAsync(JobInfo job);
+        public Task<long> EnqueueJobAsync(RequestInfo request);
 
         /// <summary>
         /// gets and removes up to <paramref name="count"/> jobs from the head of the job queue
         /// </summary>
-        public Task<JobInfo[]> DequeueJobsAsync(int count);
+        public Task<RequestInfo[]> DequeueJobsAsync(int count);
 
         /// <summary>
         /// gets the current job queue length

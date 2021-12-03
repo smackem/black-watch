@@ -221,15 +221,15 @@ namespace BlackWatch.Core.Test
             {
                 throw new NotImplementedException();
             }
-            public Task<long> EnqueueJobsAsync(IEnumerable<JobInfo> jobs)
+            public Task<long> EnqueueJobsAsync(IEnumerable<RequestInfo> jobs)
             {
                 throw new NotImplementedException();
             }
-            public Task<long> EnqueueJobAsync(JobInfo job)
+            public Task<long> EnqueueJobAsync(RequestInfo request)
             {
                 throw new NotImplementedException();
             }
-            public Task<JobInfo[]> DequeueJobsAsync(int count)
+            public Task<RequestInfo[]> DequeueJobsAsync(int count)
             {
                 throw new NotImplementedException();
             }

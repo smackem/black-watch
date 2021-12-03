@@ -32,7 +32,7 @@ namespace BlackWatch.Daemon.Features.CronActions
                 trackers.Length, from, to);
 
             var jobInfos = trackers
-                .Select(t => JobInfo.DownloadQuoteHistory(new QuoteHistoryDownloadJob(t.Symbol, from, to)));
+                .Select(t => RequestInfo.DownloadQuoteHistory(new QuoteHistoryRequest(t.Symbol, from, to)));
 
             await _dataStore.EnqueueJobsAsync(jobInfos).Linger();
             return true;

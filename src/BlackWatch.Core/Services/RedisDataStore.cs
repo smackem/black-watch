@@ -32,7 +32,7 @@ namespace BlackWatch.Core.Services
             _logger = logger;
         }
 
-        public async Task<long> EnqueueJobsAsync(IEnumerable<JobInfo> jobs)
+        public async Task<long> EnqueueJobsAsync(IEnumerable<RequestInfo> jobs)
         {
             var db = await GetDatabaseAsync().Linger();
             var values = jobs
@@ -43,18 +43,18 @@ namespace BlackWatch.Core.Services
             return count;
         }
 
-        public Task<long> EnqueueJobAsync(JobInfo job)
+        public Task<long> EnqueueJobAsync(RequestInfo request)
         {
-            return EnqueueJobsAsync(new[] { job });
+            return EnqueueJobsAsync(new[] { request });
         }
 
-        public async Task<JobInfo[]> DequeueJobsAsync(int count)
+        public async Task<RequestInfo[]> DequeueJobsAsync(int count)
         {
             var db = await GetDatabaseAsync().Linger();
             var values = await db.ListLeftPopAsync(Names.Jobs, count).Linger();
             var result = values
                 .Where(v => v.HasValue)
-                .Select(Deserialize<JobInfo>)
+                .Select(Deserialize<RequestInfo>)
                 .ToArray();
             _logger.LogDebug("dequeued {DequeuedJobs}/{EnquiredJobs} jobs", result.Length, count);
             return result;

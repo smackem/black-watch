@@ -8,30 +8,30 @@ using BlackWatch.Daemon.Util;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace BlackWatch.Daemon.JobEngine
+namespace BlackWatch.Daemon.RequestEngine
 {
     /// <summary>
     /// worker that performs throttled job execution, executing a configurable number of jobs per minute
     /// </summary>
-    public class JobExecutor : WorkerBase
+    public class RequestRunner : WorkerBase
     {
-        private readonly ILogger<JobExecutor> _logger;
+        private readonly ILogger<RequestRunner> _logger;
         private readonly IDataStore _dataStore;
-        private readonly JobExecutorOptions _config;
-        private readonly IJobFactory _jobFactory;
+        private readonly RequestRunnerOptions _config;
+        private readonly IRequestFactory _requestFactory;
         private readonly IServiceProvider _sp;
 
-        public JobExecutor(
-            ILogger<JobExecutor> logger,
+        public RequestRunner(
+            ILogger<RequestRunner> logger,
             IDataStore dataStore,
-            IJobFactory jobFactory,
-            IOptions<JobExecutorOptions> options,
+            IRequestFactory requestFactory,
+            IOptions<RequestRunnerOptions> options,
             IServiceProvider sp)
             : base(logger)
         {
             _logger = logger;
             _dataStore = dataStore;
-            _jobFactory = jobFactory;
+            _requestFactory = requestFactory;
             _config = options.Value;
             _sp = sp;
         }
@@ -42,9 +42,9 @@ namespace BlackWatch.Daemon.JobEngine
 
             while (stoppingToken.IsCancellationRequested == false)
             {
-                var jobInfos = await _dataStore.DequeueJobsAsync(_config.MaxJobsPerMinute).Linger();
-                var jobs = jobInfos.Select(info => (_jobFactory.BuildJob(info, _sp), info));
-                var ctx = new JobExecutionContext(_logger)
+                var jobInfos = await _dataStore.DequeueJobsAsync(_config.MaxRequestsPerMinute).Linger();
+                var jobs = jobInfos.Select(info => (_requestFactory.BuildRequest(info, _sp), info));
+                var ctx = new RequestContext(_logger)
                 {
                     StoppingToken = stoppingToken,
                 };
@@ -56,12 +56,12 @@ namespace BlackWatch.Daemon.JobEngine
                     _logger.Log(GetLogLevel(result), "job {Job} executed with result: {JobExecutionResult}", job, result);
 
                     // ReSharper disable once ConvertIfStatementToSwitchStatement
-                    if (result == JobExecutionResult.WaitAndRetry)
+                    if (result == RequestResult.WaitAndRetry)
                     {
                         await _dataStore.EnqueueJobAsync(jobInfo).Linger();
                         await Task.Delay(interval, stoppingToken).Linger();
                     }
-                    else if (result == JobExecutionResult.Retry)
+                    else if (result == RequestResult.Retry)
                     {
                         await _dataStore.EnqueueJobAsync(jobInfo).Linger();
                     }
@@ -73,13 +73,13 @@ namespace BlackWatch.Daemon.JobEngine
             _logger.LogInformation("job execution stopped");
         }
 
-        private static LogLevel GetLogLevel(JobExecutionResult result)
+        private static LogLevel GetLogLevel(RequestResult result)
         {
             return result switch
             {
-                JobExecutionResult.Ok => LogLevel.Information,
-                JobExecutionResult.Retry or JobExecutionResult.WaitAndRetry => LogLevel.Warning,
-                JobExecutionResult.Fatal => LogLevel.Error,
+                RequestResult.Ok => LogLevel.Information,
+                RequestResult.Retry or RequestResult.WaitAndRetry => LogLevel.Warning,
+                RequestResult.Fatal => LogLevel.Error,
                 _ => throw new ArgumentOutOfRangeException($"unknown execution result: {result}"),
             };
         }

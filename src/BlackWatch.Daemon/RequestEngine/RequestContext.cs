@@ -1,11 +1,11 @@
 using System.Threading;
 using Microsoft.Extensions.Logging;
 
-namespace BlackWatch.Daemon.JobEngine
+namespace BlackWatch.Daemon.RequestEngine
 {
-    public class JobExecutionContext
+    public class RequestContext
     {
-        public JobExecutionContext(ILogger logger)
+        public RequestContext(ILogger logger)
         {
             Logger = logger;
         }

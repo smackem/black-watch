@@ -1,9 +1,9 @@
-namespace BlackWatch.Daemon.JobEngine
+namespace BlackWatch.Daemon.RequestEngine
 {
     /// <summary>
-    /// execution results for jobs executed by <see cref="JobExecutor"/>
+    /// execution results for jobs executed by <see cref="RequestRunner"/>
     /// </summary>
-    public enum JobExecutionResult
+    public enum RequestResult
     {
         /// <summary>
         /// all is fine

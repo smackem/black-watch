@@ -22,7 +22,7 @@ namespace BlackWatch.Daemon.Features.CronActions
 
         public override async Task<bool> ExecuteAsync()
         {
-            var jobInfo = JobInfo.DownloadTrackers(new TrackerDownloadJob(DateTimeOffset.UtcNow.AddDays(-1)));
+            var jobInfo = RequestInfo.DownloadTrackers(new TrackersRequest(DateTimeOffset.UtcNow.AddDays(-1)));
             _logger.LogInformation("queue job: download trackers {JobInfo}", jobInfo);
 
             await _dataStore.EnqueueJobAsync(jobInfo).Linger();

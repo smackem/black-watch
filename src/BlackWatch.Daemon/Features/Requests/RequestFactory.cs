@@ -4,7 +4,7 @@ using BlackWatch.Daemon.Features.Polygon;
 using BlackWatch.Daemon.RequestEngine;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace BlackWatch.Daemon.Features.Jobs
+namespace BlackWatch.Daemon.Features.Requests
 {
     public class RequestFactory : IRequestFactory
     {

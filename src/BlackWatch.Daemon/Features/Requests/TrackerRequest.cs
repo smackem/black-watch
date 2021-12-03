@@ -8,7 +8,7 @@ using BlackWatch.Daemon.Features.Polygon;
 using BlackWatch.Daemon.RequestEngine;
 using Microsoft.Extensions.Logging;
 
-namespace BlackWatch.Daemon.Features.Jobs
+namespace BlackWatch.Daemon.Features.Requests
 {
     internal class TrackerRequest : Request
     {

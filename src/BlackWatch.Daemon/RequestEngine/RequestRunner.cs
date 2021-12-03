@@ -14,15 +14,17 @@ namespace BlackWatch.Daemon.RequestEngine
     /// <summary>
     /// worker that performs throttled job execution, executing a configurable number of jobs per minute
     /// </summary>
-    public class RequestRunner : WorkerBase
+    public abstract class RequestRunner : WorkerBase
     {
         private readonly ILogger<RequestRunner> _logger;
         private readonly IDataStore _dataStore;
         private readonly RequestRunnerOptions _config;
         private readonly IRequestFactory _requestFactory;
         private readonly IServiceProvider _sp;
+        private readonly TimeSpan _interval;
 
-        public RequestRunner(
+        protected RequestRunner(
+            TimeSpan interval,
             ILogger<RequestRunner> logger,
             IDataStore dataStore,
             IRequestFactory requestFactory,
@@ -30,6 +32,7 @@ namespace BlackWatch.Daemon.RequestEngine
             IServiceProvider sp)
             : base(logger)
         {
+            _interval = interval;
             _logger = logger;
             _dataStore = dataStore;
             _requestFactory = requestFactory;
@@ -37,10 +40,8 @@ namespace BlackWatch.Daemon.RequestEngine
             _sp = sp;
         }
 
-        protected override async Task ExecuteOverrideAsync(CancellationToken stoppingToken)
+        protected sealed override async Task ExecuteOverrideAsync(CancellationToken stoppingToken)
         {
-            var interval = TimeSpan.FromMinutes(1);
-
             while (stoppingToken.IsCancellationRequested == false)
             {
                 var jobInfos = await _dataStore.DequeueRequestsAsync(_config.MaxRequestsPerMinute, ApiTags.Polygon).Linger();
@@ -60,7 +61,7 @@ namespace BlackWatch.Daemon.RequestEngine
                     if (result == RequestResult.WaitAndRetry)
                     {
                         await _dataStore.EnqueueRequestAsync(jobInfo).Linger();
-                        await Task.Delay(interval, stoppingToken).Linger();
+                        await Task.Delay(_interval, stoppingToken).Linger();
                     }
                     else if (result == RequestResult.Retry)
                     {
@@ -68,7 +69,7 @@ namespace BlackWatch.Daemon.RequestEngine
                     }
                 }
 
-                await Task.Delay(interval, stoppingToken).Linger();
+                await Task.Delay(_interval, stoppingToken).Linger();
             }
 
             _logger.LogInformation("job execution stopped");

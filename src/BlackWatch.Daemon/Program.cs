@@ -4,8 +4,8 @@ using BlackWatch.Core.Contracts;
 using BlackWatch.Core.Services;
 using BlackWatch.Daemon.Cron;
 using BlackWatch.Daemon.Features.CronActions;
-using BlackWatch.Daemon.Features.Jobs;
 using BlackWatch.Daemon.Features.Polygon;
+using BlackWatch.Daemon.Features.Requests;
 using BlackWatch.Daemon.RequestEngine;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -47,11 +47,14 @@ namespace BlackWatch.Daemon
                     {
                         http.BaseAddress = new Uri(ctx.Configuration["Polygon:BaseAddress"]);
                     });
+                    services.AddOptions<PolygonApiClientOptions>()
+                        .Bind(ctx.Configuration.GetSection("Polygon"))
+                        .ValidateDataAnnotations();
 
-                    services.AddHostedService<RequestRunner>();
+                    services.AddHostedService<PolygonRequestRunner>();
                     services.AddSingleton<IRequestFactory, RequestFactory>();
-                    services.AddOptions<RequestRunnerOptions>()
-                        .Bind(ctx.Configuration.GetSection("JobExecution"))
+                    services.AddOptions<PolygonRequestRunnerOptions>()
+                        .Bind(ctx.Configuration.GetSection("Polygon"))
                         .ValidateDataAnnotations();
 
                     services.AddHostedService<CronActionRunner>();

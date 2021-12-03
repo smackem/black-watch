@@ -5,26 +5,32 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace BlackWatch.Daemon.Features.Polygon
 {
     public class PolygonApiClient : IPolygonApiClient
     {
         private readonly HttpClient _http;
-        private readonly string _apiKey;
         private readonly ILogger<PolygonApiClient> _logger;
+        private readonly PolygonApiClientOptions _options;
         private static readonly TimeSpan MaxAggregationRange = TimeSpan.FromDays(1000);
 
-        public PolygonApiClient(HttpClient http, IConfiguration configuration, ILogger<PolygonApiClient> logger)
+        public PolygonApiClient(HttpClient http, IOptions<PolygonApiClientOptions> options, ILogger<PolygonApiClient> logger)
         {
+            if (http.BaseAddress != new Uri(options.Value.BaseAddress!))
+            {
+                throw new ArgumentException($"http client base address mismatch: {http.BaseAddress} <-> {options.Value.BaseAddress}");
+            }
+
             _http = http;
-            _apiKey = configuration["Polygon:ApiKey"];
             _logger = logger;
+            _options = options.Value;
         }
 
         public async Task<GroupedDailyCurrencyPricesResponse> GetGroupedDailyCryptoPricesAsync(DateTimeOffset date)
         {
-            var path = $"aggs/grouped/locale/global/market/crypto/{date:yyyy-MM-dd}?apiKey={_apiKey}";
+            var path = $"aggs/grouped/locale/global/market/crypto/{date:yyyy-MM-dd}?apiKey={_options.ApiKey}";
             var response = await GetAsync<GroupedDailyCurrencyPricesResponse>(path);
             return response!;
         }
@@ -40,7 +46,7 @@ namespace BlackWatch.Daemon.Features.Polygon
                 throw new ArgumentException("invalid time range", nameof(toDate));
             }
 
-            var path = $"aggs/ticker/{symbol}/range/1/day/{fromDate:yyyy-MM-dd}/{toDate:yyyy-MM-dd}?sort=asc&limit=1000&apiKey={_apiKey}";
+            var path = $"aggs/ticker/{symbol}/range/1/day/{fromDate:yyyy-MM-dd}/{toDate:yyyy-MM-dd}?sort=asc&limit=1000&apiKey={_options.ApiKey}";
             var response = await GetAsync<AggregateCurrencyPricesResponse>(path);
             return response!;
         }

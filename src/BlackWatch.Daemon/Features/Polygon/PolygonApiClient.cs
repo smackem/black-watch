@@ -25,6 +25,8 @@ namespace BlackWatch.Daemon.Features.Polygon
             _http = http;
             _logger = logger;
             _options = options.Value;
+
+            _logger.LogDebug("{ClassName} created, base address = {BaseAddress}", nameof(PolygonApiClient), http.BaseAddress);
         }
 
         public async Task<GroupedDailyCurrencyPricesResponse> GetGroupedDailyCryptoPricesAsync(DateTimeOffset date)

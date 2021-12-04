@@ -13,6 +13,9 @@ namespace BlackWatch.Core.Contracts
 
         [JsonInclude]
         public QuoteHistoryRequestInfo? QuoteHistoryDownload { get; private init; }
+        
+        [JsonInclude]
+        public QuoteSnapshotRequestInfo? QuoteSnapshotDownload { get; private init; }
 
         [JsonInclude]
         public string? ApiTag { get; private init; }
@@ -28,6 +31,11 @@ namespace BlackWatch.Core.Contracts
         {
             return new RequestInfo { QuoteHistoryDownload = requestInfo, ApiTag = apiTag };
         }
+
+        public static RequestInfo DownloadQuoteSnapshots(string apiTag)
+        {
+            return new RequestInfo { QuoteSnapshotDownload = new QuoteSnapshotRequestInfo(), ApiTag = apiTag };
+        }
     }
 
     /// <summary>
@@ -40,4 +48,6 @@ namespace BlackWatch.Core.Contracts
     /// at <paramref name="FromDate"/> up to and including <paramref name="ToDate"/>
     /// </summary>
     public record QuoteHistoryRequestInfo(string Symbol, DateTimeOffset FromDate, DateTimeOffset ToDate);
+
+    public record QuoteSnapshotRequestInfo;
 }

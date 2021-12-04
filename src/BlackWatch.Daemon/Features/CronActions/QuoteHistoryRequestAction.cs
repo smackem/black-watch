@@ -28,13 +28,13 @@ namespace BlackWatch.Daemon.Features.CronActions
             var (from, to) = DateRange.DaysUntilYesterdayUtc(_quoteHistoryDays);
 
             _logger.LogInformation(
-                "queue job: download quote history for {TrackerCount} trackers from {FromDate} to {ToDate}",
+                "queue request: download quote history for {TrackerCount} trackers from {FromDate} to {ToDate}",
                 trackers.Length, from, to);
 
-            var jobInfos = trackers
+            var requestInfos = trackers
                 .Select(t => RequestInfo.DownloadQuoteHistory(new QuoteHistoryRequestInfo(t.Symbol, from, to), ApiTags.Polygon));
 
-            await _dataStore.EnqueueRequestsAsync(jobInfos).Linger();
+            await _dataStore.EnqueueRequestsAsync(requestInfos).Linger();
             return true;
         }
     }

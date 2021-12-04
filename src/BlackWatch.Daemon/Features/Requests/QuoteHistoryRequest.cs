@@ -66,7 +66,6 @@ namespace BlackWatch.Daemon.Features.Requests
             }
 
             await UpdateTracker(quotes);
-
             return RequestResult.Ok;
         }
 

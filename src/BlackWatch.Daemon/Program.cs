@@ -4,6 +4,7 @@ using BlackWatch.Core.Contracts;
 using BlackWatch.Core.Services;
 using BlackWatch.Daemon.Cron;
 using BlackWatch.Daemon.Features.CronActions;
+using BlackWatch.Daemon.Features.Messari;
 using BlackWatch.Daemon.Features.Polygon;
 using BlackWatch.Daemon.Features.Requests;
 using BlackWatch.Daemon.RequestEngine;
@@ -43,6 +44,15 @@ namespace BlackWatch.Daemon
                         .Bind(ctx.Configuration.GetSection("Redis"))
                         .ValidateDataAnnotations();
 
+                    services.AddHttpClient<IMessariApiClient, MessariApiClient>(http =>
+                    {
+                        http.BaseAddress = new Uri(ctx.Configuration["Messari:BaseAddress"]);
+                    });
+                    services.AddHostedService<MessariRequestRunner>();
+                    services.AddOptions<MessariRequestRunnerOptions>()
+                        .Bind(ctx.Configuration.GetSection("Messari"))
+                        .ValidateDataAnnotations();
+
                     services.AddHttpClient<IPolygonApiClient, PolygonApiClient>(http =>
                     {
                         http.BaseAddress = new Uri(ctx.Configuration["Polygon:BaseAddress"]);
@@ -52,10 +62,11 @@ namespace BlackWatch.Daemon
                         .ValidateDataAnnotations();
 
                     services.AddHostedService<PolygonRequestRunner>();
-                    services.AddSingleton<IRequestFactory, RequestFactory>();
                     services.AddOptions<PolygonRequestRunnerOptions>()
                         .Bind(ctx.Configuration.GetSection("Polygon"))
                         .ValidateDataAnnotations();
+
+                    services.AddSingleton<IRequestFactory, RequestFactory>();
 
                     services.AddHostedService<CronActionRunner>();
                     services.AddSingleton<ICronActionSupplier, CronActionSupplier>();

@@ -26,16 +26,28 @@ namespace BlackWatch.Core.Contracts
         public Task<Tracker[]> GetTrackersAsync();
 
         /// <summary>
-        /// gets the quote with the specified <paramref name="symbol"/> for the given <paramref name="date"/>
+        /// gets the daily quote with the specified <paramref name="symbol"/> for the given <paramref name="date"/>
         /// or <c>null</c> if no matching quote found
         /// </summary>
-        public Task<Quote?> GetQuoteAsync(string symbol, DateTimeOffset date);
+        public Task<Quote?> GetDailyQuoteAsync(string symbol, DateTimeOffset date);
+
+        /// <summary>
+        /// gets the hourly quote with the specified <paramref name="symbol"/> at <c>now.AddHours(hourOffset)</c> 
+        /// or <c>null</c> if no matching quote found. <paramref name="hourOffset"/> must be <c>0</c> or negative.
+        /// </summary>
+        public Task<Quote?> GetHourlyQuoteAsync(string symbol, int hourOffset);
 
         /// <summary>
         /// inserts the specified quote into the database, replacing an existing quote with
         /// the same symbol and date if one exists
         /// </summary>
-        public Task SetQuoteAsync(Quote quote);
+        public Task PutDailyQuoteAsync(Quote quote);
+
+        /// <summary>
+        /// inserts the specified quote into the database, replacing an existing quote with
+        /// the same symbol and date if one exists
+        /// </summary>
+        public Task PutHourlyQuoteAsync(Quote quote);
 
         /// <summary>
         /// inserts the specified <see cref="RequestInfo" />s in the request queues responsible for the request's

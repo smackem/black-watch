@@ -31,11 +31,15 @@ namespace BlackWatch.Daemon.Features.CronActions
         {
             get
             {
-                var quoteDownloader = new QuoteHistoryRequestAction(
+                var historyDownloader = new QuoteHistoryRequestAction(
                     CronExpression.Parse(_options.Cron.DownloadQuoteHistory),
                     _dataStore,
                     _logger,
                     _options.QuoteHistoryDays);
+                var snapshotDownloader = new QuoteSnapshotRequestAction(
+                    CronExpression.Parse(_options.Cron.DownloadQuoteSnapshot),
+                    _dataStore,
+                    _logger);
                 var trackerDownloader = new TrackerRequestAction(
                     CronExpression.Parse(_options.Cron.DownloadTrackers),
                     _dataStore,
@@ -44,12 +48,13 @@ namespace BlackWatch.Daemon.Features.CronActions
                     CronExpression.Parse("@every_minute"),
                     _dataStore,
                     _logger,
-                    quoteDownloader,
+                    historyDownloader,
                     trackerDownloader);
 
                 return new CronAction[]
                 {
-                    quoteDownloader,
+                    historyDownloader,
+                    snapshotDownloader,
                     trackerDownloader,
                     initializer,
                     CreateEvaluationAction(_options.Cron.EvaluationEveryHour, EvaluationInterval.OneHour),

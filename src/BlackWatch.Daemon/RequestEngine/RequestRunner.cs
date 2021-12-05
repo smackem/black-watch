@@ -22,9 +22,11 @@ namespace BlackWatch.Daemon.RequestEngine
         private readonly IRequestFactory _requestFactory;
         private readonly IServiceProvider _sp;
         private readonly TimeSpan _interval;
+        private readonly string _apiTag;
 
         protected RequestRunner(
             TimeSpan interval,
+            string apiTag,
             ILogger<RequestRunner> logger,
             IDataStore dataStore,
             IRequestFactory requestFactory,
@@ -33,6 +35,7 @@ namespace BlackWatch.Daemon.RequestEngine
             : base(logger)
         {
             _interval = interval;
+            _apiTag = apiTag;
             _logger = logger;
             _dataStore = dataStore;
             _requestFactory = requestFactory;
@@ -44,7 +47,7 @@ namespace BlackWatch.Daemon.RequestEngine
         {
             while (stoppingToken.IsCancellationRequested == false)
             {
-                var jobInfos = await _dataStore.DequeueRequestsAsync(_config.MaxRequestsPerMinute, ApiTags.Polygon).Linger();
+                var jobInfos = await _dataStore.DequeueRequestsAsync(_config.MaxRequestsPerMinute, _apiTag).Linger();
                 var jobs = jobInfos.Select(info => (_requestFactory.BuildRequest(info, _sp), info));
                 var ctx = new RequestContext(_logger)
                 {

@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace BlackWatch.Daemon.Features.Messari
 {
@@ -31,7 +33,7 @@ namespace BlackWatch.Daemon.Features.Messari
 
     public record AssetListResponse(
         StatusResult Status,
-        AssetData Data);
+        IReadOnlyCollection<AssetData> Data);
 
     public record StatusResult(
         int Elapsed,
@@ -41,14 +43,14 @@ namespace BlackWatch.Daemon.Features.Messari
         Guid Id,
         string Slug,
         string Symbol,
-        AssetMetrics Metrics);
+        AssetMetrics? Metrics);
 
     public record AssetMetrics(
-        [property: JsonPropertyName("market_data")] AssetMarketData MarketData);
+        [property: JsonPropertyName("market_data")] AssetMarketData? MarketData);
 
     public record AssetMarketData(
         [property: JsonPropertyName("price_usd")] decimal PriceUsd,
-        [property: JsonPropertyName("ohlcv_last_1_hour")] AssetOhlcv LastHour);
+        [property: JsonPropertyName("ohlcv_last_1_hour")] AssetOhlcv? LastHour);
 
     public record AssetOhlcv(
         decimal Open,

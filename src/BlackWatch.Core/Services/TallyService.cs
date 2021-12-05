@@ -71,7 +71,7 @@ namespace BlackWatch.Core.Services
         private Quote? FetchQuote(Tracker tracker, string dateStr)
         {
             var date = ParseDateStr(dateStr);
-            var quote = _dataStore.GetQuoteAsync(tracker.Symbol, date).Result;
+            var quote = _dataStore.GetDailyQuoteAsync(tracker.Symbol, date).Result;
             return quote;
         }
 

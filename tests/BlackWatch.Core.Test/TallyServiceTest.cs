@@ -172,21 +172,25 @@ namespace BlackWatch.Core.Test
                 });
             }
 
-            public Task<Quote?> GetQuoteAsync(string symbol, DateTimeOffset date)
+            public Task<Quote?> GetDailyQuoteAsync(string symbol, DateTimeOffset date)
             {
-                var quote = symbol switch
+                return Task.FromResult(GetQuote(symbol, date));
+            }
+
+            public Task<Quote?> GetHourlyQuoteAsync(string symbol, int hourOffset)
+            {
+                return Task.FromResult(GetQuote(symbol, DateTimeOffset.UtcNow));
+            }
+
+            private static Quote? GetQuote(string symbol, DateTimeOffset date)
+            {
+                return symbol switch
                 {
                     Symbols.BtcUsd => new Quote(symbol, Open: 1000, Close: 2000, High: 2500, Low: 800, Currency: "USD", Date: date),
                     Symbols.EthUsd => new Quote(symbol, Open: 100, Close: 200, High: 250, Low: 80, Currency: "USD", Date: date),
                     Symbols.UniUsd => new Quote(symbol, Open: 10, Close: 20, High: 25, Low: 8, Currency: "USD", Date: date),
                     _ => null,
                 };
-                return Task.FromResult(quote);
-            }
-
-            public Task<long> GetRequestQueueLengthAsync(string apiTag)
-            {
-                throw new NotImplementedException();
             }
 
             public IAsyncEnumerable<TallySource> GetTallySourcesAsync(string? userId)
@@ -222,7 +226,11 @@ namespace BlackWatch.Core.Test
             {
                 throw new NotImplementedException();
             }
-            public Task SetQuoteAsync(Quote quote)
+            public Task PutDailyQuoteAsync(Quote quote)
+            {
+                throw new NotImplementedException();
+            }
+            public Task PutHourlyQuoteAsync(Quote quote)
             {
                 throw new NotImplementedException();
             }
@@ -235,6 +243,10 @@ namespace BlackWatch.Core.Test
                 throw new NotImplementedException();
             }
             public Task<RequestInfo[]> DequeueRequestsAsync(int count, string apiTag)
+            {
+                throw new NotImplementedException();
+            }
+            public Task<long> GetRequestQueueLengthAsync(string apiTag)
             {
                 throw new NotImplementedException();
             }

@@ -1,9 +1,9 @@
-namespace BlackWatch.Daemon.JobEngine
+namespace BlackWatch.Daemon.RequestEngine
 {
     /// <summary>
-    /// execution results for jobs executed by <see cref="JobExecutor"/>
+    /// execution results for request executed by <see cref="RequestRunner"/>
     /// </summary>
-    public enum JobExecutionResult
+    public enum RequestResult
     {
         /// <summary>
         /// all is fine
@@ -11,17 +11,17 @@ namespace BlackWatch.Daemon.JobEngine
         Ok,
         
         /// <summary>
-        /// enqueue the job again
+        /// enqueue the request again
         /// </summary>
         Retry,
         
         /// <summary>
-        /// enqueue the job again and suspend job execution for a minute
+        /// enqueue the request again and suspend job execution for a minute
         /// </summary>
         WaitAndRetry,
 
         /// <summary>
-        /// give up on the job
+        /// give up on the request
         /// </summary>
         Fatal,
     }

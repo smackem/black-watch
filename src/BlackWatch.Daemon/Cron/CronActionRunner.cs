@@ -34,7 +34,6 @@ namespace BlackWatch.Daemon.Cron
 
             while (stoppingToken.IsCancellationRequested == false)
             {
-                var now = DateTimeOffset.UtcNow;
                 var occurrence = action.CronExpr.GetNextOccurrence(DateTimeOffset.UtcNow, TimeZoneInfo.Utc);
                 _logger.LogInformation("{CronActionMoniker}: next occurrence @ '{CronDate}'", action.Moniker, occurrence);
 
@@ -44,9 +43,12 @@ namespace BlackWatch.Daemon.Cron
                     break;
                 }
 
-                var delay = occurrence.Value - now;
-                _logger.LogDebug("{CronActionMoniker}: waiting for {Delay} until execution", action.Moniker, delay);
-                await Task.Delay(delay, stoppingToken).Linger();
+                TimeSpan delay;
+                while ((delay = occurrence.Value - DateTimeOffset.UtcNow) > TimeSpan.Zero)
+                {
+                    _logger.LogDebug("{CronActionMoniker}: waiting for {Delay} until execution", action.Moniker, delay);
+                    await Task.Delay(delay, stoppingToken).Linger();
+                }
 
                 // ReSharper disable once InvertIf
                 if (await action.ExecuteAsync().Linger() == false)

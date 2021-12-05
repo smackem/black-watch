@@ -184,6 +184,11 @@ namespace BlackWatch.Core.Test
                 return Task.FromResult(quote);
             }
 
+            public Task<long> GetRequestQueueLengthAsync(string apiTag)
+            {
+                throw new NotImplementedException();
+            }
+
             public IAsyncEnumerable<TallySource> GetTallySourcesAsync(string? userId)
             {
                 return _tallySources.ToAsyncEnumerable();
@@ -221,19 +226,15 @@ namespace BlackWatch.Core.Test
             {
                 throw new NotImplementedException();
             }
-            public Task<long> EnqueueJobsAsync(IEnumerable<JobInfo> jobs)
+            public Task EnqueueRequestsAsync(IEnumerable<RequestInfo> jobs)
             {
                 throw new NotImplementedException();
             }
-            public Task<long> EnqueueJobAsync(JobInfo job)
+            public Task EnqueueRequestAsync(RequestInfo request)
             {
                 throw new NotImplementedException();
             }
-            public Task<JobInfo[]> DequeueJobsAsync(int count)
-            {
-                throw new NotImplementedException();
-            }
-            public Task<long> GetJobQueueLengthAsync()
+            public Task<RequestInfo[]> DequeueRequestsAsync(int count, string apiTag)
             {
                 throw new NotImplementedException();
             }

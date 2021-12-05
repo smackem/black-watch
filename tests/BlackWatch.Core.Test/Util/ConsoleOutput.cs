@@ -23,12 +23,12 @@ namespace BlackWatch.Core.Test.Util
 
             public override Encoding Encoding => Encoding.UTF8;
 
-            public override void WriteLine(string message)
+            public override void WriteLine(string? message)
             {
                 _output.WriteLine(message);
             }
 
-            public override void WriteLine(string format, params object[] args)
+            public override void WriteLine(string format, params object?[] args)
             {
                 _output.WriteLine(format, args);
             }

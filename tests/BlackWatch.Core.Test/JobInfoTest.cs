@@ -21,10 +21,10 @@ namespace BlackWatch.Core.Test
         public void SerializeAggregateCrypto()
         {
             var (from, to) = DateRange.DaysUntilYesterdayUtc(1);
-            var jobInfo = JobInfo.DownloadQuoteHistory(new QuoteHistoryDownloadJob("SYM", from, to));
+            var jobInfo = RequestInfo.DownloadQuoteHistory(new QuoteHistoryRequestInfo("SYM", from, to), "some_api");
             var json = JsonSerializer.Serialize(jobInfo, new JsonSerializerOptions { IgnoreNullValues = true });
             _out.WriteLine($"serialized JobInfo: {json}");
-            var deserialized = JsonSerializer.Deserialize<JobInfo>(json);
+            var deserialized = JsonSerializer.Deserialize<RequestInfo>(json);
             Assert.NotNull(deserialized);
             Assert.Null(deserialized!.TrackerDownload);
             Assert.NotNull(deserialized.QuoteHistoryDownload);
@@ -34,10 +34,10 @@ namespace BlackWatch.Core.Test
         [Fact]
         public void SerializeDailyGroupedCrypto()
         {
-            var jobInfo = JobInfo.DownloadTrackers(new TrackerDownloadJob(DateTimeOffset.Now));
+            var jobInfo = RequestInfo.DownloadTrackers(new TrackerRequestInfo(DateTimeOffset.Now), "some_api");
             var json = JsonSerializer.Serialize(jobInfo, new JsonSerializerOptions { IgnoreNullValues = true });
             _out.WriteLine($"serialized JobInfo: {json}");
-            var deserialized = JsonSerializer.Deserialize<JobInfo>(json);
+            var deserialized = JsonSerializer.Deserialize<RequestInfo>(json);
             Assert.NotNull(deserialized);
             Assert.Null(deserialized!.QuoteHistoryDownload);
             Assert.NotNull(deserialized.TrackerDownload);

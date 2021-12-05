@@ -11,16 +11,16 @@ namespace BlackWatch.Daemon.Features.CronActions
     {
         private readonly IDataStore _dataStore;
         private readonly ILogger _logger;
-        private readonly QuoteDownloadTriggerAction _quoteDownloader;
-        private readonly TrackerDownloadTriggerAction _trackerDownloader;
+        private readonly QuoteHistoryRequestAction _quoteDownloader;
+        private readonly TrackerRequestAction _trackerDownloader;
         private bool _trackersDownloadQueued;
 
         public InitializeCronAction(
             CronExpression cronExpr,
             IDataStore dataStore,
             ILogger logger,
-            QuoteDownloadTriggerAction quoteDownloader,
-            TrackerDownloadTriggerAction trackerDownloader)
+            QuoteHistoryRequestAction quoteDownloader,
+            TrackerRequestAction trackerDownloader)
             : base(cronExpr, "trigger initial trackers download")
         {
             _dataStore = dataStore;
@@ -31,10 +31,16 @@ namespace BlackWatch.Daemon.Features.CronActions
 
         public override async Task<bool> ExecuteAsync()
         {
-            var jobQueueLength = await _dataStore.GetJobQueueLengthAsync();
-            if (jobQueueLength > 0)
+            var polygonRequestCount = await _dataStore.GetRequestQueueLengthAsync(ApiTags.Polygon);
+            if (polygonRequestCount > 0)
             {
-                _logger.LogWarning("initial job queue length at startup: {JobQueueLength}", jobQueueLength);
+                _logger.LogWarning("initial polygon request queue length at startup: {JobQueueLength}", polygonRequestCount);
+            }
+
+            var messariRequestCount = await _dataStore.GetRequestQueueLengthAsync(ApiTags.Messari);
+            if (messariRequestCount > 0)
+            {
+                _logger.LogWarning("initial messari request queue length at startup: {JobQueueLength}", messariRequestCount);
             }
 
             var trackers = await _dataStore.GetTrackersAsync().Linger();

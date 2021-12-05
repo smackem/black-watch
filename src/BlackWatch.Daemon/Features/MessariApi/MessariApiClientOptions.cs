@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace BlackWatch.Daemon.Features.Messari
+namespace BlackWatch.Daemon.Features.MessariApi
 {
     public class MessariApiClientOptions
     {

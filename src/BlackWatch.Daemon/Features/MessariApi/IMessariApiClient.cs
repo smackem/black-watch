@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace BlackWatch.Daemon.Features.Messari
+namespace BlackWatch.Daemon.Features.MessariApi
 {
     public interface IMessariApiClient
     {

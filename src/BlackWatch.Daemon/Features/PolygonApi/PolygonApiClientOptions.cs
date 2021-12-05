@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace BlackWatch.Daemon.Features.Polygon
+namespace BlackWatch.Daemon.Features.PolygonApi
 {
     public class PolygonApiClientOptions
     {

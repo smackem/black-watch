@@ -4,7 +4,7 @@ using BlackWatch.Daemon.RequestEngine;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace BlackWatch.Daemon.Features.Requests
+namespace BlackWatch.Daemon.Features.Requests.Polygon
 {
     public class PolygonRequestRunner : RequestRunner
     {

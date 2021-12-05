@@ -104,7 +104,7 @@ namespace BlackWatch.Core.Services
                 .ToArray();
         }
 
-        public async Task<Quote?> GetQuoteAsync(string symbol, DateTimeOffset date)
+        public async Task<Quote?> GetDailyQuoteAsync(string symbol, DateTimeOffset date)
         {
             var db = await GetDatabaseAsync().Linger();
             var key = Names.DateKey(date);
@@ -113,22 +113,53 @@ namespace BlackWatch.Core.Services
 
             if (value.HasValue == false)
             {
-                _logger.LogWarning("no quote found @{Hash}[{Date}]", hash, key);
+                _logger.LogWarning("no daily quote found @{Hash}[{Date}]", hash, key);
                 return null;
             }
 
-            _logger.LogDebug("got value: {Quote}", value);
+            _logger.LogTrace("got daily quote: {Quote}", value);
             return Deserialize<Quote>(value);
         }
 
-        public async Task SetQuoteAsync(Quote quote)
+        public async Task<Quote?> GetHourlyQuoteAsync(string symbol, int hourOffset)
+        {
+            if (hourOffset > 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(hourOffset), "value must be <= 0");
+            }
+
+            var index = -hourOffset;
+            var db = await GetDatabaseAsync().Linger();
+            var key = Names.HourlyQuotes(symbol);
+            var value = await db.ListGetByIndexAsync(key, index);
+
+            if (value.HasValue == false)
+            {
+                _logger.LogWarning("no hourly quote found @{List}[{Index}]", key, index);
+                return null;
+            }
+
+            _logger.LogTrace("got hourly quote: {Quote}", value);
+            return Deserialize<Quote>(value);
+        }
+
+        public async Task PutDailyQuoteAsync(Quote quote)
         {
             var db = await GetDatabaseAsync().Linger();
             var value = Serialize(quote);
             var hash = Names.DailyQuotes(quote.Symbol);
             var key = Names.DateKey(quote.Date);
             await db.HashSetAsync(hash, key, value).Linger();
-            _logger.LogDebug("quote set @{Hash}[{Date}]", hash, key);
+            _logger.LogDebug("daily quote set @{Hash}[{Date}]", hash, key);
+        }
+
+        public async Task PutHourlyQuoteAsync(Quote quote)
+        {
+            var db = await GetDatabaseAsync().Linger();
+            var value = Serialize(quote);
+            var key = Names.HourlyQuotes(quote.Symbol);
+            await db.ListLeftPushAsync(key, value);
+            _logger.LogDebug("hourly quote prepended to {Key}", key);
         }
 
         public async IAsyncEnumerable<TallySource> GetTallySourcesAsync(string? userId)
@@ -160,7 +191,7 @@ namespace BlackWatch.Core.Services
                 return null;
             }
 
-            _logger.LogDebug("got tally source: {TallySource}", entry);
+            _logger.LogTrace("got tally source: {TallySource}", entry);
             return Deserialize<TallySource>(entry);
         }
 
@@ -252,7 +283,25 @@ namespace BlackWatch.Core.Services
             GC.SuppressFinalize(this);
         }
 
-        private async Task<IDatabase> GetDatabaseAsync()
+        // probably this will be needed in the future...
+        // ReSharper disable once UnusedMember.Local
+        private async IAsyncEnumerable<RedisKey> ScanKeysAsync(RedisValue pattern)
+        {
+            var redis = await ConnectRedisAsync().Linger();
+            var endPoints = redis.GetEndPoints();
+
+            foreach (var endPoint in endPoints)
+            {
+                var server = redis.GetServer(endPoint);
+
+                await foreach (var key in server.KeysAsync(pattern: pattern))
+                {
+                    yield return key;
+                }
+            }
+        }
+
+        private async Task<ConnectionMultiplexer> ConnectRedisAsync()
         {
             // ReSharper disable once InvertIf
             if (_redis == null)
@@ -273,7 +322,13 @@ namespace BlackWatch.Core.Services
                 }
             }
 
-            return _redis.GetDatabase();
+            return _redis;
+        }
+
+        private async Task<IDatabase> GetDatabaseAsync()
+        {
+            var redis = await ConnectRedisAsync().Linger();
+            return redis.GetDatabase();
         }
 
         private static RedisValue Serialize<T>(T obj)
@@ -317,6 +372,11 @@ namespace BlackWatch.Core.Services
             /// HASH{Date => Quote}
             /// </summary>
             public static RedisKey DailyQuotes(string symbol) => $"black-watch:quotes:daily:{symbol}";
+
+            /// <summary>
+            /// LIST{Quote}
+            /// </summary>
+            public static RedisKey HourlyQuotes(string symbol) => $"black-watch:quotes:hourly:{symbol}";
 
             /// <summary>
             /// LIST{Tally}

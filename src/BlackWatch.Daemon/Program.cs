@@ -48,6 +48,10 @@ namespace BlackWatch.Daemon
                     {
                         http.BaseAddress = new Uri(ctx.Configuration["Messari:BaseAddress"]);
                     });
+                    services.AddOptions<MessariApiClientOptions>()
+                        .Bind(ctx.Configuration.GetSection("Messari"))
+                        .ValidateDataAnnotations();
+
                     services.AddHostedService<MessariRequestRunner>();
                     services.AddOptions<MessariRequestRunnerOptions>()
                         .Bind(ctx.Configuration.GetSection("Messari"))

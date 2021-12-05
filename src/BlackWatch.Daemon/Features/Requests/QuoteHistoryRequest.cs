@@ -62,7 +62,7 @@ namespace BlackWatch.Daemon.Features.Requests
 
             foreach (var quote in quotes)
             {
-                await _dataStore.SetQuoteAsync(quote);
+                await _dataStore.PutDailyQuoteAsync(quote);
             }
 
             await UpdateTracker(quotes);

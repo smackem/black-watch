@@ -14,7 +14,7 @@ namespace BlackWatch.Daemon.Features.Requests
             IRequestFactory requestFactory,
             IOptions<MessariRequestRunnerOptions> options,
             IServiceProvider sp)
-            : base(TimeSpan.FromMinutes(1), logger, dataStore, requestFactory, options, sp)
+            : base(TimeSpan.FromMinutes(1), ApiTags.Messari, logger, dataStore, requestFactory, options, sp)
         {
         }
     }

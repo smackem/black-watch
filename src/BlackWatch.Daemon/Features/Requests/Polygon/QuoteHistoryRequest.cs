@@ -53,10 +53,10 @@ namespace BlackWatch.Daemon.Features.Requests.Polygon
                 return RequestResult.Retry;
             }
 
-            var currency = GetCryptoQuoteCurrency(_info.Symbol);
+            var currency = PolygonNaming.ExtractCurrency(_info.Symbol);
             var quotes = prices.Results
                 .Select(p => new Quote(
-                    _info.Symbol, p.Open, p.Close, p.High, 0, currency,
+                    PolygonNaming.AdjustSymbol(_info.Symbol), p.Open, p.Close, p.High, 0, currency,
                     DateTimeOffset.FromUnixTimeMilliseconds(p.Timestamp)))
                 .ToArray();
 
@@ -67,11 +67,6 @@ namespace BlackWatch.Daemon.Features.Requests.Polygon
 
             await UpdateTracker(quotes);
             return RequestResult.Ok;
-        }
-
-        private static string GetCryptoQuoteCurrency(string symbol)
-        {
-            return symbol.Length > 3 ? symbol[^3..] : string.Empty;
         }
 
         private Task UpdateTracker(Quote[] quotes)

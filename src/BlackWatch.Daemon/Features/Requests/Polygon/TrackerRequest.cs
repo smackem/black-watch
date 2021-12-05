@@ -56,7 +56,8 @@ namespace BlackWatch.Daemon.Features.Requests.Polygon
             }
 
             var trackers = trackerPrices.Results
-                .Select(tp => new Tracker(tp.Symbol, null, null))
+                .Where(tp => PolygonNaming.ExtractCurrency(tp.Symbol) == "USD")
+                .Select(tp => new Tracker(PolygonNaming.AdjustSymbol(tp.Symbol), null, null))
                 .ToArray();
 
             await _dataStore.PutTrackersAsync(trackers);

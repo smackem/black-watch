@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -54,9 +55,10 @@ namespace BlackWatch.Daemon.Features.Requests.Polygon
             }
 
             var currency = PolygonNaming.ExtractCurrency(_info.Symbol);
+            var symbol = PolygonNaming.AdjustSymbol(_info.Symbol);
             var quotes = prices.Results
                 .Select(p => new Quote(
-                    PolygonNaming.AdjustSymbol(_info.Symbol), p.Open, p.Close, p.High, 0, currency,
+                    symbol, p.Open, p.Close, p.High, 0, currency,
                     DateTimeOffset.FromUnixTimeMilliseconds(p.Timestamp)))
                 .ToArray();
 
@@ -65,18 +67,10 @@ namespace BlackWatch.Daemon.Features.Requests.Polygon
                 await _dataStore.PutDailyQuoteAsync(quote);
             }
 
-            await UpdateTracker(quotes);
             return RequestResult.Ok;
         }
 
-        private Task UpdateTracker(Quote[] quotes)
-        {
-            var (from, to) = GetTrackerDateRange(quotes);
-            var tracker = new Tracker(_info.Symbol, from, to);
-            return _dataStore.PutTrackersAsync(new[] { tracker });
-        }
-
-        private static (DateTimeOffset? from, DateTimeOffset? to) GetTrackerDateRange(Quote[] quotes)
+        private static (DateTimeOffset? from, DateTimeOffset? to) GetTrackerDateRange(IEnumerable<Quote> quotes)
         {
             DateTimeOffset? from = null;
             DateTimeOffset? to = null;

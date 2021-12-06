@@ -39,9 +39,10 @@ namespace BlackWatch.Core.Contracts
     }
 
     /// <summary>
-    /// download all trackers including their market infos at <paramref name="Date"/>
+    /// download all trackers including their market infos at <paramref name="Date"/>, then queue history requests
+    /// for <paramref name="QuoteHistoryDays"/> for each tracker
     /// </summary>
-    public record TrackerRequestInfo(DateTimeOffset Date);
+    public record TrackerRequestInfo(DateTimeOffset Date, int QuoteHistoryDays);
 
     /// <summary>
     /// download the daily quotes for the tracker with symbol <paramref name="Symbol"/>, starting
@@ -49,5 +50,8 @@ namespace BlackWatch.Core.Contracts
     /// </summary>
     public record QuoteHistoryRequestInfo(string Symbol, DateTimeOffset FromDate, DateTimeOffset ToDate);
 
+    /// <summary>
+    /// download a snapshot (current price &amp; hourly ohlcv) of all available trackers
+    /// </summary>
     public record QuoteSnapshotRequestInfo;
 }

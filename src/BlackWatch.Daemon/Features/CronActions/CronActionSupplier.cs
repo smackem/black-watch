@@ -40,22 +40,16 @@ namespace BlackWatch.Daemon.Features.CronActions
                     CronExpression.Parse(_options.Cron.DownloadQuoteSnapshot),
                     _dataStore,
                     _logger);
-                var trackerDownloader = new TrackerRequestAction(
-                    CronExpression.Parse(_options.Cron.DownloadTrackers),
-                    _dataStore,
-                    _logger);
                 var initializer = new InitializeCronAction(
                     CronExpression.Parse("@every_minute"),
                     _dataStore,
                     _logger,
-                    historyDownloader,
-                    trackerDownloader);
+                    historyDownloader);
 
                 return new CronAction[]
                 {
                     historyDownloader,
                     snapshotDownloader,
-                    trackerDownloader,
                     initializer,
                     CreateEvaluationAction(_options.Cron.EvaluationEveryHour, EvaluationInterval.OneHour),
                     CreateEvaluationAction(_options.Cron.EvaluationEverySixHours, EvaluationInterval.SixHours),

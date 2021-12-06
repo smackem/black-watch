@@ -12,7 +12,7 @@ namespace BlackWatch.Core.Util
         public static ConfiguredCancelableAsyncEnumerable<T> Return<T>(this IAsyncEnumerable<T> self) =>
             self.ConfigureAwait(true);
 
-        public static async Task<IReadOnlyList<T>> ToList<T>(this IAsyncEnumerable<T> self)
+        public static async Task<IReadOnlyList<T>> ToListAsync<T>(this IAsyncEnumerable<T> self)
         {
             var list = new List<T>();
             await foreach (var item in self.Linger())

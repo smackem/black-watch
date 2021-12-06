@@ -11,22 +11,18 @@ namespace BlackWatch.Daemon.Features.CronActions
     {
         private readonly IDataStore _dataStore;
         private readonly ILogger _logger;
-        private readonly QuoteHistoryRequestAction _quoteDownloader;
-        private readonly TrackerRequestAction _trackerDownloader;
-        private bool _trackersDownloadQueued;
+        private readonly QuoteHistoryRequestAction _historyDownloader;
 
         public InitializeCronAction(
             CronExpression cronExpr,
             IDataStore dataStore,
             ILogger logger,
-            QuoteHistoryRequestAction quoteDownloader,
-            TrackerRequestAction trackerDownloader)
+            QuoteHistoryRequestAction historyDownloader)
             : base(cronExpr, "trigger initial trackers download")
         {
             _dataStore = dataStore;
             _logger = logger;
-            _quoteDownloader = quoteDownloader;
-            _trackerDownloader = trackerDownloader;
+            _historyDownloader = historyDownloader;
         }
 
         public override async Task<bool> ExecuteAsync()
@@ -43,21 +39,19 @@ namespace BlackWatch.Daemon.Features.CronActions
                 _logger.LogWarning("initial messari request queue length at startup: {JobQueueLength}", messariRequestCount);
             }
 
-            var trackers = await _dataStore.GetTrackersAsync().Linger();
-            if (trackers.Length > 0)
+            var trackers = await _dataStore.GetDailyTrackersAsync().Linger();
+            if (trackers.Count == 0)
             {
-                // queue quote download and quit
-                await _quoteDownloader.ExecuteAsync().Linger();
-                return false;
+                _logger.LogInformation("no daily trackers in database, queue download");
+                // queue quote history download
+                await _historyDownloader.ExecuteAsync().Linger();
+            }
+            else
+            {
+                _logger.LogInformation("{TrackerCount} daily trackers in database", trackers.Count);
             }
 
-            // ReSharper disable once InvertIf
-            if (_trackersDownloadQueued == false)
-            {
-                await _trackerDownloader.ExecuteAsync().Linger();
-                _trackersDownloadQueued = true;
-            }
-            return true;
+            return false;
         }
     }
 }

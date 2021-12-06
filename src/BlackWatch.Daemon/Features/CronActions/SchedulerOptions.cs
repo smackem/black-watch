@@ -14,16 +14,13 @@ namespace BlackWatch.Daemon.Features.CronActions
     public class SchedulerCronOptions
     {
         [Required]
-        public string DownloadTrackers { get; set; } = "@daily";
-
-        [Required]
-        public string DownloadQuoteHistory { get; set; } = "@hourly";
+        public string DownloadQuoteHistory { get; set; } = "@daily";
 
         [Required]
         public string DownloadQuoteSnapshot { get; set; } = "@hourly";
 
         [Required]
-        public string EvaluationEveryHour { get; set; } = "30 * * * *";
+        public string EvaluationEveryHour { get; set; } = "10 * * * *";
 
         [Required]
         public string EvaluationEverySixHours { get; set; } = "0 */6 * * *";

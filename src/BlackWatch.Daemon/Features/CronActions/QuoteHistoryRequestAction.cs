@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
@@ -24,18 +25,14 @@ namespace BlackWatch.Daemon.Features.CronActions
 
         public override async Task<bool> ExecuteAsync()
         {
-            var trackers = await _dataStore.GetTrackersAsync().Linger();
-            var (from, to) = DateRange.DaysUntilYesterdayUtc(_quoteHistoryDays);
+            var requestInfo = RequestInfo.DownloadTrackers(
+                new TrackerRequestInfo(DateTimeOffset.UtcNow.AddDays(-1), _quoteHistoryDays),
+                ApiTags.Polygon);
+            _logger.LogInformation("queue request: download trackers {RequestInfo}", requestInfo);
 
-            _logger.LogInformation(
-                "queue request: download quote history for {TrackerCount} trackers from {FromDate} to {ToDate}",
-                trackers.Length, from, to);
+            await _dataStore.EnqueueRequestAsync(requestInfo).Linger();
 
-            var requestInfos = trackers
-                .Select(t => RequestInfo.DownloadQuoteHistory(new QuoteHistoryRequestInfo(t.Symbol, from, to), ApiTags.Polygon));
-
-            await _dataStore.EnqueueRequestsAsync(requestInfos).Linger();
-            return true;
+            return true; // always continue
         }
     }
 }

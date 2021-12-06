@@ -15,15 +15,14 @@ namespace BlackWatch.Core.Contracts
         public Task<string> GenerateIdAsync();
 
         /// <summary>
-        /// inserts the passed trackers into the database. the primary key of the tracker
-        /// is the symbol. replaces existing trackers by symbol.
+        /// retrieves all trackers from the database that have a day-by-day history
         /// </summary>
-        public Task PutTrackersAsync(IEnumerable<Tracker> trackers);
+        public Task<IReadOnlyCollection<Tracker>> GetDailyTrackersAsync();
 
         /// <summary>
-        /// retrieves all trackers from the database
+        /// retrieves all trackers from the database that have an hour-by-hour history
         /// </summary>
-        public Task<Tracker[]> GetTrackersAsync();
+        public Task<IReadOnlyCollection<Tracker>> GetHourlyTrackersAsync();
 
         /// <summary>
         /// gets the daily quote with the specified <paramref name="symbol"/> for the given <paramref name="date"/>

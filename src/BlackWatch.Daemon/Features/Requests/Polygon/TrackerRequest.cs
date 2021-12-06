@@ -4,11 +4,11 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
-using BlackWatch.Daemon.Features.Polygon;
+using BlackWatch.Daemon.Features.PolygonApi;
 using BlackWatch.Daemon.RequestEngine;
 using Microsoft.Extensions.Logging;
 
-namespace BlackWatch.Daemon.Features.Requests
+namespace BlackWatch.Daemon.Features.Requests.Polygon
 {
     internal class TrackerRequest : Request
     {
@@ -56,7 +56,8 @@ namespace BlackWatch.Daemon.Features.Requests
             }
 
             var trackers = trackerPrices.Results
-                .Select(tp => new Tracker(tp.Symbol, null, null))
+                .Where(tp => PolygonNaming.ExtractCurrency(tp.Symbol) == "USD")
+                .Select(tp => new Tracker(PolygonNaming.AdjustSymbol(tp.Symbol), null, null))
                 .ToArray();
 
             await _dataStore.PutTrackersAsync(trackers);

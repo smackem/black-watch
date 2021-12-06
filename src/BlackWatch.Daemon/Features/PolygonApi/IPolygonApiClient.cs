@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace BlackWatch.Daemon.Features.Polygon
+namespace BlackWatch.Daemon.Features.PolygonApi
 {
     public interface IPolygonApiClient
     {

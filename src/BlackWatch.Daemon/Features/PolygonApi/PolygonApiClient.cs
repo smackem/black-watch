@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace BlackWatch.Daemon.Features.Polygon
+namespace BlackWatch.Daemon.Features.PolygonApi
 {
     public class PolygonApiClient : IPolygonApiClient
     {

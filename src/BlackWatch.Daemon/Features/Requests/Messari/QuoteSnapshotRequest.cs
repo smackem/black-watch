@@ -4,11 +4,11 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
-using BlackWatch.Daemon.Features.Messari;
+using BlackWatch.Daemon.Features.MessariApi;
 using BlackWatch.Daemon.RequestEngine;
 using Microsoft.Extensions.Logging;
 
-namespace BlackWatch.Daemon.Features.Requests
+namespace BlackWatch.Daemon.Features.Requests.Messari
 {
     public class QuoteSnapshotRequest : Request
     {

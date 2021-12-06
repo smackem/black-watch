@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 // ReSharper disable ClassNeverInstantiated.Global
 
-namespace BlackWatch.Daemon.Features.Messari
+namespace BlackWatch.Daemon.Features.MessariApi
 {
     /*
     {

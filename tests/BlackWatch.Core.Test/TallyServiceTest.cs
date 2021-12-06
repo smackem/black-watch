@@ -60,7 +60,7 @@ namespace BlackWatch.Core.Test
         {
             const string source = @"
     var n = 10;
-    return X.BTCUSD(-n).Close > 0;
+    return Daily.BTC(-n).Close > 0;
 ";
             var tallies = await EvaluateSingleTallySource(source, EvaluationInterval.OneHour);
             Assert.Collection(tallies,
@@ -72,10 +72,29 @@ namespace BlackWatch.Core.Test
         }
 
         [Fact]
+        public async void EvaluateEthHourly()
+        {
+            const string source = @"
+    var n = 10;
+    var eth = Hourly.ETH(-n).Close;
+    return { signal: eth > 0, result: eth };
+";
+            var tallies = await EvaluateSingleTallySource(source, EvaluationInterval.OneHour);
+            Assert.Collection(tallies,
+                t =>
+                {
+                    Assert.Equal(TallyState.Signalled, t.State);
+                    Assert.NotNull(t.Result);
+                    Assert.True(int.TryParse(t.Result!, out _), "result is not integer");
+                    Assert.True(int.Parse(t.Result!) > 0);
+                });
+        }
+
+        [Fact]
         public async void CheckQuoteOfToday()
         {
             const string source = @"
-    return { signal: true, result: X.BTCUSD(0).Date };
+    return { signal: true, result: Daily.BTC(0).Date };
 ";
             var tallies = await EvaluateSingleTallySource(source, EvaluationInterval.OneHour);
             Assert.Collection(tallies,
@@ -150,9 +169,9 @@ namespace BlackWatch.Core.Test
         {
             private static class Symbols
             {
-                public const string BtcUsd = "X:BTCUSD";
-                public const string EthUsd = "X:ETHUSD";
-                public const string UniUsd = "X:UNIUSD";
+                public const string Btc = "BTC";
+                public const string Eth = "ETH";
+                public const string Uni = "UNI";
             }
 
             private readonly TallySource[] _tallySources;
@@ -166,9 +185,9 @@ namespace BlackWatch.Core.Test
             {
                 return Task.FromResult(new[]
                 {
-                    new Tracker(Symbols.BtcUsd, null, null),
-                    new Tracker(Symbols.EthUsd, null, null),
-                    new Tracker(Symbols.UniUsd, null, null),
+                    new Tracker(Symbols.Btc, null, null),
+                    new Tracker(Symbols.Eth, null, null),
+                    new Tracker(Symbols.Uni, null, null),
                 });
             }
 
@@ -186,9 +205,9 @@ namespace BlackWatch.Core.Test
             {
                 return symbol switch
                 {
-                    Symbols.BtcUsd => new Quote(symbol, Open: 1000, Close: 2000, High: 2500, Low: 800, Currency: "USD", Date: date),
-                    Symbols.EthUsd => new Quote(symbol, Open: 100, Close: 200, High: 250, Low: 80, Currency: "USD", Date: date),
-                    Symbols.UniUsd => new Quote(symbol, Open: 10, Close: 20, High: 25, Low: 8, Currency: "USD", Date: date),
+                    Symbols.Btc => new Quote(symbol, Open: 1000, Close: 2000, High: 2500, Low: 800, Currency: "USD", Date: date),
+                    Symbols.Eth => new Quote(symbol, Open: 100, Close: 200, High: 250, Low: 80, Currency: "USD", Date: date),
+                    Symbols.Uni => new Quote(symbol, Open: 10, Close: 20, High: 25, Low: 8, Currency: "USD", Date: date),
                     _ => null,
                 };
             }

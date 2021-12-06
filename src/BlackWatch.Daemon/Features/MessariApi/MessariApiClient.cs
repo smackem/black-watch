@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace BlackWatch.Daemon.Features.Messari
+namespace BlackWatch.Daemon.Features.MessariApi
 {
     public class MessariApiClient : IMessariApiClient
     {

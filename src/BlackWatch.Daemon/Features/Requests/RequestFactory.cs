@@ -1,10 +1,11 @@
 using System;
 using BlackWatch.Core.Contracts;
-using BlackWatch.Daemon.Features.Messari;
-using BlackWatch.Daemon.Features.Polygon;
+using BlackWatch.Daemon.Features.MessariApi;
+using BlackWatch.Daemon.Features.PolygonApi;
+using BlackWatch.Daemon.Features.Requests.Messari;
+using BlackWatch.Daemon.Features.Requests.Polygon;
 using BlackWatch.Daemon.RequestEngine;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 namespace BlackWatch.Daemon.Features.Requests
 {

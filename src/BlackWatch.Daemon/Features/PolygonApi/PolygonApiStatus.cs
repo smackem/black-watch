@@ -1,5 +1,5 @@
 // ReSharper disable ConvertToConstant.Global
-namespace BlackWatch.Daemon.Features.Polygon
+namespace BlackWatch.Daemon.Features.PolygonApi
 {
     public static class PolygonApiStatus
     {

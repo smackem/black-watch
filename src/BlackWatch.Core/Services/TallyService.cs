@@ -19,7 +19,7 @@ namespace BlackWatch.Core.Services
 
         private const string CodePrefix = "(function() {\n";
         private const string CodeSuffix = "\n})();";
-        private static readonly Regex SymbolFunctionRegex = new(@"[\w]\:(\w+)", RegexOptions.Compiled);
+        private static readonly Regex SymbolFunctionRegex = new(@"^\w+$", RegexOptions.Compiled);
 
         public TallyService(IDataStore dataStore, ILogger<TallyService> logger)
         {
@@ -50,12 +50,16 @@ namespace BlackWatch.Core.Services
             return await EvaluateAsync(tallySource, ctx);
         }
 
-        private async Task<IDictionary<string, Func<string, Quote?>>> BuildContextAsync()
+        private async Task<EvaluationContext> BuildContextAsync()
         {
             var trackers = await _dataStore.GetTrackersAsync();
-            return trackers.ToDictionary(
+            var daily = trackers.ToDictionary(
                 t => GetFunctionName(t.Symbol),
-                t => new Func<string, Quote?>(dateStr => FetchQuote(t, dateStr)));
+                t => new Func<string, Quote?>(dateStr => FetchDailyQuote(t, dateStr)));
+            var hourly = trackers.ToDictionary(
+                t => GetFunctionName(t.Symbol),
+                t => new Func<string, Quote?>(offsetStr => FetchHourlyQuote(t, offsetStr)));
+            return new EvaluationContext(daily, hourly);
         }
 
         private static string GetFunctionName(string symbol)
@@ -65,10 +69,11 @@ namespace BlackWatch.Core.Services
             {
                 throw new ArgumentException($"symbol name {symbol} does not match expected format");
             }
-            return match.Groups[1].Value;
+
+            return symbol;
         }
 
-        private Quote? FetchQuote(Tracker tracker, string dateStr)
+        private Quote? FetchDailyQuote(Tracker tracker, string dateStr)
         {
             var date = ParseDateStr(dateStr);
             var quote = _dataStore.GetDailyQuoteAsync(tracker.Symbol, date).Result;
@@ -85,11 +90,30 @@ namespace BlackWatch.Core.Services
             };
         }
 
-        private Task<Tally> EvaluateAsync(TallySource tallySource, IDictionary<string, Func<string, Quote?>> ctx)
+        private Quote? FetchHourlyQuote(Tracker tracker, string offsetStr)
+        {
+            var offset = ParseOffsetStr(offsetStr);
+            var quote = _dataStore.GetHourlyQuoteAsync(tracker.Symbol, offset).Result;
+            return quote;
+        }
+
+        private static int ParseOffsetStr(string offsetStr)
+        {
+            return offsetStr switch
+            {
+                null or "now" or "last" => 0,
+                var s when string.IsNullOrWhiteSpace(s) => 0,
+                var s when int.TryParse(s, out var offset) => offset,
+                _ => throw new ArgumentException($"invalid hour offset: {offsetStr}", nameof(offsetStr)),
+            };
+        }
+
+        private Task<Tally> EvaluateAsync(TallySource tallySource, EvaluationContext ctx)
         {
             var engine = new Engine();
             var code = $"{CodePrefix}{tallySource.Code}{CodeSuffix}";
-            engine.SetValue("X", ctx);
+            engine.SetValue("Daily", ctx.DailyQuotes);
+            engine.SetValue("Hourly", ctx.HourlyQuotes);
 
             JsValue? value;
             string? errorMessage = null;
@@ -143,5 +167,9 @@ namespace BlackWatch.Core.Services
 
             return (signal, result);
         }
+
+        private record EvaluationContext(
+            IDictionary<string, Func<string, Quote?>> DailyQuotes,
+            IDictionary<string, Func<string, Quote?>> HourlyQuotes);
     }
 }

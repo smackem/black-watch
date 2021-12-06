@@ -5,11 +5,11 @@ namespace BlackWatch.Daemon.Features.Requests.Polygon
 {
     public static class PolygonNaming
     {
-        private static readonly Lazy<Regex> SymbolRegex = new(() => new Regex(@"^\w+?\:(\w+)\w{3}$", RegexOptions.Compiled));
+        private static readonly Regex SymbolRegex = new(@"^\w+?\:(\w+)\w{3}$", RegexOptions.Compiled);
 
         public static string AdjustSymbol(string polygonSymbol)
         {
-            var match = SymbolRegex.Value.Match(polygonSymbol);
+            var match = SymbolRegex.Match(polygonSymbol);
             if (match.Success == false)
             {
                 throw new ArgumentException("value does not match required format", nameof(polygonSymbol));

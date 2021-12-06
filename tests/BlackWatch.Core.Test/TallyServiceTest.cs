@@ -27,7 +27,7 @@ namespace BlackWatch.Core.Test
         {
             var dataStore = new DataStore();
             var service = new TallyService(dataStore, new NullLogger<TallyService>());
-            var tallies = await service.EvaluateAsync(EvaluationInterval.OneHour, UserId).ToList();
+            var tallies = await service.EvaluateAsync(EvaluationInterval.OneHour, UserId).ToListAsync();
             Assert.Empty(tallies);
         }
 
@@ -162,7 +162,7 @@ namespace BlackWatch.Core.Test
                 new TallySource("1", source, 1, DateTimeOffset.UtcNow, interval));
 
             var service = new TallyService(dataStore, new NullLogger<TallyService>());
-            return await service.EvaluateAsync(EvaluationInterval.OneHour, UserId).ToList();
+            return await service.EvaluateAsync(EvaluationInterval.OneHour, UserId).ToListAsync();
         }
 
         private class DataStore : IDataStore
@@ -181,14 +181,19 @@ namespace BlackWatch.Core.Test
                 _tallySources = tallySources;
             }
             
-            public Task<Tracker[]> GetTrackersAsync()
+            public Task<IReadOnlyCollection<Tracker>> GetDailyTrackersAsync()
             {
                 return Task.FromResult(new[]
                 {
-                    new Tracker(Symbols.Btc, null, null),
-                    new Tracker(Symbols.Eth, null, null),
-                    new Tracker(Symbols.Uni, null, null),
-                });
+                    new Tracker(Symbols.Btc),
+                    new Tracker(Symbols.Eth),
+                    new Tracker(Symbols.Uni),
+                } as IReadOnlyCollection<Tracker>);
+            }
+
+            public Task<IReadOnlyCollection<Tracker>> GetHourlyTrackersAsync()
+            {
+                return GetDailyTrackersAsync();
             }
 
             public Task<Quote?> GetDailyQuoteAsync(string symbol, DateTimeOffset date)

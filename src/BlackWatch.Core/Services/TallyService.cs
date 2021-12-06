@@ -52,13 +52,16 @@ namespace BlackWatch.Core.Services
 
         private async Task<EvaluationContext> BuildContextAsync()
         {
-            var trackers = await _dataStore.GetTrackersAsync();
-            var daily = trackers.ToDictionary(
+            var dailyTrackers = await _dataStore.GetDailyTrackersAsync();
+            var daily = dailyTrackers.ToDictionary(
                 t => GetFunctionName(t.Symbol),
                 t => new Func<string, Quote?>(dateStr => FetchDailyQuote(t, dateStr)));
-            var hourly = trackers.ToDictionary(
+
+            var hourlyTrackers = await _dataStore.GetHourlyTrackersAsync();
+            var hourly = hourlyTrackers.ToDictionary(
                 t => GetFunctionName(t.Symbol),
                 t => new Func<string, Quote?>(offsetStr => FetchHourlyQuote(t, offsetStr)));
+
             return new EvaluationContext(daily, hourly);
         }
 

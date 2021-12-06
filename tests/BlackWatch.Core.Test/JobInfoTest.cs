@@ -34,7 +34,7 @@ namespace BlackWatch.Core.Test
         [Fact]
         public void SerializeDailyGroupedCrypto()
         {
-            var jobInfo = RequestInfo.DownloadTrackers(new TrackerRequestInfo(DateTimeOffset.Now), "some_api");
+            var jobInfo = RequestInfo.DownloadTrackers(new TrackerRequestInfo(DateTimeOffset.Now, 1), "some_api");
             var json = JsonSerializer.Serialize(jobInfo, new JsonSerializerOptions { IgnoreNullValues = true });
             _out.WriteLine($"serialized JobInfo: {json}");
             var deserialized = JsonSerializer.Deserialize<RequestInfo>(json);

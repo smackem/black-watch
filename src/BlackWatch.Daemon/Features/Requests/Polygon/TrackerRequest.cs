@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
+using BlackWatch.Core.Util;
 using BlackWatch.Daemon.Features.PolygonApi;
 using BlackWatch.Daemon.RequestEngine;
 using Microsoft.Extensions.Logging;
@@ -46,7 +47,7 @@ namespace BlackWatch.Daemon.Features.Requests.Polygon
 
             if (trackerPrices.Status != PolygonApiStatus.Ok)
             {
-                ctx.Logger.LogWarning("aggregate crypto prices: got non-ok status: {Response}", trackerPrices);
+                ctx.Logger.LogWarning("grouped daily crypto prices: got non-ok status: {Response}", trackerPrices);
             }
 
             if (trackerPrices.Results == null)
@@ -55,12 +56,16 @@ namespace BlackWatch.Daemon.Features.Requests.Polygon
                 return RequestResult.Retry;
             }
 
-            var trackers = trackerPrices.Results
+            var (from, to) = DateRange.DaysUntilYesterdayUtc(_info.QuoteHistoryDays);
+            ctx.Logger.LogInformation(
+                "queue request: download quote history for {TrackerCount} trackers from {FromDate} to {ToDate}",
+                trackerPrices.Results.Count, from, to);
+            var quoteRequests = trackerPrices.Results
                 .Where(tp => PolygonNaming.ExtractCurrency(tp.Symbol) == "USD")
-                .Select(tp => new Tracker(PolygonNaming.AdjustSymbol(tp.Symbol), null, null))
+                .Select(tp => RequestInfo.DownloadQuoteHistory(new QuoteHistoryRequestInfo(tp.Symbol, from, to), ApiTags.Polygon))
                 .ToArray();
 
-            await _dataStore.PutTrackersAsync(trackers);
+            await _dataStore.EnqueueRequestsAsync(quoteRequests);
             return RequestResult.Ok;
         }
     }

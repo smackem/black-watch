@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BlackWatch.Core.Contracts;
@@ -85,23 +86,14 @@ namespace BlackWatch.Core.Services
             return id.ToString();
         }
 
-        public async Task PutTrackersAsync(IEnumerable<Tracker> trackers)
+        public Task<IReadOnlyCollection<Tracker>> GetDailyTrackersAsync()
         {
-            var db = await GetDatabaseAsync().Linger();
-            var entries = trackers
-                .Select(t => new HashEntry(t.Symbol, Serialize(t)))
-                .ToArray();
-            await db.HashSetAsync(Names.Trackers, entries).Linger();
+            return GetTrackersAsync(Names.DailyQuotes("*"), Names.DailyQuotesRegex(@"(\w+)"));
         }
 
-        public async Task<Tracker[]> GetTrackersAsync()
+        public Task<IReadOnlyCollection<Tracker>> GetHourlyTrackersAsync()
         {
-            var db = await GetDatabaseAsync().Linger();
-            var entries = await db.HashValuesAsync(Names.Trackers).Linger();
-            return entries
-                .Where(e => e.HasValue)
-                .Select(Deserialize<Tracker>)
-                .ToArray();
+            return GetTrackersAsync(Names.HourlyQuotes("*"), Names.HourlyQuotesRegex(@"(\w+)"));
         }
 
         public async Task<Quote?> GetDailyQuoteAsync(string symbol, DateTimeOffset date)
@@ -283,8 +275,28 @@ namespace BlackWatch.Core.Services
             GC.SuppressFinalize(this);
         }
 
-        // probably this will be needed in the future...
-        // ReSharper disable once UnusedMember.Local
+        private async Task<IReadOnlyCollection<Tracker>> GetTrackersAsync(string redisPattern, string regexPattern)
+        {
+            var trackers = new List<Tracker>();
+            var regex = new Regex(regexPattern, RegexOptions.Compiled);
+            await foreach (var key in ScanKeysAsync(redisPattern))
+            {
+                var match = regex.Match(key);
+                if (match.Success == false)
+                {
+                    _logger.LogWarning(
+                        "{Key} did not match pattern {RedisPattern} (regex {RegexPattern})",
+                        key, redisPattern, regexPattern);
+                    continue;
+                }
+
+                var symbol = match.Groups[1].Value;
+                trackers.Add(new Tracker(symbol));
+            }
+
+            return trackers;
+        }
+
         private async IAsyncEnumerable<RedisKey> ScanKeysAsync(RedisValue pattern)
         {
             var redis = await ConnectRedisAsync().Linger();
@@ -344,11 +356,6 @@ namespace BlackWatch.Core.Services
         private static class Names
         {
             /// <summary>
-            /// HASH{Symbol => Tracker}
-            /// </summary>
-            public static readonly RedisKey Trackers = new("black-watch:trackers");
-
-            /// <summary>
             /// LIST{RequestInfo}
             /// </summary>
             public static RedisKey Requests(string apiTag) => new($"black-watch:requests:{apiTag}");
@@ -371,12 +378,26 @@ namespace BlackWatch.Core.Services
             /// <summary>
             /// HASH{Date => Quote}
             /// </summary>
-            public static RedisKey DailyQuotes(string symbol) => $"black-watch:quotes:daily:{symbol}";
+            public static RedisKey DailyQuotes(string symbol) => $"{DailyQuotesPrefix}{symbol}";
+
+            /// <summary>
+            /// HASH{Date => Quote}
+            /// </summary>
+            public static RedisKey DailyQuotesRegex(string pattern) => $"{Regex.Escape(DailyQuotesPrefix)}{pattern}";
+
+            private const string DailyQuotesPrefix = "black-watch:quotes:daily:";
 
             /// <summary>
             /// LIST{Quote}
             /// </summary>
-            public static RedisKey HourlyQuotes(string symbol) => $"black-watch:quotes:hourly:{symbol}";
+            public static RedisKey HourlyQuotes(string symbol) => $"{HourlyQuotesPrefix}{symbol}";
+
+            /// <summary>
+            /// LIST{Quote}
+            /// </summary>
+            public static RedisKey HourlyQuotesRegex(string pattern) => $"{Regex.Escape(HourlyQuotesPrefix)}{pattern}";
+
+            private const string HourlyQuotesPrefix = "black-watch:quotes:hourly:";
 
             /// <summary>
             /// LIST{Tally}

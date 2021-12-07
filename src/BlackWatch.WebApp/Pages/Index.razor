@@ -1,7 +1,44 @@
 ﻿@page "/"
+@using BlackWatch.WebApp.Features.Api
+@inject IApiClient _api
 
-<h1>Hello, world!</h1>
+@if (_tallySources == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <h1>Black Watch</h1>
+    <table class="table">
+        <thead>
+        <tr>
+            <td>ID</td>
+            <td>Code</td>
+            <td>Interval</td>
+            <td>Version</td>
+            <td>Date Modified</td>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var t in _tallySources)
+        {
+            <tr>
+                <td>@t.Id</td>
+                <td>@t.Code</td>
+                <td>@t.Interval</td>
+                <td>@t.Version</td>
+                <td>@t.DateModified</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
 
-Welcome to your new app.
+@code {
+    private IReadOnlyCollection<TallySource>? _tallySources;
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+    protected override async Task OnInitializedAsync()
+    {
+        _tallySources = await _api.GetTallySourcesAsync();
+    }
+}

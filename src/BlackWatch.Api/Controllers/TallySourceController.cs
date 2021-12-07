@@ -95,7 +95,7 @@ namespace BlackWatch.Api.Controllers
         [Produces(ResponseMimeType)]
         public async Task<IReadOnlyCollection<TallySource>> Index()
         {
-            return await _dataStore.GetTallySourcesAsync().ToListAsync().ConfigureAwait(false);
+            return await _dataStore.GetTallySourcesAsync().ToListAsync().Linger();
         }
 
         [HttpPost]

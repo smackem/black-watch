@@ -1,6 +1,6 @@
 using System;
-using System.Net.Http;
 using System.Threading.Tasks;
+using BlackWatch.WebApp.Features.Api;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,7 +13,17 @@ namespace BlackWatch.WebApp
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
 
-            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+            var baseUri = new Uri(builder.HostEnvironment.BaseAddress);
+            var apiUri = new UriBuilder(baseUri)
+            {
+                Port = 5001,
+            }.Uri;
+
+            builder.Services.AddLogging();
+            builder.Services.AddHttpClient<IApiClient, ApiClient>(http =>
+            {
+                http.BaseAddress = apiUri;
+            });
 
             await builder.Build().RunAsync();
         }

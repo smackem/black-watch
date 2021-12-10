@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using BlackWatch.WebApp.Features.Api
 @inject IApiClient _api
+@inject NavigationManager _navigation
 
 @if (_tallySources == null)
 {
@@ -9,11 +10,13 @@
 }
 
 <h1>Black Watch</h1>
+
 <table class="table table-striped table-hover">
     <thead>
     <tr>
         <th>ID</th>
-        <th>Code</th>
+        <th>Name</th>
+        <th>Message</th>
         <th>Interval</th>
         <th>Version</th>
         <th>Date Modified</th>
@@ -25,7 +28,8 @@
     {
         <tr>
             <td>@t.Id</td>
-            <td>@t.Code</td>
+            <td>@t.Name</td>
+            <td>@t.Message</td>
             <td>@t.Interval</td>
             <td>@t.Version</td>
             <td>@t.DateModified</td>
@@ -37,11 +41,20 @@
     </tbody>
 </table>
 
+<div class="my-1">
+    <button class="btn btn-primary" @onclick="CreateNew">New...</button>
+</div>
+
 @code {
     private IReadOnlyCollection<TallySource>? _tallySources;
 
     protected override async Task OnInitializedAsync()
     {
         _tallySources = await _api.GetTallySourcesAsync();
+    }
+
+    private void CreateNew()
+    {
+        _navigation.NavigateTo("/new");
     }
 }

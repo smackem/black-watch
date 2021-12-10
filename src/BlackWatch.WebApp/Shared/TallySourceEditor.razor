@@ -3,7 +3,7 @@
 <form action="#" class="row p-3">
     <div class="col-8">
         <label for="name" class="col-form-label">Name</label>
-        <input type="text" id="name" class="form-control"/>
+        <input type="text" id="name" class="form-control" @bind="Model!.Name"/>
     </div>
     <div class="col-4">
         <label for="interval" class="col-form-label">Evaluation Interval</label>
@@ -16,7 +16,7 @@
     </div>
     <div class="col-12">
         <label for="message" class="col-form-label">Message</label>
-        <input type="text" id="message" class="form-control"/>
+        <input type="text" id="message" class="form-control" @bind="Model!.Message"/>
     </div>
     <div class="col-12">
         <label for="code" class="col-form-label">Code</label>

@@ -29,6 +29,10 @@ namespace BlackWatch.WebApp.Features.Api
     {
         public string? Id { get; set; }
 
+        public string? Name { get; set; }
+
+        public string? Message { get; set; }
+
         public string? Code { get; set; }
 
         public int Version { get; set; }
@@ -49,5 +53,9 @@ namespace BlackWatch.WebApp.Features.Api
         OneDay,
     }
 
-    public record PutTallySourceCommand(string Code, EvaluationInterval Interval);
+    public record PutTallySourceCommand(
+        string Name,
+        string Message,
+        string Code,
+        EvaluationInterval Interval);
 }

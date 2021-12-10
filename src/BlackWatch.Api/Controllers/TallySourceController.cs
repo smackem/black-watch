@@ -28,7 +28,7 @@ namespace BlackWatch.Api.Controllers
             _tallyService = tallyService;
         }
 
-        public record PutTallySourceCommand(string Code, EvaluationInterval Interval);
+        public record PutTallySourceCommand(string Name, string Message, string Code, EvaluationInterval Interval);
 
         [HttpGet("{id}")]
         [Produces(ResponseMimeType)]
@@ -104,8 +104,7 @@ namespace BlackWatch.Api.Controllers
         public async Task<IActionResult> Create([FromBody] PutTallySourceCommand command)
         {
             var id = await _dataStore.GenerateIdAsync();
-            var (code, interval) = command;
-            var tallySource = new TallySource(id, code, 1, DateTimeOffset.UtcNow, interval);
+            var tallySource = new TallySource(id, command.Name, command.Message, command.Code, command.Interval, 1, DateTimeOffset.UtcNow);
             await _dataStore.PutTallySourceAsync(UserId, tallySource);
             _logger.LogInformation("tally source created: user-{UserId}:{TallySourceId}", UserId, id);
             return CreatedAtAction(nameof(GetById), new { id = tallySource.Id }, tallySource);
@@ -123,8 +122,7 @@ namespace BlackWatch.Api.Controllers
                 return NotFound();
             }
 
-            var (code, interval) = command;
-            var modifiedTallySource = tallySource.Update(code, interval);
+            var modifiedTallySource = tallySource.Update(command.Name, command.Message, command.Code, command.Interval);
             await _dataStore.PutTallySourceAsync(UserId, modifiedTallySource);
             _logger.LogInformation("tally source updated: user-{UserId}:{TallySourceId}", UserId, id);
             return Ok(modifiedTallySource);

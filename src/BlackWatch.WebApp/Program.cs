@@ -13,16 +13,10 @@ namespace BlackWatch.WebApp
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
 
-            var baseUri = new Uri(builder.HostEnvironment.BaseAddress);
-            var apiUri = new UriBuilder(baseUri)
-            {
-                Port = 5001,
-            }.Uri;
-
             builder.Services.AddLogging();
             builder.Services.AddHttpClient<IApiClient, ApiClient>(http =>
             {
-                http.BaseAddress = apiUri;
+                http.BaseAddress = new Uri(builder.Configuration["Api:Uri"]);
             });
 
             await builder.Build().RunAsync();

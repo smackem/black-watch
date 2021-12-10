@@ -1,0 +1,34 @@
+@page "/New"
+@using BlackWatch.WebApp.Features.Api
+@inject NavigationManager _navigation
+@inject IApiClient _api
+
+<h3>New</h3>
+
+<TallySourceEditor Model="_model"></TallySourceEditor>
+
+<div class="my-1">
+    <button class="btn btn-primary" @onclick="SaveAsync">OK</button>
+    <button class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+</div>
+
+@code {
+    private readonly TallySource _model = new();
+
+    private async Task SaveAsync()
+    {
+        var command = new PutTallySourceCommand(
+            Name: _model.Name ?? string.Empty,
+            Message: _model.Message ?? string.Empty,
+            Code: _model.Code ?? string.Empty,
+            Interval: _model.Interval);
+
+        await _api.CreateTallySourceAsync(command);
+        _navigation.NavigateTo("/");
+    }
+
+    private void Cancel()
+    {
+        _navigation.NavigateTo("/");
+    }
+}

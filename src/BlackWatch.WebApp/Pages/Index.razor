@@ -4,35 +4,38 @@
 
 @if (_tallySources == null)
 {
-    <p>Loading...</p>
+    <p><em>Loading...</em></p>
+    return;
 }
-else
-{
-    <h1>Black Watch</h1>
-    <table class="table">
-        <thead>
+
+<h1>Black Watch</h1>
+<table class="table table-striped table-hover">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Code</th>
+        <th>Interval</th>
+        <th>Version</th>
+        <th>Date Modified</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var t in _tallySources)
+    {
         <tr>
-            <td>ID</td>
-            <td>Code</td>
-            <td>Interval</td>
-            <td>Version</td>
-            <td>Date Modified</td>
+            <td>@t.Id</td>
+            <td>@t.Code</td>
+            <td>@t.Interval</td>
+            <td>@t.Version</td>
+            <td>@t.DateModified</td>
+            <td>
+                <a href="/edit/@t.Id"><span class="oi oi-pencil"></span></a>
+            </td>
         </tr>
-        </thead>
-        <tbody>
-        @foreach (var t in _tallySources)
-        {
-            <tr>
-                <td>@t.Id</td>
-                <td>@t.Code</td>
-                <td>@t.Interval</td>
-                <td>@t.Version</td>
-                <td>@t.DateModified</td>
-            </tr>
-        }
-        </tbody>
-    </table>
-}
+    }
+    </tbody>
+</table>
 
 @code {
     private IReadOnlyCollection<TallySource>? _tallySources;

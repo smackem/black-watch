@@ -1,0 +1,32 @@
+@page "/edit/{id}"
+@using BlackWatch.WebApp.Features.Api
+@inject IApiClient _api
+
+<h3>Edit @Id</h3>
+
+@if (_tallySource == null)
+{
+    <p>Loading TallySource...</p>
+    return;
+}
+
+<TallySourceEditor @ref="_editor" Model="_tallySource"></TallySourceEditor>
+
+@code {
+    private TallySource? _tallySource;
+
+    [Parameter]
+    public string? Id { get; set; }
+
+    private TallySourceEditor? _editor;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id == null)
+        {
+            return;
+        }
+
+        _tallySource = await _api.GetTallySourceAsync(Id);
+    }
+}

@@ -1,13 +1,21 @@
 using System;
+using System.Text.Json.Serialization;
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace BlackWatch.WebApp.Features.Api
 {
-    public record Tally(
-        string TallySourceId,
-        int TallySourceVersion,
-        DateTimeOffset DateCreated,
-        TallyState State,
-        string? Result);
+    public class Tally
+    {
+        public string? TallySourceId { get; set; }
+
+        public int TallySourceVersion { get; set; }
+
+        public DateTimeOffset DateCreated { get; set; }
+
+        public TallyState State { get; set; }
+
+        public string? Result { get; set; }
+    }
 
     public enum TallyState
     {
@@ -17,12 +25,21 @@ namespace BlackWatch.WebApp.Features.Api
         Error,
     }
 
-    public record TallySource(
-        string Id,
-        string Code,
-        int Version,
-        DateTimeOffset DateModified,
-        EvaluationInterval Interval);
+    public class TallySource
+    {
+        public string? Id { get; set; }
+
+        public string? Code { get; set; }
+
+        public int Version { get; set; }
+
+        public DateTimeOffset DateModified { get; set; }
+
+        public EvaluationInterval Interval { get; set; }
+
+        [JsonIgnore]
+        public bool IsNew => Id == null;
+    }
 
     public enum EvaluationInterval
     {

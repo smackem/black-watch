@@ -1,6 +1,7 @@
 @page "/New"
 @using BlackWatch.WebApp.Features.Api
-@inject NavigationManager _navigation
+@using BlackWatch.WebApp.Services
+@inject Navigation _navigation
 @inject IApiClient _api
 
 <h3>New</h3>
@@ -29,6 +30,6 @@
 
     private void Cancel()
     {
-        _navigation.NavigateTo("/");
+        _navigation.GoBack();
     }
 }

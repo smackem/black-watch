@@ -1,6 +1,7 @@
 @page "/edit/{id}"
 @using BlackWatch.WebApp.Features.Api
-@inject NavigationManager _navigation
+@using BlackWatch.WebApp.Services
+@inject Navigation _navigation
 @inject IApiClient _api
 
 <h3>Edit @Id</h3>
@@ -46,11 +47,11 @@
 
         var id = _model.Id ?? throw new InvalidOperationException("id must not be null");
         await _api.UpdateTallySourceAsync(id, command);
-        _navigation.NavigateTo("/");
+        _navigation.GoBack();
     }
 
     private void Cancel()
     {
-        _navigation.NavigateTo("/");
+        _navigation.GoBack();
     }
 }

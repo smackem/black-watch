@@ -1,7 +1,8 @@
 ﻿@page "/"
 @using BlackWatch.WebApp.Features.Api
+@using BlackWatch.WebApp.Services
 @inject IApiClient _api
-@inject NavigationManager _navigation
+@inject Navigation _navigation
 
 @if (_tallySources == null)
 {

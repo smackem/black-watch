@@ -53,9 +53,11 @@ namespace BlackWatch.WebApp.Features.Api
             throw new System.NotImplementedException();
         }
 
-        public Task<Tally> EvaluateTallySourceAndStoreTallyAsync(string id)
+        public async Task<Tally> EvaluateTallySourceAndStoreTallyAsync(string id)
         {
-            throw new System.NotImplementedException();
+            var response = await _http.PostAsync($"tallysource/{id}/eval", new StringContent(string.Empty));
+            var tally = await response.Content.ReadFromJsonAsync<Tally>();
+            return tally!;
         }
 
         public Task<IReadOnlyCollection<Tally>> GetTallyAsync(string tallySourceId, int count)
@@ -63,9 +65,10 @@ namespace BlackWatch.WebApp.Features.Api
             throw new System.NotImplementedException();
         }
 
-        public Task<IReadOnlyCollection<Tally>> GetTalliesAsync(int count)
+        public async Task<IReadOnlyCollection<Tally>> GetTalliesAsync(int count)
         {
-            throw new System.NotImplementedException();
+            var tallies = await _http.GetFromJsonAsync<Tally[]>($"tally?count={count}");
+            return tallies!;
         }
     }
 }

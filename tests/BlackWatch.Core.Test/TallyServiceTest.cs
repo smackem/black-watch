@@ -159,7 +159,7 @@ namespace BlackWatch.Core.Test
         private static async Task<IReadOnlyList<Tally>> EvaluateSingleTallySource(string source, EvaluationInterval interval)
         {
             var dataStore = new DataStore(
-                new TallySource("1", source, 1, DateTimeOffset.UtcNow, interval));
+                new TallySource("1", "test", "hello", source, interval, 1, DateTimeOffset.UtcNow));
 
             var service = new TallyService(dataStore, new NullLogger<TallyService>());
             return await service.EvaluateAsync(EvaluationInterval.OneHour, UserId).ToListAsync();
@@ -243,10 +243,6 @@ namespace BlackWatch.Core.Test
                 throw new NotImplementedException();
             }
             public Task<string> GenerateIdAsync()
-            {
-                throw new NotImplementedException();
-            }
-            public Task PutTrackersAsync(IEnumerable<Tracker> trackers)
             {
                 throw new NotImplementedException();
             }

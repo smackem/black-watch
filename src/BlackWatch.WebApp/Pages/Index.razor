@@ -6,7 +6,9 @@
 
 @if (_tallySources == null)
 {
-    <p><em>Loading...</em></p>
+    <p>
+        <em>Loading...</em>
+    </p>
     return;
 }
 
@@ -25,19 +27,43 @@
     </tr>
     </thead>
     <tbody>
-    @foreach (var t in _tallySources)
+    @foreach (var ts in _tallySources)
     {
+        var tallies = _tallies?[ts.Id!].OrderByDescending(t => t.DateCreated);
         <tr>
-            <td>@t.Id</td>
-            <td>@t.Name</td>
-            <td>@t.Message</td>
-            <td>@t.Interval</td>
-            <td>@t.Version</td>
-            <td>@t.DateModified</td>
+            <td>@ts.Id</td>
+            <td>@ts.Name</td>
+            <td>@ts.Message</td>
+            <td>@ts.Interval</td>
+            <td>@ts.Version</td>
+            <td>@ts.DateModified</td>
             <td>
-                <a href="/edit/@t.Id"><span class="oi oi-pencil"></span></a>
+                <a href="/edit/@ts.Id">
+                    <span class="oi oi-pencil"></span>
+                </a>
+                &nbsp;
+                <a href="#" @onclick="() => EvaluateAsync(ts)">
+                    <span class="oi oi-bolt"></span>
+                </a>
             </td>
         </tr>
+        @if (tallies == null)
+        {
+            continue;
+        }
+        @foreach (var t in tallies)
+        {
+            <tr class="@GetTallyRowClass(t)">
+                <td colspan="2" />
+                <td colspan="5">
+                    @t.State
+                    &nbsp;|&nbsp;
+                    @t.Result
+                    &nbsp;|&nbsp;
+                    @t.DateCreated
+                </td>
+            </tr>
+        }
     }
     </tbody>
 </table>
@@ -48,14 +74,40 @@
 
 @code {
     private IReadOnlyCollection<TallySource>? _tallySources;
+    private ILookup<string, Tally>? _tallies;
+
+    private static string GetTallyRowClass(Tally tally)
+    {
+        return tally.State switch
+        {
+            TallyState.Indeterminate => "table-secondary",
+            TallyState.NonSignalled => "",
+            TallyState.Signalled => "table-primary",
+            TallyState.Error => "table-error",
+            _ => throw new ArgumentOutOfRangeException(),
+        };
+    }
 
     protected override async Task OnInitializedAsync()
     {
         _tallySources = await _api.GetTallySourcesAsync();
+        await FetchTalliesAsync();
+    }
+
+    private async Task FetchTalliesAsync()
+    {
+        var tallies = await _api.GetTalliesAsync(3);
+        _tallies = tallies.ToLookup(t => t.TallySourceId!);
     }
 
     private void CreateNew()
     {
         _navigation.NavigateTo("/new");
+    }
+
+    private async Task EvaluateAsync(TallySource ts)
+    {
+        var tally = await _api.EvaluateTallySourceAndStoreTallyAsync(ts.Id!);
+        await FetchTalliesAsync();
     }
 }

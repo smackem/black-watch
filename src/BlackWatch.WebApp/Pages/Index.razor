@@ -14,7 +14,7 @@
 
 <h1>Black Watch</h1>
 
-<table class="table table-striped table-hover">
+<table class="table table-hover">
     <thead>
     <tr>
         <th>ID</th>
@@ -81,8 +81,8 @@
         return tally.State switch
         {
             TallyState.Indeterminate => "table-secondary",
-            TallyState.NonSignalled => "",
-            TallyState.Signalled => "table-primary",
+            TallyState.NonSignalled => "table-dark",
+            TallyState.Signalled => "table-success",
             TallyState.Error => "table-error",
             _ => throw new ArgumentOutOfRangeException(),
         };

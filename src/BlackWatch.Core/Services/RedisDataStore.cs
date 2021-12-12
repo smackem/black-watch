@@ -261,7 +261,7 @@ namespace BlackWatch.Core.Services
         {
             var db = await GetDatabaseAsync().Linger();
             var key = Names.Tally(tallySourceId);
-            var values = await db.ListRangeAsync(key, 0, count).Linger();
+            var values = await db.ListRangeAsync(key, 0, count - 1).Linger();
             var tallies = values
                 .Where(value => value.HasValue)
                 .Select(Deserialize<Tally>)

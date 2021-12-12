@@ -54,6 +54,10 @@ namespace BlackWatch.WebApp.Services
             {
                 return;
             }
+            if (e.Location.EndsWith("#"))
+            {
+                return;
+            }
 
             _history.AddLast(e.Location);
             while (_history.Count > MaxHistoryLength)

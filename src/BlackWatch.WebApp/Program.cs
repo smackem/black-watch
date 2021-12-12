@@ -20,7 +20,7 @@ namespace BlackWatch.WebApp
             builder.Services.AddSingleton<Navigation>();
             builder.Services.AddHttpClient<IApiClient, ApiClient>(http =>
             {
-                http.BaseAddress = new Uri(builder.Configuration["Api:Uri"]);
+                http.BaseAddress = new Uri(builder.Configuration["Api:Uri"]!);
             });
 
             await builder.Build().RunAsync();

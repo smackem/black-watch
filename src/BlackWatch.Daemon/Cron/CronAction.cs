@@ -1,24 +1,23 @@
 using System.Threading.Tasks;
 using Cronos;
 
-namespace BlackWatch.Daemon.Cron
+namespace BlackWatch.Daemon.Cron;
+
+public abstract class CronAction
 {
-    public abstract class CronAction
+    protected CronAction(CronExpression cronExpr, string moniker)
     {
-        protected CronAction(CronExpression cronExpr, string moniker)
-        {
-            CronExpr = cronExpr;
-            Moniker = moniker;
-        }
+        CronExpr = cronExpr;
+        Moniker = moniker;
+    }
 
-        public CronExpression CronExpr { get; }
-        public string Moniker { get; }
+    public CronExpression CronExpr { get; }
+    public string Moniker { get; }
 
-        public abstract Task<bool> ExecuteAsync();
+    public abstract Task<bool> ExecuteAsync();
 
-        public override string ToString()
-        {
-            return $"CronAction[{Moniker}]";
-        }
+    public override string ToString()
+    {
+        return $"CronAction[{Moniker}]";
     }
 }

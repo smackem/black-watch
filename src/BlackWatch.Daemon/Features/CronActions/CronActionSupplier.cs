@@ -6,59 +6,60 @@ using Cronos;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace BlackWatch.Daemon.Features.CronActions
+namespace BlackWatch.Daemon.Features.CronActions;
+
+public class CronActionSupplier : ICronActionSupplier
 {
-    public class CronActionSupplier : ICronActionSupplier
+    private readonly IDataStore _dataStore;
+    private readonly ILogger<CronActionSupplier> _logger;
+    private readonly SchedulerOptions _options;
+    private readonly TallyService _tallyService;
+
+    public CronActionSupplier(
+        IDataStore dataStore,
+        IOptions<SchedulerOptions> options,
+        TallyService tallyService,
+        ILogger<CronActionSupplier> logger)
     {
-        private readonly IDataStore _dataStore;
-        private readonly TallyService _tallyService;
-        private readonly ILogger<CronActionSupplier> _logger;
-        private readonly SchedulerOptions _options;
+        _dataStore = dataStore;
+        _tallyService = tallyService;
+        _logger = logger;
+        _options = options.Value;
+    }
 
-        public CronActionSupplier(
-            IDataStore dataStore,
-            IOptions<SchedulerOptions> options,
-            TallyService tallyService,
-            ILogger<CronActionSupplier> logger)
+    public IEnumerable<CronAction> Actions
+    {
+        get
         {
-            _dataStore = dataStore;
-            _tallyService = tallyService;
-            _logger = logger;
-            _options = options.Value;
-        }
+            var historyDownloader = new QuoteHistoryRequestAction(
+                CronExpression.Parse(_options.Cron.DownloadQuoteHistory),
+                _dataStore,
+                _logger,
+                _options.QuoteHistoryDays);
+            var snapshotDownloader = new QuoteSnapshotRequestAction(
+                CronExpression.Parse(_options.Cron.DownloadQuoteSnapshot),
+                _dataStore,
+                _logger);
+            var initializer = new InitializeCronAction(
+                CronExpression.Parse("@every_minute"),
+                _dataStore,
+                _logger,
+                historyDownloader);
 
-        public IEnumerable<CronAction> Actions
-        {
-            get
+            return new CronAction[]
             {
-                var historyDownloader = new QuoteHistoryRequestAction(
-                    CronExpression.Parse(_options.Cron.DownloadQuoteHistory),
-                    _dataStore,
-                    _logger,
-                    _options.QuoteHistoryDays);
-                var snapshotDownloader = new QuoteSnapshotRequestAction(
-                    CronExpression.Parse(_options.Cron.DownloadQuoteSnapshot),
-                    _dataStore,
-                    _logger);
-                var initializer = new InitializeCronAction(
-                    CronExpression.Parse("@every_minute"),
-                    _dataStore,
-                    _logger,
-                    historyDownloader);
-
-                return new CronAction[]
-                {
-                    historyDownloader,
-                    snapshotDownloader,
-                    initializer,
-                    CreateEvaluationAction(_options.Cron.EvaluationEveryHour, EvaluationInterval.OneHour),
-                    CreateEvaluationAction(_options.Cron.EvaluationEverySixHours, EvaluationInterval.SixHours),
-                    CreateEvaluationAction(_options.Cron.EvaluationEveryDay, EvaluationInterval.OneDay),
-                };
-            }
+                historyDownloader,
+                snapshotDownloader,
+                initializer,
+                CreateEvaluationAction(_options.Cron.EvaluationEveryHour, EvaluationInterval.OneHour),
+                CreateEvaluationAction(_options.Cron.EvaluationEverySixHours, EvaluationInterval.SixHours),
+                CreateEvaluationAction(_options.Cron.EvaluationEveryDay, EvaluationInterval.OneDay)
+            };
         }
+    }
 
-        private EvaluationAction CreateEvaluationAction(string cronStr, EvaluationInterval interval) =>
-            new(CronExpression.Parse(cronStr), interval, _tallyService, _dataStore, _logger);
+    private EvaluationAction CreateEvaluationAction(string cronStr, EvaluationInterval interval)
+    {
+        return new EvaluationAction(CronExpression.Parse(cronStr), interval, _tallyService, _dataStore, _logger);
     }
 }

@@ -1,13 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace BlackWatch.Daemon.Features.PolygonApi
-{
-    public class PolygonApiClientOptions
-    {
-        [Required]
-        public string? BaseAddress { get; set; }
+namespace BlackWatch.Daemon.Features.PolygonApi;
 
-        [Required]
-        public string? ApiKey { get; set; }
-    }
+public class PolygonApiClientOptions
+{
+    [Required]
+    public string? BaseAddress { get; set; }
+
+    [Required]
+    public string? ApiKey { get; set; }
 }

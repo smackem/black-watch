@@ -6,43 +6,42 @@ using BlackWatch.Daemon.Cron;
 using Cronos;
 using Microsoft.Extensions.Logging;
 
-namespace BlackWatch.Daemon.Features.CronActions
+namespace BlackWatch.Daemon.Features.CronActions;
+
+public class EvaluationAction : CronAction
 {
-    public class EvaluationAction : CronAction
+    private readonly IDataStore _dataStore;
+    private readonly EvaluationInterval _interval;
+    private readonly ILogger _logger;
+    private readonly TallyService _tallyService;
+
+    public EvaluationAction(
+        CronExpression cronExpr,
+        EvaluationInterval interval,
+        TallyService tallyService,
+        IDataStore dataStore,
+        ILogger logger)
+        : base(cronExpr, $"evaluate tally sources @ interval {interval}")
     {
-        private readonly EvaluationInterval _interval;
-        private readonly TallyService _tallyService;
-        private readonly IDataStore _dataStore;
-        private readonly ILogger _logger;
+        _interval = interval;
+        _tallyService = tallyService;
+        _dataStore = dataStore;
+        _logger = logger;
+    }
 
-        public EvaluationAction(
-            CronExpression cronExpr,
-            EvaluationInterval interval,
-            TallyService tallyService,
-            IDataStore dataStore,
-            ILogger logger)
-            : base(cronExpr, $"evaluate tally sources @ interval {interval}")
+    public override async Task<bool> ExecuteAsync()
+    {
+        var tallies = _tallyService.EvaluateAsync(_interval);
+        var count = 0;
+        _logger.LogDebug("evaluating tally sources at interval {Interval}", _interval);
+
+        await foreach (var tally in tallies.Linger())
         {
-            _interval = interval;
-            _tallyService = tallyService;
-            _dataStore = dataStore;
-            _logger = logger;
+            await _dataStore.PutTallyAsync(tally);
+            count++;
         }
 
-        public override async Task<bool> ExecuteAsync()
-        {
-            var tallies = _tallyService.EvaluateAsync(_interval);
-            var count = 0;
-            _logger.LogDebug("evaluating tally sources at interval {Interval}", _interval);
-
-            await foreach (var tally in tallies.Linger())
-            {
-                await _dataStore.PutTallyAsync(tally);
-                count++;
-            }
-
-            _logger.LogInformation("evaluating tally sources at interval {Interval} yielded {TallyCount} tallies", _interval, count);
-            return true;
-        }
+        _logger.LogInformation("evaluating tally sources at interval {Interval} yielded {TallyCount} tallies", _interval, count);
+        return true;
     }
 }

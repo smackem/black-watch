@@ -1,13 +1,12 @@
 using System;
 using BlackWatch.Core.Contracts;
 
-namespace BlackWatch.Daemon.RequestEngine
+namespace BlackWatch.Daemon.RequestEngine;
+
+/// <summary>
+///     creates <see cref="Request" /> instances from <see cref="RequestInfo" />s retrieved from other services
+/// </summary>
+public interface IRequestFactory
 {
-    /// <summary>
-    /// creates <see cref="Request"/> instances from <see cref="RequestInfo"/>s retrieved from other services
-    /// </summary>
-    public interface IRequestFactory
-    {
-        Request BuildRequest(RequestInfo requestInfo, IServiceProvider sp);
-    }
+    Request BuildRequest(RequestInfo requestInfo, IServiceProvider sp);
 }

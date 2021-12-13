@@ -9,86 +9,85 @@ using BlackWatch.Daemon.Features.PolygonApi;
 using BlackWatch.Daemon.RequestEngine;
 using Microsoft.Extensions.Logging;
 
-namespace BlackWatch.Daemon.Features.Requests.Polygon
+namespace BlackWatch.Daemon.Features.Requests.Polygon;
+
+internal class QuoteHistoryRequest : Request
 {
-    internal class QuoteHistoryRequest : Request
+    private readonly IDataStore _dataStore;
+    private readonly QuoteHistoryRequestInfo _info;
+    private readonly IPolygonApiClient _polygon;
+
+    public QuoteHistoryRequest(QuoteHistoryRequestInfo info, IDataStore dataStore, IPolygonApiClient polygon)
+        : base($"download aggregates for {info.Symbol}")
     {
-        private readonly QuoteHistoryRequestInfo _info;
-        private readonly IPolygonApiClient _polygon;
-        private readonly IDataStore _dataStore;
+        _info = info;
+        _polygon = polygon;
+        _dataStore = dataStore;
+    }
 
-        public QuoteHistoryRequest(QuoteHistoryRequestInfo info, IDataStore dataStore, IPolygonApiClient polygon)
-            : base($"download aggregates for {info.Symbol}")
+    public override async Task<RequestResult> ExecuteAsync(RequestContext ctx)
+    {
+        AggregateCurrencyPricesResponse prices;
+        try
         {
-            _info = info;
-            _polygon = polygon;
-            _dataStore = dataStore;
+            prices = await _polygon.GetAggregateCryptoPricesAsync(_info.Symbol, _info.FromDate, _info.ToDate);
+        }
+        catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.TooManyRequests)
+        {
+            ctx.Logger.LogWarning(e, "received {StatusCode} while getting aggregate crypto prices for {Symbol} => wait and retry", e.StatusCode, _info.Symbol);
+            return RequestResult.WaitAndRetry;
+        }
+        catch (Exception e)
+        {
+            ctx.Logger.LogError(e, "error getting aggregate crypto prices for {Symbol}", _info.Symbol);
+            return RequestResult.Fatal;
         }
 
-        public override async Task<RequestResult> ExecuteAsync(RequestContext ctx)
+        if (prices.Status != PolygonApiStatus.Ok)
         {
-            AggregateCurrencyPricesResponse prices;
-            try
-            {
-                prices = await _polygon.GetAggregateCryptoPricesAsync(_info.Symbol, _info.FromDate, _info.ToDate);
-            }
-            catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.TooManyRequests)
-            {
-                ctx.Logger.LogWarning(e, "received {StatusCode} while getting aggregate crypto prices for {Symbol} => wait and retry", e.StatusCode, _info.Symbol);
-                return RequestResult.WaitAndRetry;
-            }
-            catch (Exception e)
-            {
-                ctx.Logger.LogError(e, "error getting aggregate crypto prices for {Symbol}", _info.Symbol);
-                return RequestResult.Fatal;
-            }
-
-            if (prices.Status != PolygonApiStatus.Ok)
-            {
-                ctx.Logger.LogWarning("aggregate crypto prices: got non-ok status: {Response}", prices);
-            }
-
-            if (prices.Results == null)
-            {
-                ctx.Logger.LogWarning("aggregate crypto prices: got empty result set: {Response}", prices);
-                return RequestResult.Retry;
-            }
-
-            var currency = PolygonNaming.ExtractCurrency(_info.Symbol);
-            var symbol = PolygonNaming.AdjustSymbol(_info.Symbol);
-            var quotes = prices.Results
-                .Select(p => new Quote(
-                    symbol, p.Open, p.Close, p.High, 0, currency,
-                    DateTimeOffset.FromUnixTimeMilliseconds(p.Timestamp)))
-                .ToArray();
-
-            foreach (var quote in quotes)
-            {
-                await _dataStore.PutDailyQuoteAsync(quote);
-            }
-
-            return RequestResult.Ok;
+            ctx.Logger.LogWarning("aggregate crypto prices: got non-ok status: {Response}", prices);
         }
 
-        private static (DateTimeOffset? from, DateTimeOffset? to) GetTrackerDateRange(IEnumerable<Quote> quotes)
+        if (prices.Results == null)
         {
-            DateTimeOffset? from = null;
-            DateTimeOffset? to = null;
+            ctx.Logger.LogWarning("aggregate crypto prices: got empty result set: {Response}", prices);
+            return RequestResult.Retry;
+        }
 
-            foreach (var quote in quotes)
+        var currency = PolygonNaming.ExtractCurrency(_info.Symbol);
+        var symbol = PolygonNaming.AdjustSymbol(_info.Symbol);
+        var quotes = prices.Results
+            .Select(p => new Quote(
+                symbol, p.Open, p.Close, p.High, 0, currency,
+                DateTimeOffset.FromUnixTimeMilliseconds(p.Timestamp)))
+            .ToArray();
+
+        foreach (var quote in quotes)
+        {
+            await _dataStore.PutDailyQuoteAsync(quote);
+        }
+
+        return RequestResult.Ok;
+    }
+
+    private static (DateTimeOffset? from, DateTimeOffset? to) GetTrackerDateRange(IEnumerable<Quote> quotes)
+    {
+        DateTimeOffset? from = null;
+        DateTimeOffset? to = null;
+
+        foreach (var quote in quotes)
+        {
+            if (from == null || quote.Date < from)
             {
-                if (from == null || quote.Date < from)
-                {
-                    from = quote.Date;
-                }
-
-                if (to == null || quote.Date > to)
-                {
-                    to = quote.Date;
-                }
+                from = quote.Date;
             }
 
-            return (from, to);
+            if (to == null || quote.Date > to)
+            {
+                to = quote.Date;
+            }
         }
+
+        return (from, to);
     }
 }

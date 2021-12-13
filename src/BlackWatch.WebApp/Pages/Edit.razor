@@ -1,0 +1,57 @@
+@page "/edit/{id}"
+@using BlackWatch.WebApp.Services
+@using BlackWatch.WebApp.Features.Api
+@inject Navigation _navigation
+@inject IApiClient _api
+
+<h3>Edit @Id</h3>
+
+@if (_model == null)
+{
+    <p>Loading TallySource...</p>
+    return;
+}
+
+<TallySourceEditor @ref="_editor" Model="_model"></TallySourceEditor>
+
+<div class="my-1">
+    <button class="btn btn-primary" @onclick="SaveAsync">OK</button>
+    <button class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+</div>
+
+@code {
+    private TallySource? _model;
+
+    [Parameter]
+    public string? Id { get; set; }
+
+    private TallySourceEditor? _editor;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id == null)
+        {
+            return;
+        }
+
+        _model = await _api.GetTallySourceAsync(Id);
+    }
+
+    private async Task SaveAsync()
+    {
+        var command = new PutTallySourceCommand(
+            _model!.Name ?? string.Empty,
+            _model.Message ?? string.Empty,
+            _model.Code ?? string.Empty,
+            _model.Interval);
+
+        var id = _model.Id ?? throw new InvalidOperationException("id must not be null");
+        await _api.UpdateTallySourceAsync(id, command);
+        _navigation.GoBack();
+    }
+
+    private void Cancel()
+    {
+        _navigation.GoBack();
+    }
+}

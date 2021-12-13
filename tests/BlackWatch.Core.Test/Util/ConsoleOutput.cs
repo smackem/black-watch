@@ -3,56 +3,55 @@ using System.IO;
 using System.Text;
 using Xunit.Abstractions;
 
-namespace BlackWatch.Core.Test.Util
+namespace BlackWatch.Core.Test.Util;
+
+public static class ConsoleOutput
 {
-    public static class ConsoleOutput
+    public static IDisposable Redirect(ITestOutputHelper @out)
     {
-        public static IDisposable Redirect(ITestOutputHelper @out)
+        return new Redirection(@out);
+    }
+
+    private class Writer : TextWriter
+    {
+        private readonly ITestOutputHelper _output;
+
+        public Writer(ITestOutputHelper output)
         {
-            return new Redirection(@out);
+            _output = output;
         }
 
-        private class Writer : TextWriter
+        public override Encoding Encoding => Encoding.UTF8;
+
+        public override void WriteLine(string? message)
         {
-            private readonly ITestOutputHelper _output;
-
-            public Writer(ITestOutputHelper output)
-            {
-                _output = output;
-            }
-
-            public override Encoding Encoding => Encoding.UTF8;
-
-            public override void WriteLine(string? message)
-            {
-                _output.WriteLine(message);
-            }
-
-            public override void WriteLine(string format, params object?[] args)
-            {
-                _output.WriteLine(format, args);
-            }
-
-            public override void Write(char value)
-            {
-                throw new NotSupportedException("This text writer only supports WriteLine(string) and WriteLine(string, params object[]).");
-            }
+            _output.WriteLine(message);
         }
 
-        private class Redirection : IDisposable
+        public override void WriteLine(string format, params object?[] args)
         {
-            private readonly TextWriter _oldOut;
+            _output.WriteLine(format, args);
+        }
 
-            public Redirection(ITestOutputHelper @out)
-            {
-                _oldOut = Console.Out;
-                Console.SetOut(new Writer(@out));
-            }
+        public override void Write(char value)
+        {
+            throw new NotSupportedException("This text writer only supports WriteLine(string) and WriteLine(string, params object[]).");
+        }
+    }
 
-            public void Dispose()
-            {
-                Console.SetOut(_oldOut);
-            }
+    private class Redirection : IDisposable
+    {
+        private readonly TextWriter _oldOut;
+
+        public Redirection(ITestOutputHelper @out)
+        {
+            _oldOut = Console.Out;
+            Console.SetOut(new Writer(@out));
+        }
+
+        public void Dispose()
+        {
+            Console.SetOut(_oldOut);
         }
     }
 }

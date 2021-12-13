@@ -1,6 +1,18 @@
 version: '3.4'
 
 services:
+    webapp:
+        image: blackwatch-webapp
+        restart: always
+        build:
+            context: .
+            dockerfile: ./BlackWatch.WebApp.Dockerfile
+        ports:
+            - "8080:80"
+        volumes:
+            - ${PWD}/src/BlackWatch.WebApp/wwwroot/appsettings.json:/usr/local/webapp/nginx/html/appsettings.json:ro
+        depends_on:
+            - api
     api:
         image: blackwatch-api
         build:

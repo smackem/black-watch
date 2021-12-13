@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,7 +25,7 @@ public class RedisDataStore : IDataStore, IDisposable
     private volatile ConnectionMultiplexer? _redis;
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
-        IgnoreNullValues = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
     };
 
     public RedisDataStore(ILogger<RedisDataStore> logger, IOptions<RedisOptions> options)

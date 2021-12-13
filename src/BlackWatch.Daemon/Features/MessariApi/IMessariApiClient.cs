@@ -1,9 +1,8 @@
 using System.Threading.Tasks;
 
-namespace BlackWatch.Daemon.Features.MessariApi
+namespace BlackWatch.Daemon.Features.MessariApi;
+
+public interface IMessariApiClient
 {
-    public interface IMessariApiClient
-    {
-        Task<AssetListResponse> GetAssetsAsync(int page = 1);
-    }
+    Task<AssetListResponse> GetAssetsAsync(int page = 1);
 }

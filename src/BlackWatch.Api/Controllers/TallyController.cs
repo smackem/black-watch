@@ -6,38 +6,35 @@ using BlackWatch.Core.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace BlackWatch.Api.Controllers
+namespace BlackWatch.Api.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class TallyController
 {
-    [ApiController]
-    [Route("[controller]")]
-    public class TallyController
+    private readonly IDataStore _dataStore;
+    private readonly ILogger<TallyController> _logger;
+    private readonly TallyService _tallyService;
+
+    private const string UserId = "0";
+    private const string ResponseMimeType = "application/json";
+
+    public TallyController(IDataStore dataStore, ILogger<TallyController> logger, TallyService tallyService)
     {
-        private readonly IDataStore _dataStore;
-        private readonly ILogger<TallyController> _logger;
-        private readonly TallyService _tallyService;
+        _dataStore = dataStore;
+        _logger = logger;
+        _tallyService = tallyService;
+    }
 
-        private const string UserId = "0";
-        private const string ResponseMimeType = "application/json";
-
-        public TallyController(IDataStore dataStore, ILogger<TallyController> logger, TallyService tallyService)
+    [HttpGet] [Produces(ResponseMimeType)] [ProducesResponseType(typeof(IReadOnlyCollection<Tally>), (int)HttpStatusCode.OK)]
+    public async Task<IReadOnlyCollection<Tally>> Index([FromQuery] int count = 1)
+    {
+        var tallies = new List<Tally>();
+        await foreach (var tallySource in _dataStore.GetTallySourcesAsync(UserId))
         {
-            _dataStore = dataStore;
-            _logger = logger;
-            _tallyService = tallyService;
+            var localTallies = await _dataStore.GetTalliesAsync(tallySource.Id, count);
+            tallies.AddRange(localTallies);
         }
-
-        [HttpGet]
-        [Produces(ResponseMimeType)]
-        [ProducesResponseType(typeof(IReadOnlyCollection<Tally>), (int) HttpStatusCode.OK)]
-        public async Task<IReadOnlyCollection<Tally>> Index([FromQuery] int count = 1)
-        {
-            var tallies = new List<Tally>();
-            await foreach (var tallySource in _dataStore.GetTallySourcesAsync(UserId))
-            {
-                var localTallies = await _dataStore.GetTalliesAsync(tallySource.Id, count);
-                tallies.AddRange(localTallies);
-            }
-            return tallies;
-        }
+        return tallies;
     }
 }

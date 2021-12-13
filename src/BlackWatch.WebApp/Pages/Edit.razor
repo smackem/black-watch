@@ -1,6 +1,6 @@
 @page "/edit/{id}"
-@using BlackWatch.WebApp.Features.Api
 @using BlackWatch.WebApp.Services
+@using BlackWatch.WebApp.Features.Api
 @inject Navigation _navigation
 @inject IApiClient _api
 
@@ -40,10 +40,10 @@
     private async Task SaveAsync()
     {
         var command = new PutTallySourceCommand(
-            Name: _model!.Name ?? string.Empty,
-            Message: _model.Message ?? string.Empty,
-            Code: _model.Code ?? string.Empty,
-            Interval: _model.Interval);
+            _model!.Name ?? string.Empty,
+            _model.Message ?? string.Empty,
+            _model.Code ?? string.Empty,
+            _model.Interval);
 
         var id = _model.Id ?? throw new InvalidOperationException("id must not be null");
         await _api.UpdateTallySourceAsync(id, command);

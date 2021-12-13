@@ -14,7 +14,7 @@
 
 <h1>Black Watch</h1>
 
-<table class="table table-hover">
+<table class="table">
     <thead>
     <tr>
         <th>ID</th>
@@ -38,11 +38,11 @@
             <td>@ts.Version</td>
             <td>@ts.DateModified</td>
             <td>
-                <a href="/edit/@ts.Id">
+                <a href="/edit/@ts.Id" aria-label="Edit">
                     <span class="oi oi-pencil"></span>
                 </a>
                 &nbsp;
-                <a href="#" @onclick="() => EvaluateAsync(ts)">
+                <a href="#" @onclick="() => EvaluateAsync(ts)" aria-label="Evaluate">
                     <span class="oi oi-bolt"></span>
                 </a>
             </td>
@@ -53,9 +53,9 @@
         }
         @foreach (var t in tallies)
         {
-            <tr class="@GetTallyRowClass(t)">
-                <td colspan="2" />
-                <td colspan="5">
+            <tr>
+                <td colspan="2"/>
+                <td colspan="5" class="@GetTallyRowClass(t)">
                     @t.State
                     &nbsp;|&nbsp;
                     @t.Result
@@ -80,12 +80,12 @@
     {
         return tally.State switch
         {
-            TallyState.Indeterminate => "table-secondary",
-            TallyState.NonSignalled => "table-dark",
+            TallyState.Indeterminate => "table-warning",
+            TallyState.NonSignalled => "table-secondary",
             TallyState.Signalled => "table-success",
-            TallyState.Error => "table-error",
-            _ => throw new ArgumentOutOfRangeException(),
-        };
+            TallyState.Error => "table-danger",
+            _ => throw new ArgumentOutOfRangeException()
+            };
     }
 
     protected override async Task OnInitializedAsync()

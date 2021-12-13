@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 
-namespace BlackWatch.Daemon.Cron
+namespace BlackWatch.Daemon.Cron;
+
+public interface ICronActionSupplier
 {
-    public interface ICronActionSupplier
-    {
-        public IEnumerable<CronAction> Actions { get; }
-    }
+    public IEnumerable<CronAction> Actions { get; }
 }

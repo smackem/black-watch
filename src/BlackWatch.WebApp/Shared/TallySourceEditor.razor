@@ -1,5 +1,4 @@
 @using BlackWatch.WebApp.Features.Api
-
 <form action="#" class="row p-3">
     <div class="col-8">
         <label for="name" class="col-form-label">Name</label>
@@ -22,10 +21,10 @@
         <label for="code" class="col-form-label">Code</label>
         <textarea id="code" class="form-control code-editor" rows="12" @bind="Model!.Code" @oninput="CodeChanged"></textarea>
         @* <MonacoEditor @ref="_codeEditor" Id="robotCode" ConstructionOptions="EditorConstructionOptions" OnDidChangeModelContent="EditorModelContentChanged" /> *@
-@if (_compilationError != null) 
-{
-        <div class="alert alert-warning my-1">@_compilationError</div> 
-}
+        @if (_compilationError != null)
+        {
+            <div class="alert alert-warning my-1">@_compilationError</div>
+        }
     </div>
 </form>
 
@@ -37,6 +36,5 @@
     public TallySource? Model { get; set; }
 
     private void CodeChanged(ChangeEventArgs obj)
-    {
-    }
+    {}
 }

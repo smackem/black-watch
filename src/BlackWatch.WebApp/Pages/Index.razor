@@ -1,8 +1,7 @@
 ﻿@page "/"
 @using BlackWatch.WebApp.Features.Api
-@using BlackWatch.WebApp.Services
 @inject IApiClient _api
-@inject Navigation _navigation
+@inject NavigationManager _navigation
 
 @if (_tallySources == null)
 {
@@ -38,9 +37,7 @@
             <td>@ts.Version</td>
             <td>@ts.DateModified</td>
             <td>
-                <a href="/edit/@ts.Id" aria-label="Edit">
-                    <span class="oi oi-pencil"></span>
-                </a>
+                <a href="/edit/@ts.Id"><span class="oi oi-pencil"></span></a>
                 &nbsp;
                 <a href="#" @onclick="() => EvaluateAsync(ts)" aria-label="Evaluate">
                     <span class="oi oi-bolt"></span>
@@ -85,7 +82,7 @@
             TallyState.Signalled => "table-success",
             TallyState.Error => "table-danger",
             _ => throw new ArgumentOutOfRangeException()
-            };
+        };
     }
 
     protected override async Task OnInitializedAsync()

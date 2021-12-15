@@ -11,6 +11,7 @@ public interface IApiClient
     Task<TallySource> UpdateTallySourceAsync(string id, PutTallySourceCommand command);
     Task DeleteTallySourceAsync(string id);
     Task<Tally> EvaluateTallySourceAsync(string id);
+    Task<Tally> EvaluateTempTallySourceAsync(PutTallySourceCommand command);
     Task<Tally> EvaluateTallySourceAndStoreTallyAsync(string id);
     Task<IReadOnlyCollection<Tally>> GetTallyAsync(string tallySourceId, int count);
     Task<IReadOnlyCollection<Tally>> GetTalliesAsync(int count);

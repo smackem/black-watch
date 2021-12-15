@@ -39,7 +39,7 @@
             <td>
                 <a href="/edit/@ts.Id"><span class="oi oi-pencil"></span></a>
                 &nbsp;
-                <a href="#" @onclick="() => EvaluateAsync(ts)" aria-label="Evaluate">
+                <a href="" @onclick:preventDefault @onclick="() => EvaluateAsync(ts)" aria-label="Evaluate">
                     <span class="oi oi-bolt"></span>
                 </a>
             </td>

@@ -1,7 +1,7 @@
 @page "/New"
 @using BlackWatch.WebApp.Services
 @using BlackWatch.WebApp.Features.Api
-@inject Navigation _navigation
+@inject NavigationManager _navigation
 @inject IApiClient _api
 
 <h3>New</h3>
@@ -25,11 +25,16 @@
             _model.Interval);
 
         await _api.CreateTallySourceAsync(command);
-        _navigation.NavigateTo("/");
+        GoBack();
     }
 
     private void Cancel()
     {
-        _navigation.GoBack();
+        GoBack();
+    }
+
+    private void GoBack()
+    {
+        _navigation.NavigateTo("/");
     }
 }

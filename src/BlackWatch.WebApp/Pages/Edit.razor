@@ -1,8 +1,9 @@
 @page "/edit/{id}"
-@using BlackWatch.WebApp.Services
 @using BlackWatch.WebApp.Features.Api
-@inject Navigation _navigation
+@using Microsoft.Extensions.Logging
 @inject IApiClient _api
+@inject ILogger<Edit> _logger
+@inject NavigationManager _navigation
 
 <h3>Edit @Id</h3>
 
@@ -12,7 +13,7 @@
     return;
 }
 
-<TallySourceEditor @ref="_editor" Model="_model"></TallySourceEditor>
+<TallySourceEditor @ref="_editor" Model="@_model"></TallySourceEditor>
 
 <div class="my-1">
     <button class="btn btn-primary" @onclick="SaveAsync">OK</button>
@@ -47,11 +48,16 @@
 
         var id = _model.Id ?? throw new InvalidOperationException("id must not be null");
         await _api.UpdateTallySourceAsync(id, command);
-        _navigation.GoBack();
+        GoBack();
     }
 
     private void Cancel()
     {
-        _navigation.GoBack();
+        GoBack();
+    }
+
+    private void GoBack()
+    {
+        _navigation.NavigateTo("/");
     }
 }

@@ -14,12 +14,12 @@ namespace BlackWatch.Api.Controllers;
 [Route("[controller]")]
 public class TallySourceController : Controller
 {
-    private readonly IDataStore _dataStore;
-    private readonly ILogger<TallySourceController> _logger;
-    private readonly TallyService _tallyService;
 
     private const string UserId = "0";
     private const string ResponseMimeType = "application/json";
+    private readonly IDataStore _dataStore;
+    private readonly ILogger<TallySourceController> _logger;
+    private readonly TallyService _tallyService;
 
     public TallySourceController(IDataStore dataStore, ILogger<TallySourceController> logger, TallyService tallyService)
     {
@@ -28,9 +28,9 @@ public class TallySourceController : Controller
         _tallyService = tallyService;
     }
 
-    public record PutTallySourceCommand(string Name, string Message, string Code, EvaluationInterval Interval);
-
-    [HttpGet("{id}")] [Produces(ResponseMimeType)] public async Task<ActionResult<TallySource>> GetById(string id)
+    [HttpGet("{id}")]
+    [Produces(ResponseMimeType)]
+    public async Task<ActionResult<TallySource>> GetById(string id)
     {
         var tallySource = await _dataStore.GetTallySourceAsync(UserId, id);
         // ReSharper disable once InvertIf
@@ -43,7 +43,9 @@ public class TallySourceController : Controller
         return Ok(tallySource);
     }
 
-    [HttpGet("{id}/eval")] [ProducesResponseType(typeof(Tally), (int)HttpStatusCode.OK)] [Produces(ResponseMimeType)]
+    [HttpGet("{id}/eval")]
+    [ProducesResponseType(typeof(Tally), (int)HttpStatusCode.OK)]
+    [Produces(ResponseMimeType)]
     public async Task<ActionResult<Tally>> Evaluate(string id)
     {
         var tally = await InternalEvaluateAsync(id);
@@ -53,7 +55,9 @@ public class TallySourceController : Controller
             : NotFound();
     }
 
-    [HttpPost("{id}/eval")] [ProducesResponseType(typeof(Tally), (int)HttpStatusCode.Created)] [Produces(ResponseMimeType)]
+    [HttpPost("{id}/eval")]
+    [ProducesResponseType(typeof(Tally), (int)HttpStatusCode.Created)]
+    [Produces(ResponseMimeType)]
     public async Task<ActionResult<Tally>> EvaluateAndStoreTally(string id)
     {
         var tally = await InternalEvaluateAsync(id);
@@ -67,7 +71,9 @@ public class TallySourceController : Controller
         return CreatedAtAction(nameof(GetTally), new { id, count = 1 }, tally);
     }
 
-    [HttpGet("{id}/tally")] [ProducesResponseType(typeof(Tally), (int)HttpStatusCode.OK)] [Produces(ResponseMimeType)]
+    [HttpGet("{id}/tally")]
+    [ProducesResponseType(typeof(Tally), (int)HttpStatusCode.OK)]
+    [Produces(ResponseMimeType)]
     public async Task<ActionResult<Tally[]>> GetTally(string id, [FromQuery] int count = 1)
     {
         var tallySource = await _dataStore.GetTallySourceAsync(UserId, id);
@@ -82,13 +88,17 @@ public class TallySourceController : Controller
         return Ok(tallies);
     }
 
-    [HttpGet] [ProducesResponseType(typeof(IReadOnlyCollection<TallySource>), (int)HttpStatusCode.OK)] [Produces(ResponseMimeType)]
+    [HttpGet]
+    [ProducesResponseType(typeof(IReadOnlyCollection<TallySource>), (int)HttpStatusCode.OK)]
+    [Produces(ResponseMimeType)]
     public async Task<IReadOnlyCollection<TallySource>> Index()
     {
         return await _dataStore.GetTallySourcesAsync().ToListAsync().Linger();
     }
 
-    [HttpPost] [ProducesResponseType(typeof(TallySource), (int)HttpStatusCode.Created)] [Produces(ResponseMimeType)]
+    [HttpPost]
+    [ProducesResponseType(typeof(TallySource), (int)HttpStatusCode.Created)]
+    [Produces(ResponseMimeType)]
     public async Task<IActionResult> Create([FromBody] PutTallySourceCommand command)
     {
         var id = await _dataStore.GenerateIdAsync();
@@ -98,7 +108,9 @@ public class TallySourceController : Controller
         return CreatedAtAction(nameof(GetById), new { id = tallySource.Id }, tallySource);
     }
 
-    [HttpPut("{id}")] [ProducesResponseType(typeof(TallySource), (int)HttpStatusCode.OK)] [Produces(ResponseMimeType)]
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(TallySource), (int)HttpStatusCode.OK)]
+    [Produces(ResponseMimeType)]
     public async Task<IActionResult> Update(string id, [FromBody] PutTallySourceCommand command)
     {
         var tallySource = await _dataStore.GetTallySourceAsync(UserId, id);
@@ -114,7 +126,9 @@ public class TallySourceController : Controller
         return Ok(modifiedTallySource);
     }
 
-    [HttpDelete("{id}")] [ProducesResponseType((int)HttpStatusCode.NoContent)] [ProducesResponseType((int)HttpStatusCode.NotFound)]
+    [HttpDelete("{id}")]
+    [ProducesResponseType((int)HttpStatusCode.NoContent)]
+    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> Delete(string id)
     {
         // ReSharper disable once InvertIf

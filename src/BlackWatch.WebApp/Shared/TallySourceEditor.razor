@@ -1,4 +1,8 @@
 @using BlackWatch.WebApp.Features.Api
+@using Microsoft.Extensions.Logging
+@inject ILogger<TallySourceEditor> _logger;
+@inject IApiClient _api;
+
 <form action="#" class="row p-3">
     <div class="col-8">
         <label for="name" class="col-form-label">Name</label>
@@ -7,10 +11,10 @@
     <div class="col-4">
         <label for="interval" class="col-form-label">Evaluation Interval</label>
         <select id="interval" class="form-control" @bind="Model!.Interval">
-            <option value="Disabled">Disabled</option>
-            <option value="OneHour">OneHour</option>
-            <option value="SixHours">SixHours</option>
-            <option value="OneDay">OneDay</option>
+            <option value="Disabled">--</option>
+            <option value="OneHour">1 hour</option>
+            <option value="SixHours">6 hours</option>
+            <option value="OneDay">1 day</option>
         </select>
     </div>
     <div class="col-12">
@@ -18,23 +22,91 @@
         <input type="text" id="message" class="form-control" @bind="Model!.Message"/>
     </div>
     <div class="col-12">
-        <label for="code" class="col-form-label">Code</label>
-        <textarea id="code" class="form-control code-editor" rows="12" @bind="Model!.Code" @oninput="CodeChanged"></textarea>
-        @* <MonacoEditor @ref="_codeEditor" Id="robotCode" ConstructionOptions="EditorConstructionOptions" OnDidChangeModelContent="EditorModelContentChanged" /> *@
-        @if (_compilationError != null)
+        <label for="code" class="col-form-label">
+            Code
+            <a href="" @onclick="EvaluateAsync" @onclick:preventDefault class="ml-1"><span class="oi oi-bolt"></span></a>
+        </label>
+        <MonacoEditor @ref="_codeEditor" Id="code"
+                      ConstructionOptions="EditorConstructionOptions"
+                      OnDidChangeModelContent="EditorModelContentChanged" />
+        @if (_tally != null)
         {
-            <div class="alert alert-warning my-1">@_compilationError</div>
+            <div class="@GetTallyAlertClass() my-1">@_tally.Result</div>
         }
     </div>
 </form>
 
-
 @code {
-    private string? _compilationError;
+    private MonacoEditor? _codeEditor;
+    private TallySource? _model;
+    private Tally? _tally;
 
     [Parameter]
-    public TallySource? Model { get; set; }
+    public TallySource? Model
+    {
+        get => _model;
+        set
+        {
+            _model = value;
+            _tally = null;
+        }
+    }
 
-    private void CodeChanged(ChangeEventArgs obj)
-    {}
+    private string GetTallyAlertClass()
+    {
+        return "alert " + _tally?.State switch
+        {
+            TallyState.Indeterminate => "alert-warning",
+            TallyState.NonSignalled => "alert-secondary",
+            TallyState.Signalled => "alert-success",
+            TallyState.Error => "alert-danger",
+            null => string.Empty,
+            _ => throw new ArgumentOutOfRangeException(),
+        };
+    }
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
+    {
+        _logger.LogInformation("EditorConstructionOptions: Code = '{Code}'", _model?.Code);
+
+        // this works around a BlazorMonaco bug with .net 6, that throws an exception when SetValue
+        // is called without await
+        Task.Run(async () => { await editor.SetValue(_model?.Code ?? string.Empty); });
+
+        return new StandaloneEditorConstructionOptions
+        {
+            Theme = "vs",
+            RenderWhitespace = "all",
+            Minimap = new EditorMinimapOptions { Enabled = false },
+            Dimension = new Dimension { Height = 400 },
+            FontSize = 14,
+            AutomaticLayout = true,
+            Language = "javascript",
+            Value = Model?.Code ?? string.Empty,
+            FontLigatures = true,
+            FontFamily = "JetBrains Mono, Fira Code, Cascadia Code, Menlo, Consolas, monospace",
+        };
+    }
+
+    private async void EditorModelContentChanged()
+    {
+        if (_model != null && _codeEditor != null)
+        {
+            _model.Code = await _codeEditor.GetValue();
+        }
+    }
+
+    private async Task EvaluateAsync()
+    {
+        if (_model == null)
+        {
+            return;
+        }
+
+        _tally = await _api.EvaluateTempTallySourceAsync(new PutTallySourceCommand(
+            _model.Name ?? string.Empty,
+            _model.Message ?? string.Empty,
+            _model.Code ?? string.Empty,
+            _model.Interval));
+    }
 }

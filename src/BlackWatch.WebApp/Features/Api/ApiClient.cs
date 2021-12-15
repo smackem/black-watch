@@ -54,6 +54,13 @@ public class ApiClient : IApiClient
         throw new NotImplementedException();
     }
 
+    public async Task<Tally> EvaluateTempTallySourceAsync(PutTallySourceCommand command)
+    {
+        var response = await _http.PostAsJsonAsync("tally/eval", command);
+        var tally = await response.Content.ReadFromJsonAsync<Tally>();
+        return tally!;
+    }
+
     public async Task<Tally> EvaluateTallySourceAndStoreTallyAsync(string id)
     {
         var response = await _http.PostAsync($"tallysource/{id}/eval", new StringContent(string.Empty));

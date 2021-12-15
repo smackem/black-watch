@@ -48,3 +48,9 @@ a, .btn-link {
     right: 0.75rem;
     top: 0.5rem;
 }
+
+.monaco-editor-container {
+    border: 1px solid #dee2e6;
+    padding: 5px;
+    border-radius: 5px;
+}

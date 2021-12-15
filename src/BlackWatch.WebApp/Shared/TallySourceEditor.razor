@@ -7,10 +7,10 @@
     <div class="col-4">
         <label for="interval" class="col-form-label">Evaluation Interval</label>
         <select id="interval" class="form-control" @bind="Model!.Interval">
-            <option value="Disabled">Disabled</option>
-            <option value="OneHour">OneHour</option>
-            <option value="SixHours">SixHours</option>
-            <option value="OneDay">OneDay</option>
+            <option value="Disabled">--</option>
+            <option value="OneHour">1 hour</option>
+            <option value="SixHours">6 hours</option>
+            <option value="OneDay">1 day</option>
         </select>
     </div>
     <div class="col-12">
@@ -19,8 +19,7 @@
     </div>
     <div class="col-12">
         <label for="code" class="col-form-label">Code</label>
-        <textarea id="code" class="form-control code-editor" rows="12" @bind="Model!.Code" @oninput="CodeChanged"></textarea>
-        @* <MonacoEditor @ref="_codeEditor" Id="robotCode" ConstructionOptions="EditorConstructionOptions" OnDidChangeModelContent="EditorModelContentChanged" /> *@
+        <MonacoEditor @ref="_codeEditor" Id="code" ConstructionOptions="EditorConstructionOptions" OnDidChangeModelContent="EditorModelContentChanged" />
         @if (_compilationError != null)
         {
             <div class="alert alert-warning my-1">@_compilationError</div>
@@ -28,13 +27,44 @@
     </div>
 </form>
 
-
 @code {
+    private MonacoEditor? _codeEditor;
+    private TallySource? _model;
     private string? _compilationError;
 
     [Parameter]
-    public TallySource? Model { get; set; }
+    public TallySource? Model
+    {
+        get => _model;
+        set
+        {
+            _model = value;
+            _codeEditor?.SetValue(value?.Code);
+        }
+    }
 
-    private void CodeChanged(ChangeEventArgs obj)
-    {}
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            Theme = "vs",
+            RenderWhitespace = "all",
+            Minimap = new EditorMinimapOptions { Enabled = false },
+            Dimension = new Dimension { Height = 400 },
+            FontSize = 14,
+            AutomaticLayout = true,
+            Language = "javascript",
+            Value = Model?.Code,
+            FontLigatures = true,
+            FontFamily = "JetBrains Mono, Fira Code, Cascadia Code, Consolas, monospace",
+        };
+    }
+
+    private async void EditorModelContentChanged()
+    {
+        if (_model != null && _codeEditor != null)
+        {
+            _model.Code = await _codeEditor.GetValue();
+        }
+    }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using BlackWatch.Core.Contracts;
 using BlackWatch.Core.Util;
 using Xunit;
@@ -20,7 +21,10 @@ public class JobInfoTest
     {
         var (from, to) = DateRange.DaysUntilYesterdayUtc(1);
         var jobInfo = RequestInfo.DownloadQuoteHistory(new QuoteHistoryRequestInfo("SYM", from, to), "some_api");
-        var json = JsonSerializer.Serialize(jobInfo, new JsonSerializerOptions { IgnoreNullValues = true });
+        var json = JsonSerializer.Serialize(jobInfo, new JsonSerializerOptions
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+        });
         _out.WriteLine($"serialized JobInfo: {json}");
         var deserialized = JsonSerializer.Deserialize<RequestInfo>(json);
         Assert.NotNull(deserialized);
@@ -32,7 +36,10 @@ public class JobInfoTest
     [Fact] public void SerializeDailyGroupedCrypto()
     {
         var jobInfo = RequestInfo.DownloadTrackers(new TrackerRequestInfo(DateTimeOffset.Now, 1), "some_api");
-        var json = JsonSerializer.Serialize(jobInfo, new JsonSerializerOptions { IgnoreNullValues = true });
+        var json = JsonSerializer.Serialize(jobInfo, new JsonSerializerOptions
+        {
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+        });
         _out.WriteLine($"serialized JobInfo: {json}");
         var deserialized = JsonSerializer.Deserialize<RequestInfo>(json);
         Assert.NotNull(deserialized);

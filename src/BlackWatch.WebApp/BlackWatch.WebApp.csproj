@@ -11,6 +11,7 @@
         <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="6.0.0" />
         <PackageReference Include="System.Net.Http.Json" Version="6.0.0" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
+        <PackageReference Include="BlazorMonaco" Version="2.1.0" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,0 +1,36 @@
+@using BlackWatch.WebApp.Features.Api
+
+<div class="tally-widget-container alert @GetCssClass()">
+    <span class="header mb-0">@TallySourceName&nbsp;|&nbsp;@Model?.DateCreated</span>
+    <hr class="mt-0" />
+    <h5 class="alert-heading">@TallySourceMessage</h5>
+    @if (Model?.Result != null)
+    {
+        <hr/>
+        <p class="mb-0">@Model?.Result</p>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string? TallySourceName { get; set; }
+
+    [Parameter]
+    public string? TallySourceMessage { get; set; }
+
+    [Parameter]
+    public Tally? Model { get; set; }
+
+    private string GetCssClass()
+    {
+        return Model?.State switch
+        {
+            TallyState.Indeterminate => "alert-warning",
+            TallyState.NonSignalled => "alert-secondary",
+            TallyState.Signalled => "alert-success",
+            TallyState.Error => "alert-danger",
+            null => string.Empty,
+            _ => throw new ArgumentOutOfRangeException(),
+        };
+    }
+}

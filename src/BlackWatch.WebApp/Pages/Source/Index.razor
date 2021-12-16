@@ -1,0 +1,106 @@
+﻿@page "/source"
+@using BlackWatch.WebApp.Features.Api
+@inject IApiClient _api
+@inject NavigationManager _navigation
+
+@if (_tallySources == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+    return;
+}
+
+<h1>Black Watch</h1>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Message</th>
+        <th>Interval</th>
+        <th>Version</th>
+        <th>Date Modified</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var ts in _tallySources)
+    {
+        var tallies = _tallies?[ts.Id!].OrderByDescending(t => t.DateCreated);
+        <tr>
+            <td>@ts.Id</td>
+            <td>@ts.Name</td>
+            <td>@ts.Message</td>
+            <td>@ts.Interval</td>
+            <td>@ts.Version</td>
+            <td>@ts.DateModified</td>
+            <td>
+                <a href="/source/edit/@ts.Id" title="Edit"><span class="oi oi-pencil"></span></a>
+                &nbsp;
+                <a href="" @onclick:preventDefault @onclick="() => EvaluateAsync(ts)" title="Evaluate">
+                    <span class="oi oi-bolt"></span>
+                </a>
+            </td>
+        </tr>
+        @if (tallies == null)
+        {
+            continue;
+        }
+        @foreach (var t in tallies)
+        {
+            <tr>
+                <td colspan="2"/>
+                <td colspan="5">
+                    <TallyWidget Model="@t" TallySourceName="@ts.Name" TallySourceMessage="@ts.Message"></TallyWidget>
+                </td>
+            </tr>
+        }
+    }
+    </tbody>
+</table>
+
+<div class="my-1">
+    <button class="btn btn-primary" @onclick="CreateNew">New...</button>
+</div>
+
+@code {
+    private IReadOnlyCollection<TallySource>? _tallySources;
+    private ILookup<string, Tally>? _tallies;
+
+    private static string GetTallyRowClass(Tally tally)
+    {
+        return tally.State switch
+        {
+            TallyState.Indeterminate => "table-warning",
+            TallyState.NonSignalled => "table-secondary",
+            TallyState.Signalled => "table-success",
+            TallyState.Error => "table-danger",
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _tallySources = await _api.GetTallySourcesAsync();
+        await FetchTalliesAsync();
+    }
+
+    private async Task FetchTalliesAsync()
+    {
+        var tallies = await _api.GetTalliesAsync(3);
+        _tallies = tallies.ToLookup(t => t.TallySourceId!);
+    }
+
+    private void CreateNew()
+    {
+        _navigation.NavigateTo("/source/new");
+    }
+
+    private async Task EvaluateAsync(TallySource ts)
+    {
+        var tally = await _api.EvaluateTallySourceAndStoreTallyAsync(ts.Id!);
+        await FetchTalliesAsync();
+    }
+}

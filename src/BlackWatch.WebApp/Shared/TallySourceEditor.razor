@@ -31,7 +31,7 @@
                       OnDidChangeModelContent="EditorModelContentChanged" />
         @if (_tally != null)
         {
-            <div class="@GetTallyAlertClass() my-1">@_tally.Result</div>
+            <TallyWidget Model="@_tally" TallySourceName="@_model?.Name" TallySourceMessage="@_model?.Message"></TallyWidget>
         }
     </div>
 </form>
@@ -50,19 +50,6 @@
             _model = value;
             _tally = null;
         }
-    }
-
-    private string GetTallyAlertClass()
-    {
-        return "alert " + _tally?.State switch
-        {
-            TallyState.Indeterminate => "alert-warning",
-            TallyState.NonSignalled => "alert-secondary",
-            TallyState.Signalled => "alert-success",
-            TallyState.Error => "alert-danger",
-            null => string.Empty,
-            _ => throw new ArgumentOutOfRangeException(),
-        };
     }
 
     private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)

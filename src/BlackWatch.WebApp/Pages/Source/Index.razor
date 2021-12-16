@@ -12,7 +12,7 @@
     return;
 }
 
-<h1>Black Watch</h1>
+<h3>Sources</h3>
 
 <table class="table">
     <thead>
@@ -69,18 +69,6 @@
 @code {
     private IReadOnlyCollection<TallySource>? _tallySources;
     private ILookup<string, Tally>? _tallies;
-
-    private static string GetTallyRowClass(Tally tally)
-    {
-        return tally.State switch
-        {
-            TallyState.Indeterminate => "table-warning",
-            TallyState.NonSignalled => "table-secondary",
-            TallyState.Signalled => "table-success",
-            TallyState.Error => "table-danger",
-            _ => throw new ArgumentOutOfRangeException()
-        };
-    }
 
     protected override async Task OnInitializedAsync()
     {

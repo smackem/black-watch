@@ -1,7 +1,70 @@
 @page "/"
-<h3>Index</h3>
+@using BlackWatch.WebApp.Features.Api
+@inject IApiClient _api
+
+<h3>Black Watch</h3>
+
+@if (_tallies == null)
+{
+    return;
+}
+
+@if (_tallies.Count == 0)
+{
+    <p>
+        No tallies yet. <a href="/source/new">Create one...</a>
+    </p>
+    return;
+}
+
+@if (_tallies.Any(x => x.IsSignalled))
+{
+    foreach (var tvm in _tallies.Where(x => x.IsSignalled))
+    {
+        <TallyWidget Tally="@tvm.PrimaryTally"
+                     TallySourceName="@tvm.Source.Name"
+                     TallySourceMessage="@tvm.Source.Message" />
+    }
+}
+else
+{
+    <p>No signalled tallies...</p>
+}
+
+@if (_tallies.Any(x => x.IsSignalled == false))
+{
+    <hr style="color: black; background-color: black" />
+
+    @foreach (var tvm in _tallies.Where(x => x.IsSignalled == false))
+    {
+        <TallyWidget Tally="@tvm.PrimaryTally"
+                     TallySourceName="@tvm.Source.Name"
+                     TallySourceMessage="@tvm.Source.Message" />
+    }
+}
 
 <a href="/source">Edit Sources</a>
 
 @code {
+    private IReadOnlyCollection<TallyViewModel>? _tallies;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tallySources = await _api.GetTallySourcesAsync();
+        var tallies = await _api.GetTalliesAsync(10);
+        var talliesBySource = tallies.ToLookup(t => t.TallySourceId!);
+        _tallies =
+            (from ts in tallySources
+            let t = talliesBySource[ts.Id]
+            where t.Any()
+            select new TallyViewModel(Source: ts, Tallies: t.ToArray()))
+            .ToArray();
+    }
+
+    private record TallyViewModel(TallySource Source, IReadOnlyCollection<Tally> Tallies)
+    {
+        public Tally? PrimaryTally => Tallies.FirstOrDefault();
+
+        public bool IsSignalled => PrimaryTally?.State == TallyState.Signalled;
+    };
 }

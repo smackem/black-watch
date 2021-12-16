@@ -1,0 +1,50 @@
+@using BlackWatch.WebApp.Features.Api
+@using BlackWatch.WebApp.Util
+
+<div class="tally-widget-container alert @GetCssClass()">
+    @if (TallySourceName != null)
+    {
+        <span class="header mb-0">@TallySourceName&nbsp;|&nbsp;@Tally?.DateCreated.Render()</span>
+    }
+    else
+    {
+        <span class="header mb-0">@Tally?.DateCreated.Render()</span>
+    }
+    @if (HasMessage)
+    {
+        <hr class="mt-0"/>
+        <h5 class="alert-heading">@TallySourceMessage</h5>
+    }
+    @if (Tally?.Result != null)
+    {
+        <hr class="@(HasMessage ? "mb-0" : "mt-0")"/>
+        <p class="mb-0">@Tally?.Result</p>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string? TallySourceName { get; set; }
+
+    [Parameter]
+    public string? TallySourceMessage { get; set; }
+
+    [Parameter]
+    public Tally? Tally { get; set; }
+
+    private bool HasMessage => string.IsNullOrWhiteSpace(TallySourceMessage) == false
+                               && Tally?.State == TallyState.Signalled;
+
+    private string GetCssClass()
+    {
+        return Tally?.State switch
+        {
+            TallyState.Indeterminate => "alert-warning",
+            TallyState.NonSignalled => "alert-secondary",
+            TallyState.Signalled => "alert-success",
+            TallyState.Error => "alert-danger",
+            null => string.Empty,
+            _ => throw new ArgumentOutOfRangeException(),
+        };
+    }
+}

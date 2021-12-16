@@ -1,5 +1,6 @@
 ﻿@page "/source"
 @using BlackWatch.WebApp.Features.Api
+@using BlackWatch.WebApp.Util
 @inject IApiClient _api
 @inject NavigationManager _navigation
 
@@ -33,9 +34,9 @@
             <td>@ts.Id</td>
             <td>@ts.Name</td>
             <td>@ts.Message</td>
-            <td>@ts.Interval</td>
+            <td>@ts.Interval.Render()</td>
             <td>@ts.Version</td>
-            <td>@ts.DateModified</td>
+            <td>@ts.DateModified.Render()</td>
             <td>
                 <a href="/source/edit/@ts.Id" title="Edit"><span class="oi oi-pencil"></span></a>
                 &nbsp;
@@ -53,7 +54,7 @@
             <tr>
                 <td colspan="2"/>
                 <td colspan="5">
-                    <TallyWidget Model="@t" TallySourceName="@ts.Name" TallySourceMessage="@ts.Message"></TallyWidget>
+                    <TallyWidget Tally="@t"></TallyWidget>
                 </td>
             </tr>
         }

@@ -1,13 +1,24 @@
 @using BlackWatch.WebApp.Features.Api
+@using BlackWatch.WebApp.Util
 
 <div class="tally-widget-container alert @GetCssClass()">
-    <span class="header mb-0">@TallySourceName&nbsp;|&nbsp;@Model?.DateCreated</span>
-    <hr class="mt-0" />
-    <h5 class="alert-heading">@TallySourceMessage</h5>
-    @if (Model?.Result != null)
+    @if (TallySourceName != null)
     {
-        <hr/>
-        <p class="mb-0">@Model?.Result</p>
+        <span class="header mb-0">@TallySourceName&nbsp;|&nbsp;@Tally?.DateCreated.Render()</span>
+    }
+    else
+    {
+        <span class="header mb-0">@Tally?.DateCreated.Render()</span>
+    }
+    @if (HasMessage)
+    {
+        <hr class="mt-0"/>
+        <h5 class="alert-heading">@TallySourceMessage</h5>
+    }
+    @if (Tally?.Result != null)
+    {
+        <hr class="@(HasMessage ? "mb-0" : "mt-0")"/>
+        <p class="mb-0">@Tally?.Result</p>
     }
 </div>
 
@@ -19,11 +30,14 @@
     public string? TallySourceMessage { get; set; }
 
     [Parameter]
-    public Tally? Model { get; set; }
+    public Tally? Tally { get; set; }
+
+    private bool HasMessage => string.IsNullOrWhiteSpace(TallySourceMessage) == false
+                               && Tally?.State == TallyState.Signalled;
 
     private string GetCssClass()
     {
-        return Model?.State switch
+        return Tally?.State switch
         {
             TallyState.Indeterminate => "alert-warning",
             TallyState.NonSignalled => "alert-secondary",

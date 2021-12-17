@@ -87,7 +87,8 @@ public class TallyService
     {
         return dateStr switch
         {
-            var s when int.TryParse(s, out var n) => DateTimeOffset.UtcNow.AddDays(n),
+            null or "" or "last" => DateTimeOffset.UtcNow.AddDays(-1),
+            var s when int.TryParse(s, out var n) => DateTimeOffset.UtcNow.AddDays(n - 1),
             var s when DateTimeOffset.TryParse(s, out var date) => date,
             _ => throw new ArgumentException($"invalid date or date offset: {dateStr}", nameof(dateStr)),
         };
@@ -104,8 +105,7 @@ public class TallyService
     {
         return offsetStr switch
         {
-            null or "now" or "last" => 0,
-            var s when string.IsNullOrWhiteSpace(s) => 0,
+            null or "" or "now" or "last" => 0,
             var s when int.TryParse(s, out var offset) => offset,
             _ => throw new ArgumentException($"invalid hour offset: {offsetStr}", nameof(offsetStr)),
         };

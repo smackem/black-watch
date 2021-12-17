@@ -1,37 +1,25 @@
-﻿<div class="top-row pl-4 navbar navbar-dark">
-    <a class="navbar-brand" href="">BlackWatch.WebApp</a>
-    <button class="navbar-toggler" @onclick="ToggleNavMenu">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-</div>
-
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    <ul class="nav flex-column">
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
-        </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="oi oi-plus" aria-hidden="true"></span> Counter
-            </NavLink>
-        </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="fetchdata">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
-            </NavLink>
-        </li>
-    </ul>
-</div>
+﻿<ul class="nav">
+    <li class="nav-item">
+        <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <span class="oi oi-bar-chart" aria-hidden="true"></span> Tally
+        </NavLink>
+    </li>
+    <li class="nav-item">
+        <NavLink class="nav-link" href="source/new">
+            <span class="oi oi-plus" aria-hidden="true"></span>Create
+        </NavLink>
+    </li>
+    <li class="nav-item">
+        <NavLink class="nav-link" href="source/">
+            <span class="oi oi-pencil" aria-hidden="true"></span> Edit
+        </NavLink>
+    </li>
+    <li class="nav-item">
+        <NavLink class="nav-link" href="sys/">
+            <span class="oi oi-cog" aria-hidden="true"></span> System
+        </NavLink>
+    </li>
+</ul>
 
 @code {
-    private bool collapseNavMenu = true;
-
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
 }

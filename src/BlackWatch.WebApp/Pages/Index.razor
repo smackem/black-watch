@@ -2,8 +2,6 @@
 @using BlackWatch.WebApp.Features.Api
 @inject IApiClient _api
 
-<h3>Black Watch</h3>
-
 @if (_tallies == null)
 {
     return;
@@ -42,8 +40,6 @@ else
                      TallySourceMessage="@tvm.Source.Message" />
     }
 }
-
-<a href="/source">Edit Sources</a>
 
 @code {
     private IReadOnlyCollection<TallyViewModel>? _tallies;

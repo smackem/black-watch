@@ -114,6 +114,11 @@ public class RedisDataStore : IDataStore, IDisposable
         return Deserialize<Quote>(value);
     }
 
+    public Task<IReadOnlyCollection<Quote>> GetDailyQuotesAsync(string symbol)
+    {
+        return GetQuotes(Names.DailyQuotes(symbol));
+    }
+
     public async Task<Quote?> GetHourlyQuoteAsync(string symbol, int hourOffset)
     {
         if (hourOffset > 0)
@@ -134,6 +139,11 @@ public class RedisDataStore : IDataStore, IDisposable
 
         _logger.LogTrace("got hourly quote: {Quote}", value);
         return Deserialize<Quote>(value);
+    }
+
+    public Task<IReadOnlyCollection<Quote>> GetHourlyQuotesAsync(string symbol)
+    {
+        return GetQuotes(Names.HourlyQuotes(symbol));
     }
 
     public async Task PutDailyQuoteAsync(Quote quote)
@@ -274,6 +284,19 @@ public class RedisDataStore : IDataStore, IDisposable
     {
         _redis?.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private async Task<IReadOnlyCollection<Quote>> GetQuotes(string hash)
+    {
+        var db = await GetDatabaseAsync().Linger();
+        var quotes = new List<Quote>();
+        await foreach (var entry in db.HashScanAsync(hash))
+        {
+            var quote = Deserialize<Quote>(entry.Value);
+            quotes.Add(quote);
+        }
+        _logger.LogTrace("got {Count} quotes from hash @{Key}", quotes.Count, hash);
+        return quotes;
     }
 
     private async Task<IReadOnlyCollection<Tracker>> GetTrackersAsync(string redisPattern, string regexPattern)

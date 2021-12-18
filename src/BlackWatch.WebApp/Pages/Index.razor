@@ -31,7 +31,7 @@ else
 
 @if (_tallies.Any(x => x.IsSignalled == false))
 {
-    <hr style="color: black; background-color: black" />
+    <hr />
 
     @foreach (var tvm in _tallies.Where(x => x.IsSignalled == false))
     {

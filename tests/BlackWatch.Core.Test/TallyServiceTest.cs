@@ -184,10 +184,18 @@ public class TallyServiceTest
         {
             return Task.FromResult(GetQuote(symbol, date));
         }
+        public Task<IReadOnlyCollection<Quote>> GetDailyQuotesAsync(string symbol)
+        {
+            throw new NotImplementedException();
+        }
 
         public Task<Quote?> GetHourlyQuoteAsync(string symbol, int hourOffset)
         {
             return Task.FromResult(GetQuote(symbol, DateTimeOffset.UtcNow));
+        }
+        public Task<IReadOnlyCollection<Quote>> GetHourlyQuotesAsync(string symbol)
+        {
+            throw new NotImplementedException();
         }
 
         public IAsyncEnumerable<TallySource> GetTallySourcesAsync(string? userId)

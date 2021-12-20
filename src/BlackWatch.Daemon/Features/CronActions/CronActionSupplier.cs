@@ -45,9 +45,15 @@ public class CronActionSupplier : ICronActionSupplier
                 _dataStore,
                 _logger,
                 historyDownloader);
+            var cleaner = new CleanupCronAction(
+                CronExpression.Parse(_options.Cron.Cleanup),
+                _dataStore,
+                _logger,
+                _options.QuoteHistoryDays);
 
             return new CronAction[]
             {
+                cleaner,
                 historyDownloader,
                 snapshotDownloader,
                 initializer,

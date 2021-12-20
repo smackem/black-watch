@@ -9,4 +9,7 @@ public class RedisOptions
 
     [Range(1, 1000)]
     public int MaxTallyHistoryLength { get; set; } = 100;
+    
+    [Range(1, 100)]
+    public int MaxHourlyQuotes { get; set; } = 24;
 }

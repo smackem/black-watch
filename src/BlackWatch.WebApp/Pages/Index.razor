@@ -31,7 +31,7 @@ else
 
 @if (_tallies.Any(x => x.IsSignalled == false))
 {
-    <hr style="color: black; background-color: black" />
+    <hr />
 
     @foreach (var tvm in _tallies.Where(x => x.IsSignalled == false))
     {
@@ -51,7 +51,8 @@ else
         var talliesBySource = tallies.ToLookup(t => t.TallySourceId!);
         _tallies =
             (from ts in tallySources
-            let t = talliesBySource[ts.Id]
+            where ts.Id != null
+            let t = talliesBySource[ts.Id!]
             where t.Any()
             select new TallyViewModel(Source: ts, Tallies: t.ToArray()))
             .ToArray();

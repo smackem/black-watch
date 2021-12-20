@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -114,6 +115,23 @@ public class RedisDataStore : IDataStore, IDisposable
         return Deserialize<Quote>(value);
     }
 
+    public async Task RemoveDailyQuotesAsync(string symbol, DateTimeOffset threshold)
+    {
+        var db = await GetDatabaseAsync().Linger();
+        var keys = new List<RedisValue>();
+        var hash = Names.DailyQuotes(symbol);
+        await foreach (var entry in db.HashScanAsync(hash).Linger())
+        {
+            var date = DateTimeOffset.Parse((string) entry.Name, styles: DateTimeStyles.AssumeUniversal);
+            if (date < threshold)
+            {
+                keys.Add(entry.Name);
+            }
+        }
+        var count = await db.HashDeleteAsync(hash, keys.ToArray()).Linger();
+        _logger.LogInformation("removed {Count} quotes from hash @{Key}", count, hash);
+    }
+
     public async Task<Quote?> GetHourlyQuoteAsync(string symbol, int hourOffset)
     {
         if (hourOffset > 0)
@@ -151,8 +169,15 @@ public class RedisDataStore : IDataStore, IDisposable
         var db = await GetDatabaseAsync().Linger();
         var value = Serialize(quote);
         var key = Names.HourlyQuotes(quote.Symbol);
-        await db.ListLeftPushAsync(key, value);
+        var count = await db.ListLeftPushAsync(key, value).Linger();
         _logger.LogDebug("hourly quote prepended to {Key}", key);
+
+        var maxCount = _options.MaxHourlyQuotes;
+        if (count > maxCount)
+        {
+            await db.ListTrimAsync(key, 0, count - 1).Linger();
+            _logger.LogDebug("hourly quotes @ {Key} trimmed from {OriginalCount} to {NewCount}", key, count, maxCount);
+        }
     }
 
     public async IAsyncEnumerable<TallySource> GetTallySourcesAsync(string? userId)

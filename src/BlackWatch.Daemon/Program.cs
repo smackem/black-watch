@@ -41,13 +41,13 @@ namespace BlackWatch.Daemon
                 })
                 .ConfigureServices((ctx, services) =>
                 {
-                    services.AddSingleton<RedisUserDataStore>();
+                    services.AddSingleton<RedisConnection>();
                     services.AddOptions<RedisOptions>()
                         .Bind(ctx.Configuration.GetSection("Redis"))
                         .ValidateDataAnnotations();
-                    services.AddSingleton<IUserDataStore>(sp => sp.GetRequiredService<RedisUserDataStore>());
-                    services.AddSingleton<IQuoteStore>(sp => sp.GetRequiredService<RedisUserDataStore>());
-                    services.AddSingleton<IRequestQueue>(sp => sp.GetRequiredService<RedisUserDataStore>());
+                    services.AddSingleton<IUserDataStore, RedisUserDataStore>();
+                    services.AddSingleton<IQuoteStore, RedisQuoteStore>();
+                    services.AddSingleton<IRequestQueue, RedisRequestQueue>();
 
                     services.AddHttpClient<IMessariApiClient, MessariApiClient>(http =>
                     {

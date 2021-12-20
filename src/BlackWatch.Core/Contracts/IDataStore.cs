@@ -31,20 +31,15 @@ public interface IDataStore
     public Task<Quote?> GetDailyQuoteAsync(string symbol, DateTimeOffset date);
 
     /// <summary>
-    /// gets all daily <see cref="Quote"/>s for the given symbol
+    /// removes all daily <see cref="Quote"/>s older than <paramref name="threshold"/> for the given symbol
     /// </summary>
-    public Task<IReadOnlyCollection<Quote>> GetDailyQuotesAsync(string symbol);
+    public Task RemoveDailyQuotesAsync(string symbol, DateTimeOffset threshold);
 
     /// <summary>
     /// gets the hourly quote with the specified <paramref name="symbol"/> at <c>now.AddHours(hourOffset)</c> 
     /// or <c>null</c> if no matching quote found. <paramref name="hourOffset"/> must be <c>0</c> or negative.
     /// </summary>
     public Task<Quote?> GetHourlyQuoteAsync(string symbol, int hourOffset);
-
-    /// <summary>
-    /// gets all hourly <see cref="Quote"/>s for the given symbol
-    /// </summary>
-    public Task<IReadOnlyCollection<Quote>> GetHourlyQuotesAsync(string symbol);
 
     /// <summary>
     /// inserts the specified quote into the database, replacing an existing quote with

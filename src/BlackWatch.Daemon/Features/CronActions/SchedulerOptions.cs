@@ -20,6 +20,9 @@ public class SchedulerCronOptions
     public string DownloadQuoteSnapshot { get; set; } = "@hourly";
 
     [Required]
+    public string Cleanup { get; set; } = "30 5 * * *";
+
+    [Required]
     public string EvaluationEveryHour { get; set; } = "10 * * * *";
 
     [Required]

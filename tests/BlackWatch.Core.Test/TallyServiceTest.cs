@@ -22,7 +22,8 @@ public class TallyServiceTest
         _out = @out;
     }
 
-    [Fact] public async void EvaluateEmpty()
+    [Fact]
+    public async void EvaluateEmpty()
     {
         var dataStore = new DataStore();
         var service = new TallyService(dataStore, new NullLogger<TallyService>());
@@ -30,7 +31,8 @@ public class TallyServiceTest
         Assert.Empty(tallies);
     }
 
-    [Fact] public async void EvaluateSingleSignalledTally()
+    [Fact]
+    public async void EvaluateSingleSignalledTally()
     {
         var tallies = await EvaluateSingleTallySource("return true;", EvaluationInterval.OneHour);
         Assert.Collection(tallies,
@@ -41,7 +43,8 @@ public class TallyServiceTest
             });
     }
 
-    [Fact] public async void EvaluateSingleNonSignalledTally()
+    [Fact]
+    public async void EvaluateSingleNonSignalledTally()
     {
         var tallies = await EvaluateSingleTallySource("return false;", EvaluationInterval.OneHour);
         Assert.Collection(tallies,
@@ -52,7 +55,8 @@ public class TallyServiceTest
             });
     }
 
-    [Fact] public async void EvaluateBtcGreaterZero()
+    [Fact]
+    public async void EvaluateBtcGreaterZero()
     {
         const string source = @"
     var n = 10;
@@ -67,7 +71,8 @@ public class TallyServiceTest
             });
     }
 
-    [Fact] public async void EvaluateEthHourly()
+    [Fact]
+    public async void EvaluateEthHourly()
     {
         const string source = @"
     var n = 10;
@@ -85,7 +90,8 @@ public class TallyServiceTest
             });
     }
 
-    [Fact] public async void CheckQuoteOfToday()
+    [Fact]
+    public async void CheckQuoteOfToday()
     {
         const string source = @"
     return { signal: true, result: Daily.BTC(0).Date };
@@ -99,7 +105,8 @@ public class TallyServiceTest
             });
     }
 
-    [Fact] public async void EvaluateWithResult()
+    [Fact]
+    public async void EvaluateWithResult()
     {
         const string source = @"return { signal: true, result: 'hello' };";
         var tallies = await EvaluateSingleTallySource(source, EvaluationInterval.OneHour);
@@ -111,7 +118,8 @@ public class TallyServiceTest
             });
     }
 
-    [Fact] public async void EvaluateReturnedObjectWithoutResult()
+    [Fact]
+    public async void EvaluateReturnedObjectWithoutResult()
     {
         const string source = @"return { signal: true };";
         var tallies = await EvaluateSingleTallySource(source, EvaluationInterval.OneHour);
@@ -123,7 +131,8 @@ public class TallyServiceTest
             });
     }
 
-    [Fact] public async void EvaluateInvalidReturnValue()
+    [Fact]
+    public async void EvaluateInvalidReturnValue()
     {
         const string source = @"return 123;";
         var tallies = await EvaluateSingleTallySource(source, EvaluationInterval.OneHour);
@@ -135,7 +144,8 @@ public class TallyServiceTest
             });
     }
 
-    [Fact] public void JsTest()
+    [Fact]
+    public void JsTest()
     {
         var engine = new Engine();
         var value = engine.Evaluate(@"
@@ -157,7 +167,6 @@ public class TallyServiceTest
 
     private class DataStore : IDataStore
     {
-
         private readonly TallySource[] _tallySources;
 
         public DataStore(params TallySource[] tallySources)
@@ -171,7 +180,7 @@ public class TallyServiceTest
             {
                 new Tracker(Symbols.Btc),
                 new Tracker(Symbols.Eth),
-                new Tracker(Symbols.Uni)
+                new Tracker(Symbols.Uni),
             } as IReadOnlyCollection<Tracker>);
         }
 
@@ -184,18 +193,10 @@ public class TallyServiceTest
         {
             return Task.FromResult(GetQuote(symbol, date));
         }
-        public Task<IReadOnlyCollection<Quote>> GetDailyQuotesAsync(string symbol)
-        {
-            throw new NotImplementedException();
-        }
 
         public Task<Quote?> GetHourlyQuoteAsync(string symbol, int hourOffset)
         {
             return Task.FromResult(GetQuote(symbol, DateTimeOffset.UtcNow));
-        }
-        public Task<IReadOnlyCollection<Quote>> GetHourlyQuotesAsync(string symbol)
-        {
-            throw new NotImplementedException();
         }
 
         public IAsyncEnumerable<TallySource> GetTallySourcesAsync(string? userId)
@@ -203,6 +204,18 @@ public class TallyServiceTest
             return _tallySources.ToAsyncEnumerable();
         }
 
+        public Task RemoveDailyQuotesAsync(string symbol, DateTimeOffset threshold)
+        {
+            throw new NotImplementedException();
+        }
+        public Task<IReadOnlyCollection<Quote>> RemoveDailyQuotesAsync(string symbol)
+        {
+            throw new NotImplementedException();
+        }
+        public Task<IReadOnlyCollection<Quote>> GetHourlyQuotesAsync(string symbol)
+        {
+            throw new NotImplementedException();
+        }
         public Task<TallySource?> GetTallySourceAsync(string userId, string id)
         {
             throw new NotImplementedException();
@@ -259,7 +272,7 @@ public class TallyServiceTest
                 Symbols.Btc => new Quote(symbol, 1000, 2000, 2500, 800, "USD", date),
                 Symbols.Eth => new Quote(symbol, 100, 200, 250, 80, "USD", date),
                 Symbols.Uni => new Quote(symbol, 10, 20, 25, 8, "USD", date),
-                _ => null
+                _ => null,
             };
         }
 

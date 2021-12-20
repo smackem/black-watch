@@ -29,6 +29,7 @@ public class CleanupCronAction : CronAction
     {
         var threshold = DateTimeOffset.UtcNow.AddDays(-_quoteHistoryDays);
         var dailyTrackers = await _dataStore.GetDailyTrackersAsync();
+        _logger.LogInformation("cleanup cron action executing");
         foreach (var tracker in dailyTrackers)
         {
             await _dataStore.RemoveDailyQuotesAsync(tracker.Symbol, threshold);

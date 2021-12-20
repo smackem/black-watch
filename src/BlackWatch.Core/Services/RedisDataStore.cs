@@ -129,7 +129,7 @@ public class RedisDataStore : IDataStore, IDisposable
             }
         }
         var count = await db.HashDeleteAsync(hash, keys.ToArray()).Linger();
-        _logger.LogTrace("removed {Count} quotes from hash @{Key}", count, hash);
+        _logger.LogInformation("removed {Count} quotes from hash @{Key}", count, hash);
     }
 
     public async Task<Quote?> GetHourlyQuoteAsync(string symbol, int hourOffset)

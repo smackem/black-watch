@@ -35,8 +35,11 @@ public class Startup
         services.AddControllers();
         services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo { Title = "BlackWatch.Api", Version = "v1" }); });
 
-        services.AddSingleton<IDataStore, RedisDataStore>();
+        services.AddSingleton<RedisUserDataStore>();
         services.AddOptions<RedisOptions>().Bind(_configuration.GetSection("Redis")).ValidateDataAnnotations();
+        services.AddSingleton<IUserDataStore>(sp => sp.GetRequiredService<RedisUserDataStore>());
+        services.AddSingleton<IQuoteStore>(sp => sp.GetRequiredService<RedisUserDataStore>());
+        services.AddSingleton<IIdGenerator>(sp => sp.GetRequiredService<RedisUserDataStore>());
 
         services.AddTransient<TallyService>();
     }

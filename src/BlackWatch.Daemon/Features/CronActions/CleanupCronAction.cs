@@ -9,18 +9,18 @@ namespace BlackWatch.Daemon.Features.CronActions;
 
 public class CleanupCronAction : CronAction
 {
-    private readonly IDataStore _dataStore;
+    private readonly IQuoteStore _quoteStore;
     private readonly ILogger _logger;
     private readonly int _quoteHistoryDays;
 
     public CleanupCronAction(
         CronExpression cronExpr,
-        IDataStore dataStore,
+        IQuoteStore quoteStore,
         ILogger logger,
         int quoteHistoryDays)
         : base(cronExpr, "cleanup")
     {
-        _dataStore = dataStore;
+        _quoteStore = quoteStore;
         _logger = logger;
         _quoteHistoryDays = quoteHistoryDays;
     }
@@ -28,11 +28,11 @@ public class CleanupCronAction : CronAction
     public override async Task<bool> ExecuteAsync()
     {
         var threshold = DateTimeOffset.UtcNow.AddDays(-_quoteHistoryDays);
-        var dailyTrackers = await _dataStore.GetDailyTrackersAsync();
+        var dailyTrackers = await _quoteStore.GetDailyTrackersAsync();
         _logger.LogInformation("cleanup cron action executing");
         foreach (var tracker in dailyTrackers)
         {
-            await _dataStore.RemoveDailyQuotesAsync(tracker.Symbol, threshold);
+            await _quoteStore.RemoveDailyQuotesAsync(tracker.Symbol, threshold);
         }
         return true;
     }

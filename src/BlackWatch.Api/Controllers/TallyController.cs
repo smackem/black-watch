@@ -16,13 +16,13 @@ public class TallyController
 
     private const string UserId = "0";
     private const string ResponseMimeType = "application/json";
-    private readonly IDataStore _dataStore;
+    private readonly IUserDataStore _userDataStore;
     private readonly ILogger<TallyController> _logger;
     private readonly TallyService _tallyService;
 
-    public TallyController(IDataStore dataStore, ILogger<TallyController> logger, TallyService tallyService)
+    public TallyController(IUserDataStore userDataStore, ILogger<TallyController> logger, TallyService tallyService)
     {
-        _dataStore = dataStore;
+        _userDataStore = userDataStore;
         _logger = logger;
         _tallyService = tallyService;
     }
@@ -33,9 +33,9 @@ public class TallyController
     public async Task<IReadOnlyCollection<Tally>> Index([FromQuery] int count = 1)
     {
         var tallies = new List<Tally>();
-        await foreach (var tallySource in _dataStore.GetTallySourcesAsync(UserId))
+        await foreach (var tallySource in _userDataStore.GetTallySourcesAsync(UserId))
         {
-            var localTallies = await _dataStore.GetTalliesAsync(tallySource.Id, count);
+            var localTallies = await _userDataStore.GetTalliesAsync(tallySource.Id, count);
             tallies.AddRange(localTallies);
         }
         return tallies;

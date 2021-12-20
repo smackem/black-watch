@@ -25,8 +25,8 @@ public class TallyServiceTest
     [Fact]
     public async void EvaluateEmpty()
     {
-        var dataStore = new DataStore();
-        var service = new TallyService(dataStore, new NullLogger<TallyService>());
+        var dataStore = new UserDataStore();
+        var service = new TallyService(dataStore, dataStore, new NullLogger<TallyService>());
         var tallies = await service.EvaluateAsync(EvaluationInterval.OneHour, UserId).ToListAsync();
         Assert.Empty(tallies);
     }
@@ -158,18 +158,18 @@ public class TallyServiceTest
 
     private static async Task<IReadOnlyList<Tally>> EvaluateSingleTallySource(string source, EvaluationInterval interval)
     {
-        var dataStore = new DataStore(
+        var dataStore = new UserDataStore(
             new TallySource("1", "test", "hello", source, interval, 1, DateTimeOffset.UtcNow));
 
-        var service = new TallyService(dataStore, new NullLogger<TallyService>());
+        var service = new TallyService(dataStore, dataStore, new NullLogger<TallyService>());
         return await service.EvaluateAsync(EvaluationInterval.OneHour, UserId).ToListAsync();
     }
 
-    private class DataStore : IDataStore
+    private class UserDataStore : IUserDataStore, IQuoteStore
     {
         private readonly TallySource[] _tallySources;
 
-        public DataStore(params TallySource[] tallySources)
+        public UserDataStore(params TallySource[] tallySources)
         {
             _tallySources = tallySources;
         }
@@ -236,31 +236,11 @@ public class TallyServiceTest
         {
             throw new NotImplementedException();
         }
-        public Task<string> GenerateIdAsync()
-        {
-            throw new NotImplementedException();
-        }
         public Task PutDailyQuoteAsync(Quote quote)
         {
             throw new NotImplementedException();
         }
         public Task PutHourlyQuoteAsync(Quote quote)
-        {
-            throw new NotImplementedException();
-        }
-        public Task EnqueueRequestsAsync(IEnumerable<RequestInfo> jobs)
-        {
-            throw new NotImplementedException();
-        }
-        public Task EnqueueRequestAsync(RequestInfo request)
-        {
-            throw new NotImplementedException();
-        }
-        public Task<RequestInfo[]> DequeueRequestsAsync(int count, string apiTag)
-        {
-            throw new NotImplementedException();
-        }
-        public Task<long> GetRequestQueueLengthAsync(string apiTag)
         {
             throw new NotImplementedException();
         }

@@ -17,7 +17,7 @@ public abstract class RequestRunner : WorkerBase
 {
     private readonly string _apiTag;
     private readonly RequestRunnerOptions _config;
-    private readonly IDataStore _dataStore;
+    private readonly IRequestQueue _requestQueue;
     private readonly TimeSpan _interval;
     private readonly ILogger<RequestRunner> _logger;
     private readonly IRequestFactory _requestFactory;
@@ -27,7 +27,7 @@ public abstract class RequestRunner : WorkerBase
         TimeSpan interval,
         string apiTag,
         ILogger<RequestRunner> logger,
-        IDataStore dataStore,
+        IRequestQueue requestQueue,
         IRequestFactory requestFactory,
         IOptions<RequestRunnerOptions> options,
         IServiceProvider sp)
@@ -36,7 +36,7 @@ public abstract class RequestRunner : WorkerBase
         _interval = interval;
         _apiTag = apiTag;
         _logger = logger;
-        _dataStore = dataStore;
+        _requestQueue = requestQueue;
         _requestFactory = requestFactory;
         _config = options.Value;
         _sp = sp;
@@ -46,7 +46,7 @@ public abstract class RequestRunner : WorkerBase
     {
         while (stoppingToken.IsCancellationRequested == false)
         {
-            var jobInfos = await _dataStore.DequeueRequestsAsync(_config.MaxRequestsPerMinute, _apiTag).Linger();
+            var jobInfos = await _requestQueue.DequeueRequestsAsync(_config.MaxRequestsPerMinute, _apiTag).Linger();
             var jobs = jobInfos.Select(info => (_requestFactory.BuildRequest(info, _sp), info));
             var ctx = new RequestContext(_logger)
             {
@@ -62,12 +62,12 @@ public abstract class RequestRunner : WorkerBase
                 // ReSharper disable once ConvertIfStatementToSwitchStatement
                 if (result == RequestResult.WaitAndRetry)
                 {
-                    await _dataStore.EnqueueRequestAsync(jobInfo).Linger();
+                    await _requestQueue.EnqueueRequestAsync(jobInfo).Linger();
                     await Task.Delay(_interval, stoppingToken).Linger();
                 }
                 else if (result == RequestResult.Retry)
                 {
-                    await _dataStore.EnqueueRequestAsync(jobInfo).Linger();
+                    await _requestQueue.EnqueueRequestAsync(jobInfo).Linger();
                 }
             }
 

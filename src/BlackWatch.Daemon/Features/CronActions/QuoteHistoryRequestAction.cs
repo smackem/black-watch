@@ -10,14 +10,14 @@ namespace BlackWatch.Daemon.Features.CronActions;
 
 internal class QuoteHistoryRequestAction : CronAction
 {
-    private readonly IDataStore _dataStore;
+    private readonly IRequestQueue _requestQueue;
     private readonly ILogger _logger;
     private readonly int _quoteHistoryDays;
 
-    public QuoteHistoryRequestAction(CronExpression cronExpr, IDataStore dataStore, ILogger logger, int quoteHistoryDays)
+    public QuoteHistoryRequestAction(CronExpression cronExpr, IRequestQueue requestQueue, ILogger logger, int quoteHistoryDays)
         : base(cronExpr, "trigger download of quote history")
     {
-        _dataStore = dataStore;
+        _requestQueue = requestQueue;
         _logger = logger;
         _quoteHistoryDays = quoteHistoryDays;
     }
@@ -29,7 +29,7 @@ internal class QuoteHistoryRequestAction : CronAction
             ApiTags.Polygon);
         _logger.LogInformation("queue request: download trackers {RequestInfo}", requestInfo);
 
-        await _dataStore.EnqueueRequestAsync(requestInfo).Linger();
+        await _requestQueue.EnqueueRequestAsync(requestInfo).Linger();
 
         return true;// always continue
     }

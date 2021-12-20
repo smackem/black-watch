@@ -10,10 +10,10 @@ public class MessariRequestRunner : RequestRunner
 {
     public MessariRequestRunner(
         ILogger<MessariRequestRunner> logger,
-        IDataStore dataStore,
+        IRequestQueue requestQueue,
         IRequestFactory requestFactory,
         IOptions<MessariRequestRunnerOptions> options,
         IServiceProvider sp)
-        : base(TimeSpan.FromMinutes(1), ApiTags.Messari, logger, dataStore, requestFactory, options, sp)
+        : base(TimeSpan.FromMinutes(1), ApiTags.Messari, logger, requestQueue, requestFactory, options, sp)
     {}
 }

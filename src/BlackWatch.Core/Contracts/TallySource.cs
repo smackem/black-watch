@@ -3,7 +3,7 @@ using System;
 namespace BlackWatch.Core.Contracts;
 
 /// <summary>
-/// a tally source is an executable, versioned script that is executed against an <see cref="IDataStore"/>
+/// a tally source is an executable, versioned script that is executed against an <see cref="IUserDataStore"/>
 /// </summary>
 /// <param name="Id">the tally source id, unique in the scope of this application</param>
 /// <param name="Name">the display name of the tally source</param>

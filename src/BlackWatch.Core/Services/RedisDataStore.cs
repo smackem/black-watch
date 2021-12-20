@@ -16,11 +16,11 @@ using StackExchange.Redis;
 namespace BlackWatch.Core.Services;
 
 /// <summary>
-/// implements a <see cref="IDataStore"/> backed by the redis persistent cache 
+/// implements a <see cref="IUserDataStore"/> backed by the redis persistent cache 
 /// </summary>
-public class RedisDataStore : IDataStore, IDisposable
+public class RedisUserDataStore : IUserDataStore, IRequestQueue, IQuoteStore, IIdGenerator, IDisposable
 {
-    private readonly ILogger<RedisDataStore> _logger;
+    private readonly ILogger<RedisUserDataStore> _logger;
     private readonly SemaphoreSlim _semaphore = new(1);
     private readonly RedisOptions _options;
     private volatile ConnectionMultiplexer? _redis;
@@ -29,7 +29,7 @@ public class RedisDataStore : IDataStore, IDisposable
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
     };
 
-    public RedisDataStore(ILogger<RedisDataStore> logger, IOptions<RedisOptions> options)
+    public RedisUserDataStore(ILogger<RedisUserDataStore> logger, IOptions<RedisOptions> options)
     {
         _options = options.Value;
         _logger = logger;

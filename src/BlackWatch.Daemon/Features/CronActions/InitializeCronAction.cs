@@ -9,37 +9,40 @@ namespace BlackWatch.Daemon.Features.CronActions;
 
 internal class InitializeCronAction : CronAction
 {
-    private readonly IDataStore _dataStore;
+    private readonly IRequestQueue _requestQueue;
+    private readonly IQuoteStore _quoteStore;
     private readonly QuoteHistoryRequestAction _historyDownloader;
     private readonly ILogger _logger;
 
     public InitializeCronAction(
         CronExpression cronExpr,
-        IDataStore dataStore,
+        IRequestQueue requestQueue,
+        IQuoteStore quoteStore,
         ILogger logger,
         QuoteHistoryRequestAction historyDownloader)
         : base(cronExpr, "trigger initial trackers download")
     {
-        _dataStore = dataStore;
+        _requestQueue = requestQueue;
+        _quoteStore = quoteStore;
         _logger = logger;
         _historyDownloader = historyDownloader;
     }
 
     public override async Task<bool> ExecuteAsync()
     {
-        var polygonRequestCount = await _dataStore.GetRequestQueueLengthAsync(ApiTags.Polygon);
+        var polygonRequestCount = await _requestQueue.GetRequestQueueLengthAsync(ApiTags.Polygon);
         if (polygonRequestCount > 0)
         {
             _logger.LogWarning("initial polygon request queue length at startup: {JobQueueLength}", polygonRequestCount);
         }
 
-        var messariRequestCount = await _dataStore.GetRequestQueueLengthAsync(ApiTags.Messari);
+        var messariRequestCount = await _requestQueue.GetRequestQueueLengthAsync(ApiTags.Messari);
         if (messariRequestCount > 0)
         {
             _logger.LogWarning("initial messari request queue length at startup: {JobQueueLength}", messariRequestCount);
         }
 
-        var trackers = await _dataStore.GetDailyTrackersAsync().Linger();
+        var trackers = await _quoteStore.GetDailyTrackersAsync().Linger();
         if (trackers.Count == 0)
         {
             _logger.LogInformation("no daily trackers in database, queue download");

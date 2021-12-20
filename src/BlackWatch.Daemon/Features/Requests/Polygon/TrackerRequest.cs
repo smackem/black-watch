@@ -13,15 +13,21 @@ namespace BlackWatch.Daemon.Features.Requests.Polygon;
 
 internal class TrackerRequest : Request
 {
-    private readonly IDataStore _dataStore;
+    private readonly IQuoteStore _quoteStore;
+    private readonly IRequestQueue _requestQueue;
     private readonly TrackerRequestInfo _info;
     private readonly IPolygonApiClient _polygon;
 
-    public TrackerRequest(TrackerRequestInfo info, IDataStore dataStore, IPolygonApiClient polygon)
+    public TrackerRequest(
+        TrackerRequestInfo info,
+        IQuoteStore quoteStore,
+        IRequestQueue requestQueue,
+        IPolygonApiClient polygon)
         : base("download crypto trackers")
     {
         _info = info;
-        _dataStore = dataStore;
+        _quoteStore = quoteStore;
+        _requestQueue = requestQueue;
         _polygon = polygon;
     }
 
@@ -65,7 +71,7 @@ internal class TrackerRequest : Request
             .Select(tp => RequestInfo.DownloadQuoteHistory(new QuoteHistoryRequestInfo(tp.Symbol, from, to), ApiTags.Polygon))
             .ToArray();
 
-        await _dataStore.EnqueueRequestsAsync(quoteRequests);
+        await _requestQueue.EnqueueRequestsAsync(quoteRequests);
         return RequestResult.Ok;
     }
 }

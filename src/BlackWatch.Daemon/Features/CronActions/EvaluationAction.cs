@@ -10,7 +10,7 @@ namespace BlackWatch.Daemon.Features.CronActions;
 
 public class EvaluationAction : CronAction
 {
-    private readonly IDataStore _dataStore;
+    private readonly IUserDataStore _userDataStore;
     private readonly EvaluationInterval _interval;
     private readonly ILogger _logger;
     private readonly TallyService _tallyService;
@@ -19,13 +19,13 @@ public class EvaluationAction : CronAction
         CronExpression cronExpr,
         EvaluationInterval interval,
         TallyService tallyService,
-        IDataStore dataStore,
+        IUserDataStore userDataStore,
         ILogger logger)
         : base(cronExpr, $"evaluate tally sources @ interval {interval}")
     {
         _interval = interval;
         _tallyService = tallyService;
-        _dataStore = dataStore;
+        _userDataStore = userDataStore;
         _logger = logger;
     }
 
@@ -37,7 +37,7 @@ public class EvaluationAction : CronAction
 
         await foreach (var tally in tallies.Linger())
         {
-            await _dataStore.PutTallyAsync(tally);
+            await _userDataStore.PutTallyAsync(tally);
             count++;
         }
 

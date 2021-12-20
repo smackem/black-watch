@@ -12,19 +12,19 @@ namespace BlackWatch.Daemon.Features.Requests.Messari;
 
 public class QuoteSnapshotRequest : Request
 {
-    private readonly IDataStore _dataStore;
+    private readonly IQuoteStore _quoteStore;
     private readonly QuoteSnapshotRequestInfo _info;
     private readonly IMessariApiClient _messari;
 
     public QuoteSnapshotRequest(
         QuoteSnapshotRequestInfo info,
-        IDataStore dataStore,
+        IQuoteStore quoteStore,
         IMessariApiClient messari)
         : base("download quote snapshots")
     {
         _info = info;
         _messari = messari;
-        _dataStore = dataStore;
+        _quoteStore = quoteStore;
     }
 
     public override async Task<RequestResult> ExecuteAsync(RequestContext ctx)
@@ -59,7 +59,7 @@ public class QuoteSnapshotRequest : Request
 
         foreach (var quote in quotes)
         {
-            await _dataStore.PutHourlyQuoteAsync(quote);
+            await _quoteStore.PutHourlyQuoteAsync(quote);
         }
 
         return RequestResult.Ok;

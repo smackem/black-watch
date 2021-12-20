@@ -8,13 +8,13 @@ namespace BlackWatch.Daemon.Features.CronActions;
 
 public class QuoteSnapshotRequestAction : CronAction
 {
-    private readonly IDataStore _dataStore;
+    private readonly IRequestQueue _requestQueue;
     private readonly ILogger _logger;
 
-    public QuoteSnapshotRequestAction(CronExpression cronExpr, IDataStore dataStore, ILogger logger)
+    public QuoteSnapshotRequestAction(CronExpression cronExpr, IRequestQueue requestQueue, ILogger logger)
         : base(cronExpr, "trigger download of quote snapshots")
     {
-        _dataStore = dataStore;
+        _requestQueue = requestQueue;
         _logger = logger;
     }
 
@@ -22,7 +22,7 @@ public class QuoteSnapshotRequestAction : CronAction
     {
         var requestInfo = RequestInfo.DownloadQuoteSnapshots(ApiTags.Messari);
         _logger.LogInformation("queue request: download quote snapshots {RequestInfo}", requestInfo);
-        await _dataStore.EnqueueRequestAsync(requestInfo);
+        await _requestQueue.EnqueueRequestAsync(requestInfo);
         return true;
     }
 }

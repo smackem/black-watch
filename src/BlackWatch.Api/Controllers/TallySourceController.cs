@@ -17,13 +17,19 @@ public class TallySourceController : Controller
 
     private const string UserId = "0";
     private const string ResponseMimeType = "application/json";
-    private readonly IDataStore _dataStore;
+    private readonly IUserDataStore _userDataStore;
+    private readonly IIdGenerator _idGenerator;
     private readonly ILogger<TallySourceController> _logger;
     private readonly TallyService _tallyService;
 
-    public TallySourceController(IDataStore dataStore, ILogger<TallySourceController> logger, TallyService tallyService)
+    public TallySourceController(
+        IUserDataStore userDataStore,
+        IIdGenerator idGenerator,
+        ILogger<TallySourceController> logger,
+        TallyService tallyService)
     {
-        _dataStore = dataStore;
+        _userDataStore = userDataStore;
+        _idGenerator = idGenerator;
         _logger = logger;
         _tallyService = tallyService;
     }
@@ -32,7 +38,7 @@ public class TallySourceController : Controller
     [Produces(ResponseMimeType)]
     public async Task<ActionResult<TallySource>> GetById(string id)
     {
-        var tallySource = await _dataStore.GetTallySourceAsync(UserId, id);
+        var tallySource = await _userDataStore.GetTallySourceAsync(UserId, id);
         // ReSharper disable once InvertIf
         if (tallySource == null)
         {
@@ -66,7 +72,7 @@ public class TallySourceController : Controller
             return NotFound();
         }
 
-        await _dataStore.PutTallyAsync(tally);
+        await _userDataStore.PutTallyAsync(tally);
         _logger.LogInformation("tally stored: {Tally}", tally);
         return CreatedAtAction(nameof(GetTally), new { id, count = 1 }, tally);
     }
@@ -76,7 +82,7 @@ public class TallySourceController : Controller
     [Produces(ResponseMimeType)]
     public async Task<ActionResult<Tally[]>> GetTally(string id, [FromQuery] int count = 1)
     {
-        var tallySource = await _dataStore.GetTallySourceAsync(UserId, id);
+        var tallySource = await _userDataStore.GetTallySourceAsync(UserId, id);
         // ReSharper disable once InvertIf
         if (tallySource == null)
         {
@@ -84,7 +90,7 @@ public class TallySourceController : Controller
             return NotFound();
         }
 
-        var tallies = await _dataStore.GetTalliesAsync(id, count);
+        var tallies = await _userDataStore.GetTalliesAsync(id, count);
         return Ok(tallies);
     }
 
@@ -93,7 +99,7 @@ public class TallySourceController : Controller
     [Produces(ResponseMimeType)]
     public async Task<IReadOnlyCollection<TallySource>> Index()
     {
-        return await _dataStore.GetTallySourcesAsync().ToListAsync().Linger();
+        return await _userDataStore.GetTallySourcesAsync().ToListAsync().Linger();
     }
 
     [HttpPost]
@@ -101,9 +107,9 @@ public class TallySourceController : Controller
     [Produces(ResponseMimeType)]
     public async Task<IActionResult> Create([FromBody] PutTallySourceCommand command)
     {
-        var id = await _dataStore.GenerateIdAsync();
+        var id = await _idGenerator.GenerateIdAsync();
         var tallySource = new TallySource(id, command.Name, command.Message, command.Code, command.Interval, 1, DateTimeOffset.UtcNow);
-        await _dataStore.PutTallySourceAsync(UserId, tallySource);
+        await _userDataStore.PutTallySourceAsync(UserId, tallySource);
         _logger.LogInformation("tally source created: user-{UserId}:{TallySourceId}", UserId, id);
         return CreatedAtAction(nameof(GetById), new { id = tallySource.Id }, tallySource);
     }
@@ -113,7 +119,7 @@ public class TallySourceController : Controller
     [Produces(ResponseMimeType)]
     public async Task<IActionResult> Update(string id, [FromBody] PutTallySourceCommand command)
     {
-        var tallySource = await _dataStore.GetTallySourceAsync(UserId, id);
+        var tallySource = await _userDataStore.GetTallySourceAsync(UserId, id);
         if (tallySource == null)
         {
             _logger.LogWarning("tally source not found: user-{UserId}:{TallySourceId}", UserId, id);
@@ -121,7 +127,7 @@ public class TallySourceController : Controller
         }
 
         var modifiedTallySource = tallySource.Update(command.Name, command.Message, command.Code, command.Interval);
-        await _dataStore.PutTallySourceAsync(UserId, modifiedTallySource);
+        await _userDataStore.PutTallySourceAsync(UserId, modifiedTallySource);
         _logger.LogInformation("tally source updated: user-{UserId}:{TallySourceId}", UserId, id);
         return Ok(modifiedTallySource);
     }
@@ -132,7 +138,7 @@ public class TallySourceController : Controller
     public async Task<IActionResult> Delete(string id)
     {
         // ReSharper disable once InvertIf
-        if (await _dataStore.DeleteTallySourceAsync(UserId, id) == false)
+        if (await _userDataStore.DeleteTallySourceAsync(UserId, id) == false)
         {
             _logger.LogWarning("tally source not found: user-{UserId}:{TallySourceId}", UserId, id);
             return NotFound();
@@ -144,7 +150,7 @@ public class TallySourceController : Controller
 
     private async Task<Tally?> InternalEvaluateAsync(string id)
     {
-        var tallySource = await _dataStore.GetTallySourceAsync(UserId, id);
+        var tallySource = await _userDataStore.GetTallySourceAsync(UserId, id);
         // ReSharper disable once InvertIf
         if (tallySource == null)
         {

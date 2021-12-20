@@ -13,16 +13,16 @@ namespace BlackWatch.Daemon.Features.Requests.Polygon;
 
 internal class QuoteHistoryRequest : Request
 {
-    private readonly IDataStore _dataStore;
+    private readonly IQuoteStore _quoteStore;
     private readonly QuoteHistoryRequestInfo _info;
     private readonly IPolygonApiClient _polygon;
 
-    public QuoteHistoryRequest(QuoteHistoryRequestInfo info, IDataStore dataStore, IPolygonApiClient polygon)
+    public QuoteHistoryRequest(QuoteHistoryRequestInfo info, IQuoteStore quoteStore, IPolygonApiClient polygon)
         : base($"download aggregates for {info.Symbol}")
     {
         _info = info;
         _polygon = polygon;
-        _dataStore = dataStore;
+        _quoteStore = quoteStore;
     }
 
     public override async Task<RequestResult> ExecuteAsync(RequestContext ctx)
@@ -64,7 +64,7 @@ internal class QuoteHistoryRequest : Request
 
         foreach (var quote in quotes)
         {
-            await _dataStore.PutDailyQuoteAsync(quote);
+            await _quoteStore.PutDailyQuoteAsync(quote);
         }
 
         return RequestResult.Ok;

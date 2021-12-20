@@ -14,23 +14,25 @@ namespace BlackWatch.Core.Services;
 
 public class TallyService
 {
-    private readonly IDataStore _dataStore;
+    private readonly IUserDataStore _userDataStore;
+    private readonly IQuoteStore _quoteStore;
     private readonly ILogger<TallyService> _logger;
 
     private const string CodePrefix = "(function() {\n";
     private const string CodeSuffix = "\n})();";
     private static readonly Regex SymbolFunctionRegex = new(@"^\w+$", RegexOptions.Compiled);
 
-    public TallyService(IDataStore dataStore, ILogger<TallyService> logger)
+    public TallyService(IUserDataStore userDataStore, IQuoteStore quoteStore, ILogger<TallyService> logger)
     {
-        _dataStore = dataStore;
+        _userDataStore = userDataStore;
+        _quoteStore = quoteStore;
         _logger = logger;
     }
 
     public async IAsyncEnumerable<Tally> EvaluateAsync(EvaluationInterval interval, string? userId = null)
     {
         var ctx = await BuildContextAsync();
-        var tallySources = _dataStore.GetTallySourcesAsync(userId);
+        var tallySources = _userDataStore.GetTallySourcesAsync(userId);
 
         await foreach (var tallySource in tallySources.Linger())
         {
@@ -52,12 +54,12 @@ public class TallyService
 
     private async Task<EvaluationContext> BuildContextAsync()
     {
-        var dailyTrackers = await _dataStore.GetDailyTrackersAsync();
+        var dailyTrackers = await _quoteStore.GetDailyTrackersAsync();
         var daily = dailyTrackers.ToDictionary(
             t => GetFunctionName(t.Symbol),
             t => new Func<string, Quote?>(dateStr => FetchDailyQuote(t, dateStr)));
 
-        var hourlyTrackers = await _dataStore.GetHourlyTrackersAsync();
+        var hourlyTrackers = await _quoteStore.GetHourlyTrackersAsync();
         var hourly = hourlyTrackers.ToDictionary(
             t => GetFunctionName(t.Symbol),
             t => new Func<string, Quote?>(offsetStr => FetchHourlyQuote(t, offsetStr)));
@@ -79,7 +81,7 @@ public class TallyService
     private Quote? FetchDailyQuote(Tracker tracker, string dateStr)
     {
         var date = ParseDateStr(dateStr);
-        var quote = _dataStore.GetDailyQuoteAsync(tracker.Symbol, date).Result;
+        var quote = _quoteStore.GetDailyQuoteAsync(tracker.Symbol, date).Result;
         return quote;
     }
 
@@ -97,7 +99,7 @@ public class TallyService
     private Quote? FetchHourlyQuote(Tracker tracker, string offsetStr)
     {
         var offset = ParseOffsetStr(offsetStr);
-        var quote = _dataStore.GetHourlyQuoteAsync(tracker.Symbol, offset).Result;
+        var quote = _quoteStore.GetHourlyQuoteAsync(tracker.Symbol, offset).Result;
         return quote;
     }
 

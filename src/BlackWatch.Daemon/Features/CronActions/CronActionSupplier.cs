@@ -10,18 +10,24 @@ namespace BlackWatch.Daemon.Features.CronActions;
 
 public class CronActionSupplier : ICronActionSupplier
 {
-    private readonly IDataStore _dataStore;
+    private readonly IRequestQueue _requestQueue;
+    private readonly IQuoteStore _quoteStore;
+    private readonly IUserDataStore _userDataStore;
     private readonly ILogger<CronActionSupplier> _logger;
     private readonly SchedulerOptions _options;
     private readonly TallyService _tallyService;
 
     public CronActionSupplier(
-        IDataStore dataStore,
+        IRequestQueue requestQueue,
+        IQuoteStore quoteStore,
+        IUserDataStore userDataStore,
         IOptions<SchedulerOptions> options,
         TallyService tallyService,
         ILogger<CronActionSupplier> logger)
     {
-        _dataStore = dataStore;
+        _requestQueue = requestQueue;
+        _quoteStore = quoteStore;
+        _userDataStore = userDataStore;
         _tallyService = tallyService;
         _logger = logger;
         _options = options.Value;
@@ -33,21 +39,22 @@ public class CronActionSupplier : ICronActionSupplier
         {
             var historyDownloader = new QuoteHistoryRequestAction(
                 CronExpression.Parse(_options.Cron.DownloadQuoteHistory),
-                _dataStore,
+                _requestQueue,
                 _logger,
                 _options.QuoteHistoryDays);
             var snapshotDownloader = new QuoteSnapshotRequestAction(
                 CronExpression.Parse(_options.Cron.DownloadQuoteSnapshot),
-                _dataStore,
+                _requestQueue,
                 _logger);
             var initializer = new InitializeCronAction(
                 CronExpression.Parse("@every_minute"),
-                _dataStore,
+                _requestQueue,
+                _quoteStore,
                 _logger,
                 historyDownloader);
             var cleaner = new CleanupCronAction(
                 CronExpression.Parse(_options.Cron.Cleanup),
-                _dataStore,
+                _quoteStore,
                 _logger,
                 _options.QuoteHistoryDays);
 
@@ -66,6 +73,6 @@ public class CronActionSupplier : ICronActionSupplier
 
     private EvaluationAction CreateEvaluationAction(string cronStr, EvaluationInterval interval)
     {
-        return new EvaluationAction(CronExpression.Parse(cronStr), interval, _tallyService, _dataStore, _logger);
+        return new EvaluationAction(CronExpression.Parse(cronStr), interval, _tallyService, _userDataStore, _logger);
     }
 }

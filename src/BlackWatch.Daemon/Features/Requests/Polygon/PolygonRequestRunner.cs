@@ -10,10 +10,10 @@ public class PolygonRequestRunner : RequestRunner
 {
     public PolygonRequestRunner(
         ILogger<PolygonRequestRunner> logger,
-        IDataStore dataStore,
+        IRequestQueue requestQueue,
         IRequestFactory requestFactory,
         IOptions<PolygonRequestRunnerOptions> options,
         IServiceProvider sp)
-        : base(TimeSpan.FromMinutes(1), ApiTags.Polygon, logger, dataStore, requestFactory, options, sp)
+        : base(TimeSpan.FromMinutes(1), ApiTags.Polygon, logger, requestQueue, requestFactory, options, sp)
     {}
 }

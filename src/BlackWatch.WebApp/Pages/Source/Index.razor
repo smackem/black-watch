@@ -1,8 +1,14 @@
 ﻿@page "/source"
 @using BlackWatch.WebApp.Features.Api
+@using BlackWatch.WebApp.Services
 @using BlackWatch.WebApp.Util
+@using Microsoft.Extensions.Logging
+@implements IDisposable
 @inject IApiClient _api
 @inject NavigationManager _navigation
+@inject ILogger<Index> _logger
+@inject IJSRuntime _js
+@inject UiService _ui
 
 @if (_tallySources == null)
 {
@@ -36,10 +42,18 @@
             <td>@ts.Version</td>
             <td>@ts.DateModified.Render()</td>
             <td>
-                <a href="/source/edit/@ts.Id" title="Edit"><span class="oi oi-pencil"></span></a>
-                &nbsp;
                 <a href="" @onclick:preventDefault @onclick="() => EvaluateAsync(ts)" title="Evaluate">
                     <span class="oi oi-bolt"></span>
+                </a>
+                &nbsp;
+                <a href="" @onclick:preventDefault @onclick="() => PurgeAsync(ts)" title="Purge Tallies">
+                    <span class="oi oi-fire"></span>
+                </a>
+                &nbsp;
+                <a href="/source/edit/@ts.Id" title="Edit"><span class="oi oi-pencil"></span></a>
+                &nbsp;
+                <a href="" @onclick:preventDefault @onclick="() => DeleteAsync(ts)" title="Delete">
+                    <span class="oi oi-x text-center" style="font-size: 0.9rem"></span>
                 </a>
             </td>
         </tr>
@@ -66,6 +80,21 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await RefreshAsync();
+
+        _ui.Refresh += UiOnRefresh;
+    }
+
+    private async void UiOnRefresh(object? sender, EventArgs e)
+    {
+        _logger.LogInformation("Edit -> UiOnRefresh");
+        await RefreshAsync();
+        StateHasChanged();
+        _logger.LogInformation("Edit <- UiOnRefresh");
+    }
+
+    private async Task RefreshAsync()
+    {
         _tallySources = await _api.GetTallySourcesAsync();
         await FetchTalliesAsync();
     }
@@ -76,14 +105,37 @@
         _tallies = tallies.ToLookup(t => t.TallySourceId!);
     }
 
-    private void CreateNew()
-    {
-        _navigation.NavigateTo("/source/new");
-    }
-
     private async Task EvaluateAsync(TallySource ts)
     {
         var tally = await _api.EvaluateTallySourceAndStoreTallyAsync(ts.Id!);
+        _logger.LogInformation("evaluated tally source #{TallySourceId}: {Tally}", ts.Id, tally.ToString());
         await FetchTalliesAsync();
+    }
+
+    private async Task DeleteAsync(TallySource ts)
+    {
+        if (await _js.InvokeAsync<bool>("confirm", "Delete tally source?") == false)
+        {
+            return;
+        }
+
+        await _api.DeleteTallySourceAsync(ts.Id!);
+        await RefreshAsync();
+    }
+
+    private async Task PurgeAsync(TallySource ts)
+    {
+        if (await _js.InvokeAsync<bool>("confirm", "Purge tallies?") == false)
+        {
+            return;
+        }
+
+        await _api.PurgeTallies(ts.Id!);
+        await FetchTalliesAsync();
+    }
+
+    public void Dispose()
+    {
+        _ui.Refresh -= UiOnRefresh;
     }
 }

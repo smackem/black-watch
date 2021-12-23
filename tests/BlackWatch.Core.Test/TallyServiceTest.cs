@@ -236,6 +236,10 @@ public class TallyServiceTest
         {
             throw new NotImplementedException();
         }
+        public Task PurgeTalliesAsync(string tallySourceId)
+        {
+            throw new NotImplementedException();
+        }
         public Task PutDailyQuoteAsync(Quote quote)
         {
             throw new NotImplementedException();

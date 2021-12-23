@@ -13,7 +13,6 @@ namespace BlackWatch.Api.Controllers;
 [Route("[controller]")]
 public class TallyController
 {
-
     private const string UserId = "0";
     private const string ResponseMimeType = "application/json";
     private readonly IUserDataStore _userDataStore;

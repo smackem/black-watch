@@ -45,4 +45,9 @@ public interface IUserDataStore
     /// the most recent one
     /// </summary>
     public Task<Tally[]> GetTalliesAsync(string tallySourceId, int count);
+    
+    /// <summary>
+    /// deletes all <see cref="Tally"/>s evaluated for the <see cref="TallySource"/> with the given id
+    /// </summary>
+    public Task PurgeTalliesAsync(string tallySourceId);
 }

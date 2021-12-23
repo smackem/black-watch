@@ -78,4 +78,9 @@ public class ApiClient : IApiClient
         var tallies = await _http.GetFromJsonAsync<Tally[]>($"tally?count={count}");
         return tallies!;
     }
+
+    public Task PurgeTallies(string tallySourceId)
+    {
+        return _http.DeleteAsync($"tallysource/{tallySourceId}/tally");
+    }
 }

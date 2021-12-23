@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -117,8 +119,10 @@ public class TallyService
     {
         var engine = new Engine();
         var code = $"{CodePrefix}{tallySource.Code}{CodeSuffix}";
+        var console = new JsConsole();
         engine.SetValue("Daily", ctx.DailyQuotes);
         engine.SetValue("Hourly", ctx.HourlyQuotes);
+        engine.SetValue("console", console);
 
         JsValue? value;
         string? errorMessage = null;
@@ -142,7 +146,14 @@ public class TallyService
             _ => (TallyState.Indeterminate, value.ToString()),
         };
 
-        return Task.FromResult(new Tally(tallySource.Id, tallySource.Version, DateTimeOffset.Now, state, result));
+        var tally = new Tally(
+            TallySourceId: tallySource.Id,
+            TallySourceVersion: tallySource.Version,
+            DateCreated: DateTimeOffset.Now,
+            State: state,
+            Result: result,
+            Log: console.Log);
+        return Task.FromResult(tally);
     }
 
     private static (TallyState signal, string? result) DecodeReturnedObject(ObjectInstance obj)
@@ -176,4 +187,30 @@ public class TallyService
     private record EvaluationContext(
         IDictionary<string, Func<string, Quote?>> DailyQuotes,
         IDictionary<string, Func<string, Quote?>> HourlyQuotes);
+
+    private class JsConsole
+    {
+        private readonly LinkedList<string> _log = new();
+
+        public IReadOnlyCollection<string> Log => _log.ToArray();
+
+        // ReSharper disable once InconsistentNaming
+        public void assert(bool condition)
+        {
+            log("assertion failed");
+            throw new Exception();
+        }
+
+        // ReSharper disable once MemberCanBePrivate.Local
+        // ReSharper disable once InconsistentNaming
+        public void log(string s)
+        {
+            _log.AddLast(s);
+
+            if (_log.Count > 100)
+            {
+                _log.RemoveFirst();
+            }
+        }
+    }
 }

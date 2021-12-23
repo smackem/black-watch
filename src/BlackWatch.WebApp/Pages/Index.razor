@@ -1,6 +1,11 @@
 @page "/"
 @using BlackWatch.WebApp.Features.Api
+@using BlackWatch.WebApp.Services
+@using Microsoft.Extensions.Logging
+@implements IDisposable
 @inject IApiClient _api
+@inject UiService _ui
+@inject ILogger<Index> _logger;
 
 @if (_tallies == null)
 {
@@ -46,6 +51,13 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        await RefreshAsync();
+
+        _ui.Refresh += UiOnRefresh;
+    }
+
+    private async Task RefreshAsync()
+    {
         var tallySources = await _api.GetTallySourcesAsync();
         var tallies = await _api.GetTalliesAsync(10);
         var talliesBySource = tallies.ToLookup(t => t.TallySourceId!);
@@ -64,4 +76,17 @@ else
 
         public bool IsSignalled => PrimaryTally?.State == TallyState.Signalled;
     };
+
+    private async void UiOnRefresh(object? sender, EventArgs e)
+    {
+        _logger.LogInformation("Tally -> UiOnRefresh");
+        await RefreshAsync();
+        StateHasChanged();
+        _logger.LogInformation("Tally <- UiOnRefresh");
+    }
+
+    public void Dispose()
+    {
+        _ui.Refresh -= UiOnRefresh;
+    }
 }

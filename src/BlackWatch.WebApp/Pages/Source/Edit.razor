@@ -1,9 +1,12 @@
 @page "/source/edit/{id}"
 @using BlackWatch.WebApp.Features.Api
+@using BlackWatch.WebApp.Services
 @using Microsoft.Extensions.Logging
+@implements IDisposable
 @inject IApiClient _api
 @inject ILogger<Edit> _logger
 @inject NavigationManager _navigation
+@inject UiService _ui
 
 @if (_model == null)
 {
@@ -25,6 +28,13 @@
     public string? Id { get; set; }
 
     protected override async Task OnInitializedAsync()
+    {
+        _ui.Refresh += UiOnRefresh;
+
+        await RefreshAsync();
+    }
+
+    private async Task RefreshAsync()
     {
         if (Id == null)
         {
@@ -55,5 +65,17 @@
     private void GoBack()
     {
         _navigation.NavigateTo("/source");
+    }
+
+    private async void UiOnRefresh(object? sender, EventArgs e)
+    {
+        await RefreshAsync();
+
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _ui.Refresh -= UiOnRefresh;
     }
 }

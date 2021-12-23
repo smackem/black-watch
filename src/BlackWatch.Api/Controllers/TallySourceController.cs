@@ -94,6 +94,15 @@ public class TallySourceController : Controller
         return Ok(tallies);
     }
 
+    [HttpDelete("{id}/tally")]
+    [ProducesResponseType((int)HttpStatusCode.NoContent)]
+    public async Task<ActionResult<Tally[]>> PurgeTally(string id)
+    {
+        await _userDataStore.PurgeTalliesAsync(id);
+        _logger.LogInformation("tallies purged for source {TallySourceId}", id);
+        return NoContent();
+    }
+
     [HttpGet]
     [ProducesResponseType(typeof(IReadOnlyCollection<TallySource>), (int)HttpStatusCode.OK)]
     [Produces(ResponseMimeType)]

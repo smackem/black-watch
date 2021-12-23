@@ -18,6 +18,7 @@ public class Program
         builder.Services.AddLogging();
         builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
         builder.Services.AddHttpClient<IApiClient, ApiClient>(http => { http.BaseAddress = new Uri(builder.Configuration["Api:Uri"]!); });
+        builder.Services.AddSingleton<UiService>();
 
         await builder.Build().RunAsync();
     }

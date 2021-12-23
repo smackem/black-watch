@@ -1,4 +1,9 @@
-﻿<ul class="nav">
+﻿@using System.Text.RegularExpressions
+@using System.Diagnostics
+@using BlackWatch.WebApp.Services
+@inject UiService _ui;
+
+<ul class="nav">
     <li class="nav-item">
         <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
             <span class="oi oi-bar-chart" aria-hidden="true"></span> Tally
@@ -20,6 +25,17 @@
         </NavLink>
     </li>
 </ul>
+<ul class="nav justify-content-end">
+    <li class="nav-item">
+        <a class="nav-link" href="" @onclick:preventDefault @onclick="OnReloadClicked" title="Reload">
+            <span class="oi oi-reload" aria-hidden="true"></span> Reload
+        </a>
+    </li>
+</ul>
 
 @code {
+    private void OnReloadClicked()
+    {
+        _ui.RaiseRefresh();
+    }
 }

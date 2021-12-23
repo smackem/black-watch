@@ -140,4 +140,11 @@ public class RedisUserDataStore : RedisStore, IUserDataStore
             .ToArray();
         return tallies;
     }
+
+    public async Task PurgeTalliesAsync(string tallySourceId)
+    {
+        var db = await GetDatabaseAsync().Linger();
+        var key = RedisNames.Tally(tallySourceId);
+        await db.KeyDeleteAsync(key);
+    }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
@@ -58,6 +59,10 @@ public class ApiClient : IApiClient
     {
         var response = await _http.PostAsJsonAsync("tally/eval", command);
         var tally = await response.Content.ReadFromJsonAsync<Tally>();
+        _logger.LogInformation(
+            "received tally: {Tally}, Log: {TallyLog}",
+            tally?.ToString(),
+            string.Join(", ", tally?.Log ?? Array.Empty<string>()));
         return tally!;
     }
 

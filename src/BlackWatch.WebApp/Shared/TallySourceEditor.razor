@@ -33,6 +33,16 @@
         @if (_tally != null)
         {
             <TallyWidget Tally="@_tally" TallySourceName="@_model?.Name" TallySourceMessage="@_model?.Message"></TallyWidget>
+
+            @if (_tally.Log.Count > 0)
+            {
+                <ul class="list-group">
+                    @foreach (var message in _tally.Log)
+                    {
+                        <li class="list-group-item">@message</li>
+                    }
+                </ul>
+            }
         }
     </div>
 </form>

@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -119,7 +117,11 @@ public class TallyService
     {
         var engine = new Engine();
         var code = $"{CodePrefix}{tallySource.Code}{CodeSuffix}";
-        var console = new JsConsole();
+        var console = new JsConsole
+        {
+            Logger = _logger,
+        };
+
         engine.SetValue("Daily", ctx.DailyQuotes);
         engine.SetValue("Hourly", ctx.HourlyQuotes);
         engine.SetValue("console", console);
@@ -152,7 +154,7 @@ public class TallyService
             DateCreated: DateTimeOffset.Now,
             State: state,
             Result: result,
-            Log: console.Log);
+            Log: console.LogMessages);
         return Task.FromResult(tally);
     }
 
@@ -192,19 +194,39 @@ public class TallyService
     {
         private readonly LinkedList<string> _log = new();
 
-        public IReadOnlyCollection<string> Log => _log.ToArray();
+        public IReadOnlyCollection<string> LogMessages => _log.ToArray();
+
+        public ILogger? Logger { get; init; }
+
+        // ReSharper disable once InconsistentNaming
+        // ReSharper disable once MemberCanBePrivate.Local
+        public void assert(bool condition, string? data)
+        {
+            if (condition)
+            {
+                return;
+            }
+
+            var message = data != null
+                ? "assertion failed: " + data
+                : "assertion failed";
+            log(message);
+            throw new Exception(message);
+        }
 
         // ReSharper disable once InconsistentNaming
         public void assert(bool condition)
         {
-            log("assertion failed");
-            throw new Exception();
+            // ReSharper disable once IntroduceOptionalParameters.Local
+            assert(condition, null);
         }
 
         // ReSharper disable once MemberCanBePrivate.Local
         // ReSharper disable once InconsistentNaming
         public void log(string s)
         {
+            Logger?.LogInformation("JsConsole: {JsLogMessage}", s);
+
             _log.AddLast(s);
 
             if (_log.Count > 100)

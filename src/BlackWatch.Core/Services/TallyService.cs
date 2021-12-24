@@ -117,8 +117,14 @@ public class TallyService
     {
         var engine = new Engine();
         var code = $"{CodePrefix}{tallySource.Code}{CodeSuffix}";
+        var console = new JsConsole
+        {
+            Logger = _logger,
+        };
+
         engine.SetValue("Daily", ctx.DailyQuotes);
         engine.SetValue("Hourly", ctx.HourlyQuotes);
+        engine.SetValue("console", console);
 
         JsValue? value;
         string? errorMessage = null;
@@ -142,7 +148,14 @@ public class TallyService
             _ => (TallyState.Indeterminate, value.ToString()),
         };
 
-        return Task.FromResult(new Tally(tallySource.Id, tallySource.Version, DateTimeOffset.Now, state, result));
+        var tally = new Tally(
+            TallySourceId: tallySource.Id,
+            TallySourceVersion: tallySource.Version,
+            DateCreated: DateTimeOffset.Now,
+            State: state,
+            Result: result,
+            Log: console.LogMessages);
+        return Task.FromResult(tally);
     }
 
     private static (TallyState signal, string? result) DecodeReturnedObject(ObjectInstance obj)
@@ -176,4 +189,50 @@ public class TallyService
     private record EvaluationContext(
         IDictionary<string, Func<string, Quote?>> DailyQuotes,
         IDictionary<string, Func<string, Quote?>> HourlyQuotes);
+
+    private class JsConsole
+    {
+        private readonly LinkedList<string> _log = new();
+
+        public IReadOnlyCollection<string> LogMessages => _log.ToArray();
+
+        public ILogger? Logger { get; init; }
+
+        // ReSharper disable once InconsistentNaming
+        // ReSharper disable once MemberCanBePrivate.Local
+        public void assert(bool condition, string? data)
+        {
+            if (condition)
+            {
+                return;
+            }
+
+            var message = data != null
+                ? "assertion failed: " + data
+                : "assertion failed";
+            log(message);
+            throw new Exception(message);
+        }
+
+        // ReSharper disable once InconsistentNaming
+        public void assert(bool condition)
+        {
+            // ReSharper disable once IntroduceOptionalParameters.Local
+            assert(condition, null);
+        }
+
+        // ReSharper disable once MemberCanBePrivate.Local
+        // ReSharper disable once InconsistentNaming
+        public void log(string s)
+        {
+            Logger?.LogInformation("JsConsole: {JsLogMessage}", s);
+
+            _log.AddLast(s);
+
+            if (_log.Count > 100)
+            {
+                _log.RemoveFirst();
+            }
+        }
+    }
 }

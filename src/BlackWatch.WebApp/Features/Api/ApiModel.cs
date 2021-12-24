@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 // ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace BlackWatch.WebApp.Features.Api;
 
@@ -15,6 +18,13 @@ public class Tally
     public TallyState State { get; set; }
 
     public string? Result { get; set; }
+
+    public IList<string> Log { get; init; } = new List<string>();
+
+    public override string ToString()
+    {
+        return $"{nameof(TallySourceId)}: {TallySourceId}, {nameof(TallySourceVersion)}: {TallySourceVersion}, {nameof(DateCreated)}: {DateCreated}, {nameof(State)}: {State}, {nameof(Result)}: {Result}, {nameof(Log)}: {Log}";
+    }
 }
 
 public enum TallyState

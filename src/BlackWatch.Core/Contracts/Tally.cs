@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace BlackWatch.Core.Contracts;
 
@@ -10,12 +11,14 @@ namespace BlackWatch.Core.Contracts;
 /// <param name="DateCreated">evaluation date</param>
 /// <param name="State">the tally signal state</param>
 /// <param name="Result">a free-form string that conveys additional information, like a symbol</param>
+/// <param name="Log">the JS log messages emitted through <c>console.log</c></param>
 public record Tally(
     string TallySourceId,
     int TallySourceVersion,
     DateTimeOffset DateCreated,
     TallyState State,
-    string? Result);
+    string? Result,
+    IReadOnlyCollection<string> Log);
 
 /// <summary>
 /// tally states

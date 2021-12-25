@@ -115,16 +115,22 @@ public class TallyService
 
     private Task<Tally> EvaluateAsync(TallySource tallySource, EvaluationContext ctx)
     {
-        var engine = new Engine();
         var code = $"{CodePrefix}{tallySource.Code}{CodeSuffix}";
         var console = new JsConsole
         {
             Logger = _logger,
         };
 
-        engine.SetValue("Daily", ctx.DailyQuotes);
-        engine.SetValue("Hourly", ctx.HourlyQuotes);
-        engine.SetValue("console", console);
+        var engine = new Engine(options =>
+            {
+                options.LimitMemory(16 * 1024 * 1024); // MB
+                options.LimitRecursion(100);
+                options.MaxStatements(100_000);
+                options.TimeoutInterval(TimeSpan.FromSeconds(2));
+            })
+            .SetValue("Daily", ctx.DailyQuotes)
+            .SetValue("Hourly", ctx.HourlyQuotes)
+            .SetValue("console", console);
 
         JsValue? value;
         string? errorMessage = null;

@@ -1,7 +1,11 @@
 @using BlackWatch.WebApp.Features.Api
 @using BlackWatch.WebApp.Util
 
-<div class="tally-widget-container alert @GetCssClass()">
+<div class="tally-widget-container alert @GetAlertClass()">
+    @if (HasIcon)
+    {
+        <span class="header oi mr-1 @GetIconClass()"></span>
+    }
     @if (TallySourceName != null)
     {
         <span class="header mb-0">@TallySourceName&nbsp;|&nbsp;@Tally?.DateCreated.Render()</span>
@@ -35,7 +39,9 @@
     private bool HasMessage => string.IsNullOrWhiteSpace(TallySourceMessage) == false
                                && Tally?.State == TallyState.Signalled;
 
-    private string GetCssClass()
+    private bool HasIcon => Tally?.State != TallyState.NonSignalled;
+
+    private string GetAlertClass()
     {
         return Tally?.State switch
         {
@@ -43,6 +49,19 @@
             TallyState.NonSignalled => "alert-secondary",
             TallyState.Signalled => "alert-success",
             TallyState.Error => "alert-danger",
+            null => string.Empty,
+            _ => throw new ArgumentOutOfRangeException(),
+        };
+    }
+
+    private string GetIconClass()
+    {
+        return Tally?.State switch
+        {
+            TallyState.Indeterminate => "oi-question-mark",
+            TallyState.NonSignalled => "",
+            TallyState.Signalled => "oi-check",
+            TallyState.Error => "oi-warning",
             null => string.Empty,
             _ => throw new ArgumentOutOfRangeException(),
         };

@@ -44,6 +44,9 @@ public class Startup
         services.AddSingleton<IIdGenerator, RedisIdGenerator>();
 
         services.AddTransient<TallyService>();
+        services.AddOptions<TallyServiceOptions>()
+            .Bind(_configuration.GetSection("Tally"))
+            .ValidateDataAnnotations();
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

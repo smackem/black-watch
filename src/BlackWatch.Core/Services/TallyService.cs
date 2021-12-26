@@ -9,6 +9,7 @@ using Jint;
 using Jint.Native;
 using Jint.Native.Object;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace BlackWatch.Core.Services;
 
@@ -17,16 +18,22 @@ public class TallyService
     private readonly IUserDataStore _userDataStore;
     private readonly IQuoteStore _quoteStore;
     private readonly ILogger<TallyService> _logger;
+    private readonly TallyServiceOptions _options;
 
     private const string CodePrefix = "(function() {\n";
     private const string CodeSuffix = "\n})();";
     private static readonly Regex SymbolFunctionRegex = new(@"^\w+$", RegexOptions.Compiled);
 
-    public TallyService(IUserDataStore userDataStore, IQuoteStore quoteStore, ILogger<TallyService> logger)
+    public TallyService(
+        IUserDataStore userDataStore,
+        IQuoteStore quoteStore,
+        ILogger<TallyService> logger,
+        IOptions<TallyServiceOptions> options)
     {
         _userDataStore = userDataStore;
         _quoteStore = quoteStore;
         _logger = logger;
+        _options = options.Value;
     }
 
     public async IAsyncEnumerable<Tally> EvaluateAsync(EvaluationInterval interval, string? userId = null)
@@ -115,16 +122,22 @@ public class TallyService
 
     private Task<Tally> EvaluateAsync(TallySource tallySource, EvaluationContext ctx)
     {
-        var engine = new Engine();
         var code = $"{CodePrefix}{tallySource.Code}{CodeSuffix}";
         var console = new JsConsole
         {
             Logger = _logger,
         };
 
-        engine.SetValue("Daily", ctx.DailyQuotes);
-        engine.SetValue("Hourly", ctx.HourlyQuotes);
-        engine.SetValue("console", console);
+        var engine = new Engine(options =>
+            {
+                options.LimitMemory(_options.ScriptMemoryLimitKiloBytes * 1024);
+                options.LimitRecursion(_options.ScriptRecursionLimit);
+                options.MaxStatements(_options.ScriptStatementLimit);
+                options.TimeoutInterval(_options.ScriptExecutionTimeLimit);
+            })
+            .SetValue("Daily", ctx.DailyQuotes)
+            .SetValue("Hourly", ctx.HourlyQuotes)
+            .SetValue("console", console);
 
         JsValue? value;
         string? errorMessage = null;

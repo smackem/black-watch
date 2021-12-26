@@ -84,6 +84,9 @@ namespace BlackWatch.Daemon
                         .ValidateDataAnnotations();
 
                     services.AddTransient<TallyService>();
+                    services.AddOptions<TallyServiceOptions>()
+                        .Bind(ctx.Configuration.GetSection("Tally"))
+                        .ValidateDataAnnotations();
                 });
 
         private static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)

@@ -9,6 +9,7 @@ using Jint;
 using Jint.Native;
 using Jint.Native.Object;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace BlackWatch.Core.Services;
 
@@ -17,16 +18,22 @@ public class TallyService
     private readonly IUserDataStore _userDataStore;
     private readonly IQuoteStore _quoteStore;
     private readonly ILogger<TallyService> _logger;
+    private readonly TallyServiceOptions _options;
 
     private const string CodePrefix = "(function() {\n";
     private const string CodeSuffix = "\n})();";
     private static readonly Regex SymbolFunctionRegex = new(@"^\w+$", RegexOptions.Compiled);
 
-    public TallyService(IUserDataStore userDataStore, IQuoteStore quoteStore, ILogger<TallyService> logger)
+    public TallyService(
+        IUserDataStore userDataStore,
+        IQuoteStore quoteStore,
+        ILogger<TallyService> logger,
+        IOptions<TallyServiceOptions> options)
     {
         _userDataStore = userDataStore;
         _quoteStore = quoteStore;
         _logger = logger;
+        _options = options.Value;
     }
 
     public async IAsyncEnumerable<Tally> EvaluateAsync(EvaluationInterval interval, string? userId = null)
@@ -123,10 +130,10 @@ public class TallyService
 
         var engine = new Engine(options =>
             {
-                options.LimitMemory(16 * 1024 * 1024); // MB
-                options.LimitRecursion(100);
-                options.MaxStatements(100_000);
-                options.TimeoutInterval(TimeSpan.FromSeconds(2));
+                options.LimitMemory(_options.ScriptMemoryLimitKiloBytes * 1024);
+                options.LimitRecursion(_options.ScriptRecursionLimit);
+                options.MaxStatements(_options.ScriptStatementLimit);
+                options.TimeoutInterval(_options.ScriptExecutionTimeLimit);
             })
             .SetValue("Daily", ctx.DailyQuotes)
             .SetValue("Hourly", ctx.HourlyQuotes)

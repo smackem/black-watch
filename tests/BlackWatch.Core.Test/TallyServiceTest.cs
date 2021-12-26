@@ -9,6 +9,7 @@ using Jint;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using Xunit.Abstractions;
+using Options=Microsoft.Extensions.Options.Options;
 
 namespace BlackWatch.Core.Test;
 
@@ -26,7 +27,11 @@ public class TallyServiceTest
     public async void EvaluateEmpty()
     {
         var dataStore = new UserDataStore();
-        var service = new TallyService(dataStore, dataStore, new NullLogger<TallyService>());
+        var service = new TallyService(
+            dataStore,
+            dataStore,
+            NullLogger<TallyService>.Instance,
+            Options.Create(new TallyServiceOptions()));
         var tallies = await service.EvaluateAsync(EvaluationInterval.OneHour, UserId).ToListAsync();
         Assert.Empty(tallies);
     }
@@ -161,7 +166,11 @@ public class TallyServiceTest
         var dataStore = new UserDataStore(
             new TallySource("1", "test", "hello", source, interval, 1, DateTimeOffset.UtcNow));
 
-        var service = new TallyService(dataStore, dataStore, new NullLogger<TallyService>());
+        var service = new TallyService(
+            dataStore,
+            dataStore,
+            NullLogger<TallyService>.Instance,
+            Options.Create(new TallyServiceOptions()));
         return await service.EvaluateAsync(EvaluationInterval.OneHour, UserId).ToListAsync();
     }
 

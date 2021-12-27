@@ -1,0 +1,66 @@
+@page "/{id}"
+@using BlackWatch.WebApp.Features.Api
+@using BlackWatch.WebApp.Services
+@using Microsoft.Extensions.Logging
+@implements IDisposable
+@inject IApiClient _api
+@inject ILogger<Detail> _logger
+@inject UiService _ui
+
+@if (_tallySource is null || _tallies is null)
+{
+    <p>Loading Tallies...</p>
+    return;
+}
+
+@foreach (var tally in _tallies.Take(1))
+{
+    <TallyWidget Tally="@tally" TallySourceMessage="@_tallySource.Message" TallySourceName="@_tallySource.Name" />
+}
+
+@foreach (var tally in _tallies.Skip(1))
+{
+    <TallyWidget Tally="@tally" />
+}
+
+@code {
+    private TallySource? _tallySource;
+    private IReadOnlyList<Tally>? _tallies;
+
+    [Parameter]
+    public string? Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshAsync();
+
+        _ui.Refresh += UiOnRefresh;
+    }
+
+    private async Task RefreshAsync()
+    {
+        if (Id is null)
+        {
+            return;
+        }
+
+        _tallySource = await _api.GetTallySourceAsync(Id);
+
+        var tallies = await _api.GetTallyAsync(Id, Int32.MaxValue);
+        _tallies = tallies
+            .OrderByDescending(t => t.DateCreated)
+            .ToArray();
+    }
+
+    private async void UiOnRefresh(object? sender, EventArgs e)
+    {
+        _logger.LogInformation("Details -> OnRefresh");
+        await RefreshAsync();
+        _logger.LogInformation("Details <- OnRefresh");
+    }
+
+    public void Dispose()
+    {
+        _ui.Refresh -= UiOnRefresh;
+    }
+}

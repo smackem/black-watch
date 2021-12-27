@@ -8,7 +8,18 @@
     }
     @if (TallySourceName != null)
     {
-        <span class="header mb-0">@TallySourceName&nbsp;|&nbsp;@Tally?.DateCreated.Render()</span>
+        <span class="header mb-0">
+            @if (TallySourceId != null)
+            {
+                <a class="alert-link" href="/@TallySourceId">@TallySourceName</a>
+            }
+            else
+            {
+                @TallySourceName
+            }
+            &nbsp;|&nbsp;
+            @Tally?.DateCreated.Render()
+        </span>
     }
     else
     {
@@ -32,6 +43,9 @@
 
     [Parameter]
     public string? TallySourceMessage { get; set; }
+
+    [Parameter]
+    public string? TallySourceId { get; set; }
 
     [Parameter]
     public Tally? Tally { get; set; }

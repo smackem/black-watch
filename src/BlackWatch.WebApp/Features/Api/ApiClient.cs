@@ -73,9 +73,10 @@ public class ApiClient : IApiClient
         return tally!;
     }
 
-    public Task<IReadOnlyCollection<Tally>> GetTallyAsync(string tallySourceId, int count)
+    public async Task<IReadOnlyCollection<Tally>> GetTallyAsync(string tallySourceId, int count)
     {
-        throw new NotImplementedException();
+        var tallies = await _http.GetFromJsonAsync<Tally[]>($"tallysource/{tallySourceId}/tally?count={count}");
+        return tallies!;
     }
 
     public async Task<IReadOnlyCollection<Tally>> GetTalliesAsync(int count)

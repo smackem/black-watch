@@ -25,6 +25,7 @@
     foreach (var tvm in _tallies.Where(x => x.IsSignalled))
     {
         <TallyWidget Tally="@tvm.PrimaryTally"
+                     TallySourceId="@tvm.Source.Id"
                      TallySourceName="@tvm.Source.Name"
                      TallySourceMessage="@tvm.Source.Message" />
     }
@@ -41,6 +42,7 @@ else
     @foreach (var tvm in _tallies.Where(x => x.IsSignalled == false))
     {
         <TallyWidget Tally="@tvm.PrimaryTally"
+                     TallySourceId="@tvm.Source.Id"
                      TallySourceName="@tvm.Source.Name"
                      TallySourceMessage="@tvm.Source.Message" />
     }
